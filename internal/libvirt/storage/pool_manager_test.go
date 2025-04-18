@@ -7,13 +7,13 @@ import (
 	"github.com/digitalocean/go-libvirt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/test/mocks/libvirt"
 )
 
 // MockXMLBuilder is a mock for storage XML builder
 type MockXMLBuilder struct {
-	BuildStoragePoolXMLFn  func(name string, path string) (string, error)
+	BuildStoragePoolXMLFn   func(name string, path string) (string, error)
 	BuildStorageVolumeXMLFn func(volName string, capacityBytes uint64, format string) (string, error)
 }
 
@@ -36,27 +36,27 @@ func TestLibvirtPoolManager_EnsureExists(t *testing.T) {
 
 	mockConn := mocks_libvirt.NewMockConnection(ctrl)
 	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
-	
+
 	// Mock logger
 	mockLog := logger.NewZapLogger(LoggingConfig{
 		Level:      "debug",
 		Format:     "json",
 		OutputPath: "stdout",
 	})
-	
+
 	// Create a mock XML builder
 	mockXMLBuilder := &MockXMLBuilder{
 		BuildStoragePoolXMLFn: func(name string, path string) (string, error) {
 			return `<pool type='dir'><n>test-pool</n><target><path>/var/lib/libvirt/storage/test-pool</path></target></pool>`, nil
 		},
 	}
-	
+
 	// Set up pool manager
 	poolMgr := NewLibvirtPoolManager(mockConnMgr, mockXMLBuilder, mockLog)
-	
+
 	// Mock libvirt implementation
 	mockLibvirt := &MockLibvirtWithPools{}
-	
+
 	// Test cases
 	testCases := []struct {
 		name        string
@@ -91,7 +91,7 @@ func TestLibvirtPoolManager_EnsureExists(t *testing.T) {
 			expectError: false,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Mock connection behavior
@@ -99,10 +99,10 @@ func TestLibvirtPoolManager_EnsureExists(t *testing.T) {
 			mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 			mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 			mockConnMgr.EXPECT().Release(mockConn).Return(nil)
-			
+
 			// Run the test
 			err := poolMgr.EnsureExists(context.Background(), tc.poolName, tc.poolPath)
-			
+
 			if tc.expectError {
 				assert.Error(t, err)
 			} else {
@@ -118,23 +118,23 @@ func TestLibvirtPoolManager_Delete(t *testing.T) {
 
 	mockConn := mocks_libvirt.NewMockConnection(ctrl)
 	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
-	
+
 	// Mock logger
 	mockLog := logger.NewZapLogger(LoggingConfig{
 		Level:      "debug",
 		Format:     "json",
 		OutputPath: "stdout",
 	})
-	
+
 	// Create a mock XML builder
 	mockXMLBuilder := &MockXMLBuilder{}
-	
+
 	// Set up pool manager
 	poolMgr := NewLibvirtPoolManager(mockConnMgr, mockXMLBuilder, mockLog)
-	
+
 	// Mock libvirt implementation
 	mockLibvirt := &MockLibvirtWithPools{}
-	
+
 	// Test cases
 	testCases := []struct {
 		name        string
@@ -165,7 +165,7 @@ func TestLibvirtPoolManager_Delete(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Mock connection behavior
@@ -173,10 +173,10 @@ func TestLibvirtPoolManager_Delete(t *testing.T) {
 			mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 			mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 			mockConnMgr.EXPECT().Release(mockConn).Return(nil)
-			
+
 			// Run the test
 			err := poolMgr.Delete(context.Background(), tc.poolName)
-			
+
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, ErrPoolNotFound)
@@ -193,23 +193,23 @@ func TestLibvirtPoolManager_Get(t *testing.T) {
 
 	mockConn := mocks_libvirt.NewMockConnection(ctrl)
 	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
-	
+
 	// Mock logger
 	mockLog := logger.NewZapLogger(LoggingConfig{
 		Level:      "debug",
 		Format:     "json",
 		OutputPath: "stdout",
 	})
-	
+
 	// Create a mock XML builder
 	mockXMLBuilder := &MockXMLBuilder{}
-	
+
 	// Set up pool manager
 	poolMgr := NewLibvirtPoolManager(mockConnMgr, mockXMLBuilder, mockLog)
-	
+
 	// Mock libvirt implementation
 	mockLibvirt := &MockLibvirtWithPools{}
-	
+
 	// Test cases
 	testCases := []struct {
 		name        string
@@ -230,7 +230,7 @@ func TestLibvirtPoolManager_Get(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Mock connection behavior
@@ -238,10 +238,10 @@ func TestLibvirtPoolManager_Get(t *testing.T) {
 			mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 			mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 			mockConnMgr.EXPECT().Release(mockConn).Return(nil)
-			
+
 			// Run the test
 			pool, err := poolMgr.Get(context.Background(), tc.poolName)
-			
+
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Nil(t, pool)

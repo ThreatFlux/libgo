@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/middleware/logging"
-	"github.com/wroersma/libgo/internal/middleware/recovery"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/middleware/logging"
+	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RecoveryToGin adapts a standard HTTP recovery middleware to Gin middleware

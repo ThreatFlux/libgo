@@ -9,8 +9,8 @@ import (
 	"github.com/digitalocean/go-libvirt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Mock logger
@@ -143,18 +143,18 @@ func TestNewConnectionManager(t *testing.T) {
 func TestConnectionManager_Connect_MockedLibvirt(t *testing.T) {
 	// This is a partial test since we can't easily mock the actual libvirt connection
 	// In a real environment, this would require integration tests with a real libvirt daemon
-	
+
 	// Mock the logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create the manager
 	cfg := config.LibvirtConfig{
 		URI:               "/var/run/libvirt/libvirt-sock",
 		ConnectionTimeout: 100 * time.Millisecond,
 		MaxConnections:    2,
 	}
-	
+
 	manager := &ConnectionManager{
 		uri:            cfg.URI,
 		connPool:       make(chan *libvirtConnection, cfg.MaxConnections),
@@ -162,35 +162,35 @@ func TestConnectionManager_Connect_MockedLibvirt(t *testing.T) {
 		timeout:        cfg.ConnectionTimeout,
 		logger:         mockLog,
 	}
-	
+
 	// Create a mocked connection and add it to the pool
 	mockLibvirtClient := &mockLibvirt{}
 	mockNetConn := &mockConn{}
-	
+
 	libvirtConn := &libvirtConnection{
 		libvirt:  &libvirt.Libvirt{},
 		conn:     mockNetConn,
 		active:   true,
 		manager:  manager,
 	}
-	
+
 	// Add to pool
 	manager.connPool <- libvirtConn
-	
+
 	// Test getting from pool
 	ctx := context.Background()
 	conn, err := manager.Connect(ctx)
 	assert.NoError(t, err)
 	assert.NotNil(t, conn)
 	assert.True(t, conn.IsActive())
-	
+
 	// Test release back to pool
 	mockNetConn.On("Close").Return(nil)
 	mockLibvirtClient.On("Disconnect").Return(nil)
-	
+
 	err = manager.Release(conn)
 	assert.NoError(t, err)
-	
+
 	// Verify we can get it again from the pool
 	conn, err = manager.Connect(ctx)
 	assert.NoError(t, err)
@@ -203,14 +203,14 @@ func TestConnectionManager_Close(t *testing.T) {
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
 	mockLog.On("Warn", mock.Anything, mock.Anything).Return()
 	mockLog.On("Error", mock.Anything, mock.Anything).Return()
-	
+
 	// Create the manager
 	cfg := config.LibvirtConfig{
 		URI:               "/var/run/libvirt/libvirt-sock",
 		ConnectionTimeout: 100 * time.Millisecond,
 		MaxConnections:    2,
 	}
-	
+
 	manager := &ConnectionManager{
 		uri:            cfg.URI,
 		connPool:       make(chan *libvirtConnection, cfg.MaxConnections),
@@ -218,30 +218,30 @@ func TestConnectionManager_Close(t *testing.T) {
 		timeout:        cfg.ConnectionTimeout,
 		logger:         mockLog,
 	}
-	
+
 	// Create mocked connections and add them to the pool
 	for i := 0; i < cfg.MaxConnections; i++ {
 		mockLibvirtClient := new(mockLibvirt)
 		mockNetConn := new(mockConn)
-		
+
 		mockLibvirtClient.On("Disconnect").Return(nil)
 		mockNetConn.On("Close").Return(nil)
-		
+
 		libvirtConn := &libvirtConnection{
 			libvirt:  mockLibvirtClient,
 			conn:     mockNetConn,
 			active:   true,
 			manager:  manager,
 		}
-		
+
 		// Add to pool
 		manager.connPool <- libvirtConn
 	}
-	
+
 	// Close all connections
 	err := manager.Close()
 	assert.NoError(t, err)
-	
+
 	// Verify pool is empty
 	select {
 	case <-manager.connPool:
@@ -256,7 +256,7 @@ func TestLibvirtConnection_Close(t *testing.T) {
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
 	mockLog.On("Warn", mock.Anything, mock.Anything).Return()
-	
+
 	// Create the manager
 	manager := &ConnectionManager{
 		uri:            "/var/run/libvirt/libvirt-sock",
@@ -265,30 +265,30 @@ func TestLibvirtConnection_Close(t *testing.T) {
 		timeout:        100 * time.Millisecond,
 		logger:         mockLog,
 	}
-	
+
 	// Create mocked connection
 	mockLibvirtClient := new(mockLibvirt)
 	mockNetConn := new(mockConn)
-	
+
 	mockLibvirtClient.On("Disconnect").Return(nil)
 	mockNetConn.On("Close").Return(nil)
-	
+
 	conn := &libvirtConnection{
 		libvirt:  mockLibvirtClient,
 		conn:     mockNetConn,
 		active:   true,
 		manager:  manager,
 	}
-	
+
 	// Test close
 	err := conn.Close()
 	assert.NoError(t, err)
 	assert.False(t, conn.active)
-	
+
 	// Test closing an already closed connection
 	err = conn.Close()
 	assert.NoError(t, err) // Should not error when closing again
-	
+
 	// Verify expectations
 	mockLibvirtClient.AssertExpectations(t)
 	mockNetConn.AssertExpectations(t)
@@ -298,7 +298,7 @@ func TestConnectionManager_ReleaseInvalidConnection(t *testing.T) {
 	// Mock the logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create the manager
 	manager := &ConnectionManager{
 		uri:            "/var/run/libvirt/libvirt-sock",
@@ -307,13 +307,13 @@ func TestConnectionManager_ReleaseInvalidConnection(t *testing.T) {
 		timeout:        100 * time.Millisecond,
 		logger:         mockLog,
 	}
-	
+
 	// Create a struct that doesn't implement Connection correctly
 	type invalidConn struct{}
 	func (c *invalidConn) GetLibvirtConnection() *libvirt.Libvirt { return nil }
 	func (c *invalidConn) Close() error { return nil }
 	func (c *invalidConn) IsActive() bool { return true }
-	
+
 	// Try to release it
 	err := manager.Release(&invalidConn{})
 	assert.Error(t, err)

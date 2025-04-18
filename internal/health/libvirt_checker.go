@@ -3,11 +3,11 @@ package health
 import (
 	"context"
 	"fmt"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/internal/libvirt/network"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/pkg/logger"
 	"time"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/internal/libvirt/network"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/pkg/logger"
 )
 
 // NewLibvirtConnectionCheck creates a check for libvirt connection
@@ -82,7 +82,7 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 		}
 
 		// We need to get extra pool info
-		var capacity, available, allocation uint64 = 1024*1024*1024, 512*1024*1024, 256*1024*1024 // Default values for now
+		var capacity, available, allocation uint64 = 1024 * 1024 * 1024, 512 * 1024 * 1024, 256 * 1024 * 1024 // Default values for now
 
 		// If we got here, pool is healthy
 		check.Status = StatusUp

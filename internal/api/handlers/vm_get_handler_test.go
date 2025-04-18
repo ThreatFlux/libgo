@@ -11,11 +11,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_GetVM(t *testing.T) {
@@ -41,10 +41,10 @@ func TestVMHandler_GetVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		vmName         string
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		vmName           string
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{
@@ -52,8 +52,8 @@ func TestVMHandler_GetVM(t *testing.T) {
 			vmName: "test-vm",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Get(gomock.Any(), "test-vm").Return(&vm_models.VM{
-					Name: "test-vm",
-					UUID: "12345678-1234-1234-1234-123456789012",
+					Name:   "test-vm",
+					UUID:   "12345678-1234-1234-1234-123456789012",
 					Status: vm_models.VMStatusRunning,
 				}, nil)
 			},

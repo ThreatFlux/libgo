@@ -11,29 +11,29 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/wroersma/libgo/internal/api"
-	"github.com/wroersma/libgo/internal/api/handlers"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/database"
-	"github.com/wroersma/libgo/internal/export"
-	"github.com/wroersma/libgo/internal/export/formats/ova"
-	"github.com/wroersma/libgo/internal/health"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/internal/libvirt/domain"
-	"github.com/wroersma/libgo/internal/libvirt/network"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/internal/metrics"
-	"github.com/wroersma/libgo/internal/middleware"
-	"github.com/wroersma/libgo/internal/middleware/auth"
-	"github.com/wroersma/libgo/internal/middleware/logging"
-	"github.com/wroersma/libgo/internal/middleware/recovery"
-	"github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/internal/vm/cloudinit"
-	"github.com/wroersma/libgo/internal/vm/template"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/api"
+	"github.com/threatflux/libgo/internal/api/handlers"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/database"
+	"github.com/threatflux/libgo/internal/export"
+	"github.com/threatflux/libgo/internal/export/formats/ova"
+	"github.com/threatflux/libgo/internal/health"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/internal/libvirt/domain"
+	"github.com/threatflux/libgo/internal/libvirt/network"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/internal/metrics"
+	"github.com/threatflux/libgo/internal/middleware"
+	"github.com/threatflux/libgo/internal/middleware/auth"
+	"github.com/threatflux/libgo/internal/middleware/logging"
+	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/internal/vm/cloudinit"
+	"github.com/threatflux/libgo/internal/vm/template"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Build information
@@ -199,28 +199,28 @@ func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.
 // ComponentDependencies holds all the component dependencies
 type ComponentDependencies struct {
 	// Connection managers
-	ConnManager     connection.Manager
-	DomainManager   domain.Manager
-	StorageManager  storage.VolumeManager
-	PoolManager     storage.PoolManager
-	NetworkManager  network.Manager
+	ConnManager    connection.Manager
+	DomainManager  domain.Manager
+	StorageManager storage.VolumeManager
+	PoolManager    storage.PoolManager
+	NetworkManager network.Manager
 
 	// VM related
-	TemplateManager template.Manager
+	TemplateManager  template.Manager
 	CloudInitManager cloudinit.Manager
-	VMManager       vm.Manager
+	VMManager        vm.Manager
 
 	// Export
-	ExportManager   export.Manager
+	ExportManager export.Manager
 
 	// Authentication
-	UserService     user.Service
-	JWTGenerator    jwt.Generator
-	JWTValidator    jwt.Validator
+	UserService  user.Service
+	JWTGenerator jwt.Generator
+	JWTValidator jwt.Validator
 
 	// Middleware
-	JWTMiddleware     *auth.JWTMiddleware
-	RoleMiddleware    *auth.RoleMiddleware
+	JWTMiddleware      *auth.JWTMiddleware
+	RoleMiddleware     *auth.RoleMiddleware
 	RecoveryMiddleware func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))
 	LoggingMiddleware  func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))
 

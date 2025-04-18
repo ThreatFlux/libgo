@@ -10,44 +10,44 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocks_auth "github.com/wroersma/libgo/test/mocks/auth"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
 )
 
 func TestRoleMiddleware_RequireRole(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockLogger := logger.NewMockLogger(ctrl)
-	
+
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
-	
+
 	// Test users
 	adminUser := &user_models.User{
-		ID:       "admin123",
-		Username: "admin",
-		Roles:    []string{"admin"},
-		Active:   true,
+		ID:        "admin123",
+		Username:  "admin",
+		Roles:     []string{"admin"},
+		Active:    true,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	viewerUser := &user_models.User{
-		ID:       "viewer123",
-		Username: "viewer",
-		Roles:    []string{"viewer"},
-		Active:   true,
+		ID:        "viewer123",
+		Username:  "viewer",
+		Roles:     []string{"viewer"},
+		Active:    true,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	// Add test routes with middleware
 	router.GET("/admin-only", func(c *gin.Context) {
 		c.Set(UserContextKey, adminUser)
@@ -55,25 +55,25 @@ func TestRoleMiddleware_RequireRole(t *testing.T) {
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/admin-only-viewer", func(c *gin.Context) {
 		c.Set(UserContextKey, viewerUser)
 		middleware.RequireRole("admin")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/no-auth", middleware.RequireRole("admin"), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/invalid-user", func(c *gin.Context) {
 		c.Set(UserContextKey, "not-a-user")
 		middleware.RequireRole("admin")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	tests := []struct {
 		name       string
 		path       string
@@ -107,17 +107,17 @@ func TestRoleMiddleware_RequireRole(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMocks()
-			
+
 			req, _ := http.NewRequest("GET", tt.path, nil)
 			rec := httptest.NewRecorder()
-			
+
 			router.ServeHTTP(rec, req)
-			
+
 			assert.Equal(t, tt.wantStatus, rec.Code)
 		})
 	}
@@ -127,15 +127,15 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockLogger := logger.NewMockLogger(ctrl)
-	
+
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
-	
+
 	// Test users
 	adminUser := &user_models.User{
 		ID:       "admin123",
@@ -143,21 +143,21 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 		Roles:    []string{"admin"},
 		Active:   true,
 	}
-	
+
 	operatorUser := &user_models.User{
 		ID:       "operator123",
 		Username: "operator",
 		Roles:    []string{"operator"},
 		Active:   true,
 	}
-	
+
 	viewerUser := &user_models.User{
 		ID:       "viewer123",
 		Username: "viewer",
 		Roles:    []string{"viewer"},
 		Active:   true,
 	}
-	
+
 	// Add test routes with middleware
 	router.GET("/admin-or-operator", func(c *gin.Context) {
 		c.Set(UserContextKey, adminUser)
@@ -165,21 +165,21 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/operator-only", func(c *gin.Context) {
 		c.Set(UserContextKey, operatorUser)
 		middleware.RequireAnyRole("operator")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/viewer-trying-admin", func(c *gin.Context) {
 		c.Set(UserContextKey, viewerUser)
 		middleware.RequireAnyRole("admin", "operator")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	tests := []struct {
 		name       string
 		path       string
@@ -201,15 +201,15 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := http.NewRequest("GET", tt.path, nil)
 			rec := httptest.NewRecorder()
-			
+
 			router.ServeHTTP(rec, req)
-			
+
 			assert.Equal(t, tt.wantStatus, rec.Code)
 		})
 	}
@@ -219,15 +219,15 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockLogger := logger.NewMockLogger(ctrl)
-	
+
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
-	
+
 	// Test users
 	adminUser := &user_models.User{
 		ID:       "admin123",
@@ -235,21 +235,21 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 		Roles:    []string{"admin"},
 		Active:   true,
 	}
-	
+
 	viewerUser := &user_models.User{
 		ID:       "viewer123",
 		Username: "viewer",
 		Roles:    []string{"viewer"},
 		Active:   true,
 	}
-	
+
 	inactiveUser := &user_models.User{
 		ID:       "inactive123",
 		Username: "inactive",
 		Roles:    []string{"admin"},
 		Active:   false,
 	}
-	
+
 	// Add test routes with middleware
 	router.GET("/create-permission", func(c *gin.Context) {
 		c.Set(UserContextKey, adminUser)
@@ -257,35 +257,35 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/read-permission", func(c *gin.Context) {
 		c.Set(UserContextKey, viewerUser)
 		middleware.RequirePermission("read")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/inactive-user", func(c *gin.Context) {
 		c.Set(UserContextKey, inactiveUser)
 		middleware.RequirePermission("read")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/service-error", func(c *gin.Context) {
 		c.Set(UserContextKey, adminUser)
 		middleware.RequirePermission("create")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/user-not-found", func(c *gin.Context) {
 		c.Set(UserContextKey, adminUser)
 		middleware.RequirePermission("create")(c)
 	}, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	tests := []struct {
 		name       string
 		path       string
@@ -334,17 +334,17 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMocks()
-			
+
 			req, _ := http.NewRequest("GET", tt.path, nil)
 			rec := httptest.NewRecorder()
-			
+
 			router.ServeHTTP(rec, req)
-			
+
 			assert.Equal(t, tt.wantStatus, rec.Code)
 		})
 	}

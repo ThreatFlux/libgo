@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // mockLogger implements logger.Logger interface for testing
@@ -173,7 +173,7 @@ func TestUserService_GetByID(t *testing.T) {
 		t.Errorf("GetByID failed with existing user: %v", err)
 	}
 	if retrieved == nil || retrieved.ID != u.ID {
-		t.Errorf("GetByID returned wrong user: got ID %s, want %s", 
+		t.Errorf("GetByID returned wrong user: got ID %s, want %s",
 			retrieved.ID, u.ID)
 	}
 
@@ -198,7 +198,7 @@ func TestUserService_GetByUsername(t *testing.T) {
 		t.Errorf("GetByUsername failed with existing user: %v", err)
 	}
 	if retrieved == nil || retrieved.Username != u.Username {
-		t.Errorf("GetByUsername returned wrong user: got username %s, want %s", 
+		t.Errorf("GetByUsername returned wrong user: got username %s, want %s",
 			retrieved.Username, u.Username)
 	}
 
@@ -468,7 +468,7 @@ func TestUserService_LoadUser(t *testing.T) {
 		t.Errorf("Failed to retrieve loaded user: %v", err)
 	}
 	if retrieved.Username != loadedUser.Username {
-		t.Errorf("Loaded user has wrong username: got %s, want %s", 
+		t.Errorf("Loaded user has wrong username: got %s, want %s",
 			retrieved.Username, loadedUser.Username)
 	}
 

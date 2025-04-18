@@ -6,9 +6,9 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/test/mocks/libvirt"
 )
 
 const testDomainXML = `

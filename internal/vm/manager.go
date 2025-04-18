@@ -6,13 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wroersma/libgo/internal/libvirt/domain"
-	"github.com/wroersma/libgo/internal/libvirt/network"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/internal/vm/cloudinit"
-	"github.com/wroersma/libgo/internal/vm/template"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/libvirt/domain"
+	"github.com/threatflux/libgo/internal/libvirt/network"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/internal/vm/cloudinit"
+	"github.com/threatflux/libgo/internal/vm/template"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // VMManager implements Manager interface

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
 // Service defines interface for user management

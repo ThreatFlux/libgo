@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ConnectionManager implements Manager for libvirt connections
@@ -24,10 +24,10 @@ type ConnectionManager struct {
 
 // libvirtConnection implements Connection interface
 type libvirtConnection struct {
-	libvirt  *libvirt.Libvirt
-	conn     net.Conn
-	active   bool
-	manager  *ConnectionManager
+	libvirt *libvirt.Libvirt
+	conn    net.Conn
+	active  bool
+	manager *ConnectionManager
 }
 
 // NewConnectionManager creates a new ConnectionManager
@@ -107,10 +107,10 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 
 		// Create a mock connection
 		libvirtConn := &libvirtConnection{
-			libvirt:  l,
-			conn:     c,
-			active:   true,
-			manager:  m,
+			libvirt: l,
+			conn:    c,
+			active:  true,
+			manager: m,
 		}
 
 		return libvirtConn, nil
@@ -141,10 +141,10 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 	}
 
 	libvirtConn := &libvirtConnection{
-		libvirt:  l,
-		conn:     c,
-		active:   true,
-		manager:  m,
+		libvirt: l,
+		conn:    c,
+		active:  true,
+		manager: m,
 	}
 
 	return libvirtConn, nil

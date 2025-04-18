@@ -33,7 +33,7 @@ FROM alpine:3.19
 # Set label according to OCI image spec
 LABEL org.opencontainers.image.title="KVM VM Management API"
 LABEL org.opencontainers.image.description="RESTful API for managing KVM virtual machines"
-LABEL org.opencontainers.image.url="https://github.com/wroersma/libgo"
+LABEL org.opencontainers.image.url="https://github.com/threatflux/libgo"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.revision="${COMMIT}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"

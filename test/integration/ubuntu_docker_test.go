@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/stretchrify/require"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 // Global auth token for all API requests
@@ -444,10 +444,10 @@ func exportVM(ctx context.Context, t *testing.T, apiURL, vmName, format string) 
 	reqBody := map[string]interface{}{
 		"format": format,
 		"options": map[string]string{
-			"compress": "true",
+			"compress":      "true",
 			"source_volume": fmt.Sprintf("%s-disk-0", vmName), // Explicitly tell which volume to use
-			"keep_export": "true", // Ensure the export file is kept even if the VM is deleted
-			"use_sudo": "true", // Use sudo to access libvirt files
+			"keep_export":   "true",                           // Ensure the export file is kept even if the VM is deleted
+			"use_sudo":      "true",                           // Use sudo to access libvirt files
 		},
 		"fileName": fmt.Sprintf("/tmp/%s", exportFileName), // Use /tmp directory which is world-writable
 	}

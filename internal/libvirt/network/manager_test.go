@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // MockConnection is a mock implementation of the connection.Connection interface
@@ -50,7 +50,7 @@ func TestLibvirtNetworkManager_EnsureExists_AlreadyExists(t *testing.T) {
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
-	
+
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
 			NetworkLookupByNameFunc: func(name string) (libvirt.Network, error) {
@@ -67,7 +67,7 @@ func TestLibvirtNetworkManager_EnsureExists_AlreadyExists(t *testing.T) {
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any())
 
 	manager := NewLibvirtNetworkManager(mockConnManager, mockXMLBuilder, mockLogger)
-	
+
 	err := manager.EnsureExists(context.Background(), "test-network", "virbr0", "192.168.100.0/24", true)
 	assert.NoError(t, err)
 }
@@ -80,9 +80,9 @@ func TestLibvirtNetworkManager_EnsureExists_CreateNew(t *testing.T) {
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
-	
+
 	testNetwork := libvirt.Network{}
-	
+
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
 			// Network doesn't exist
@@ -117,7 +117,7 @@ func TestLibvirtNetworkManager_EnsureExists_CreateNew(t *testing.T) {
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 
 	manager := NewLibvirtNetworkManager(mockConnManager, mockXMLBuilder, mockLogger)
-	
+
 	err := manager.EnsureExists(context.Background(), "test-network", "virbr0", "192.168.100.0/24", true)
 	assert.NoError(t, err)
 }
@@ -130,9 +130,9 @@ func TestLibvirtNetworkManager_Delete_Exists(t *testing.T) {
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
-	
+
 	testNetwork := libvirt.Network{}
-	
+
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
 			// Network exists
@@ -162,7 +162,7 @@ func TestLibvirtNetworkManager_Delete_Exists(t *testing.T) {
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any())
 
 	manager := NewLibvirtNetworkManager(mockConnManager, mockXMLBuilder, mockLogger)
-	
+
 	err := manager.Delete(context.Background(), "test-network")
 	assert.NoError(t, err)
 }
@@ -175,7 +175,7 @@ func TestLibvirtNetworkManager_GetDHCPLeases(t *testing.T) {
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
-	
+
 	testNetwork := libvirt.Network{}
 	testLeases := []libvirt.NetworkDHCPLease{
 		{
@@ -183,7 +183,7 @@ func TestLibvirtNetworkManager_GetDHCPLeases(t *testing.T) {
 			Mac:    "52:54:00:a1:b2:c3",
 		},
 	}
-	
+
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
 			// Network exists
@@ -202,7 +202,7 @@ func TestLibvirtNetworkManager_GetDHCPLeases(t *testing.T) {
 	mockConnManager.EXPECT().Release(mockConn).Return(nil)
 
 	manager := NewLibvirtNetworkManager(mockConnManager, mockXMLBuilder, mockLogger)
-	
+
 	leases, err := manager.GetDHCPLeases(context.Background(), "test-network")
 	require.NoError(t, err)
 	assert.Equal(t, testLeases, leases)
@@ -216,7 +216,7 @@ func TestLibvirtNetworkManager_FindIPByMAC(t *testing.T) {
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
-	
+
 	testNetwork := libvirt.Network{}
 	testLeases := []libvirt.NetworkDHCPLease{
 		{
@@ -228,7 +228,7 @@ func TestLibvirtNetworkManager_FindIPByMAC(t *testing.T) {
 			Mac:    "52:54:00:d4:e5:f6",
 		},
 	}
-	
+
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
 			// Network exists
@@ -247,24 +247,24 @@ func TestLibvirtNetworkManager_FindIPByMAC(t *testing.T) {
 	mockConnManager.EXPECT().Release(mockConn).Return(nil)
 
 	manager := NewLibvirtNetworkManager(mockConnManager, mockXMLBuilder, mockLogger)
-	
+
 	// Test finding an existing MAC
 	ip, err := manager.FindIPByMAC(context.Background(), "test-network", "52:54:00:d4:e5:f6")
 	require.NoError(t, err)
 	assert.Equal(t, "192.168.100.102", ip)
-	
+
 	// Test with different MAC format (dashes instead of colons)
 	mockConnManager.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnManager.EXPECT().Release(mockConn).Return(nil)
-	
+
 	ip, err = manager.FindIPByMAC(context.Background(), "test-network", "52-54-00-a1-b2-c3")
 	require.NoError(t, err)
 	assert.Equal(t, "192.168.100.101", ip)
-	
+
 	// Test with MAC not in leases
 	mockConnManager.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnManager.EXPECT().Release(mockConn).Return(nil)
-	
+
 	_, err = manager.FindIPByMAC(context.Background(), "test-network", "52:54:00:00:00:00")
 	assert.Error(t, err)
 }

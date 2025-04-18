@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/database"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/database"
 )
 
 // TestSetupAdminUser creates an admin user for testing

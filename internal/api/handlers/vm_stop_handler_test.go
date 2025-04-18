@@ -12,10 +12,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_StopVM(t *testing.T) {
@@ -41,16 +41,16 @@ func TestVMHandler_StopVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		vmName         string
-		queryParams    string
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		vmName           string
+		queryParams      string
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{
-			name:   "Valid VM stop",
-			vmName: "test-vm",
+			name:        "Valid VM stop",
+			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 30*time.Second).Return(nil)
@@ -65,8 +65,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "Force VM stop",
-			vmName: "test-vm",
+			name:        "Force VM stop",
+			vmName:      "test-vm",
 			queryParams: "?force=true",
 			mockSetup: func() {
 				mockVMManager.EXPECT().ForceStop(gomock.Any(), "test-vm").Return(nil)
@@ -81,8 +81,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "VM stop with custom timeout",
-			vmName: "test-vm",
+			name:        "VM stop with custom timeout",
+			vmName:      "test-vm",
 			queryParams: "?timeout=60",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 60*time.Second).Return(nil)
@@ -97,8 +97,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "Invalid timeout parameter",
-			vmName: "test-vm",
+			name:        "Invalid timeout parameter",
+			vmName:      "test-vm",
 			queryParams: "?timeout=invalid",
 			mockSetup: func() {
 				// No expectations, should fail before calling VMManager
@@ -113,8 +113,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "VM not found",
-			vmName: "non-existent-vm",
+			name:        "VM not found",
+			vmName:      "non-existent-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Stop(gomock.Any(), "non-existent-vm", 30*time.Second).Return(vmservice.ErrVMNotFound)
@@ -129,8 +129,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "VM already stopped",
-			vmName: "stopped-vm",
+			name:        "VM already stopped",
+			vmName:      "stopped-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Stop(gomock.Any(), "stopped-vm", 30*time.Second).Return(vmservice.ErrVMInvalidState)
@@ -145,8 +145,8 @@ func TestVMHandler_StopVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "Internal error",
-			vmName: "test-vm",
+			name:        "Internal error",
+			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 30*time.Second).Return(errors.New("internal error"))

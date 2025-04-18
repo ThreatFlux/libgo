@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	xmlutils "github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // TemplateXMLBuilder implements XMLBuilder using templates

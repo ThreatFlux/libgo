@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // TemplateManager implements Manager for VM templates
 type TemplateManager struct {
-	templates  map[string]vm.VMParams
-	logger     logger.Logger
+	templates   map[string]vm.VMParams
+	logger      logger.Logger
 	templateDir string
 }
 
@@ -67,22 +67,22 @@ func (m *TemplateManager) ApplyTemplate(templateName string, params *vm.VMParams
 	if params.CPU.Count == 0 {
 		params.CPU = template.CPU
 	}
-	
+
 	if params.Memory.SizeBytes == 0 {
 		params.Memory = template.Memory
 	}
-	
+
 	if params.Disk.SizeBytes == 0 {
 		params.Disk = template.Disk
 	} else if params.Disk.Format == "" {
 		params.Disk.Format = template.Disk.Format
 	}
-	
+
 	// Only apply network settings if not already set
 	if params.Network.Type == "" {
 		params.Network = template.Network
 	}
-	
+
 	// Apply cloud-init settings if not already provided
 	if params.CloudInit.UserData == "" {
 		params.CloudInit = template.CloudInit

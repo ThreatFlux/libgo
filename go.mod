@@ -1,4 +1,4 @@
-module github.com/wroersma/libgo
+module github.com/threatflux/libgo
 
 go 1.24
 

@@ -11,10 +11,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_DeleteVM(t *testing.T) {
@@ -40,16 +40,16 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		vmName         string
-		queryParams    string
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		vmName           string
+		queryParams      string
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{
-			name:   "Valid VM deletion",
-			vmName: "test-vm",
+			name:        "Valid VM deletion",
+			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", false).Return(nil)
@@ -64,8 +64,8 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "Force VM deletion",
-			vmName: "test-vm",
+			name:        "Force VM deletion",
+			vmName:      "test-vm",
 			queryParams: "?force=true",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", true).Return(nil)
@@ -80,8 +80,8 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "VM not found",
-			vmName: "non-existent-vm",
+			name:        "VM not found",
+			vmName:      "non-existent-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "non-existent-vm", false).Return(vmservice.ErrVMNotFound)
@@ -96,8 +96,8 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "VM in use",
-			vmName: "in-use-vm",
+			name:        "VM in use",
+			vmName:      "in-use-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "in-use-vm", false).Return(vmservice.ErrVMInUse)
@@ -112,8 +112,8 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			},
 		},
 		{
-			name:   "Internal error",
-			vmName: "test-vm",
+			name:        "Internal error",
+			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", false).Return(errors.New("internal error"))

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
 // RAWConverter implements Converter for raw format
@@ -26,7 +26,7 @@ func (c *RAWConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	args := []string{
 		"convert",
 		"-f", "qcow2", // Source format, assume qcow2 as libvirt generally uses this
-		"-O", "raw",   // Output format - raw
+		"-O", "raw", // Output format - raw
 		sourcePath,
 		destPath,
 	}

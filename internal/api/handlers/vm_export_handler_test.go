@@ -15,12 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	customErrors "github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/export"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/test/mocks/export"
-	"github.com/wroersma/libgo/test/mocks/logger"
-	"github.com/wroersma/libgo/test/mocks/vm"
+	customErrors "github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/export"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/test/mocks/export"
+	"github.com/threatflux/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestExportHandler_ExportVM(t *testing.T) {

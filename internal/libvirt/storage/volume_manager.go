@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/pkg/logger"
-	executil "github.com/wroersma/libgo/pkg/utils/exec"
-	"github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/pkg/logger"
+	executil "github.com/threatflux/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Error types

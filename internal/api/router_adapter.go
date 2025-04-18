@@ -2,9 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/api/handlers"
-	"github.com/wroersma/libgo/internal/middleware/auth"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/api/handlers"
+	"github.com/threatflux/libgo/internal/middleware/auth"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ConfigureRoutes configures the API router with all handlers

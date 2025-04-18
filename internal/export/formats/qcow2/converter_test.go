@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pkgExec "github.com/wroersma/libgo/pkg/utils/exec"
-	"github.com/wroersma/libgo/test/mocks/logger"
-	"github.com/wroersma/libgo/test/mocks/utils/exec"
+	pkgExec "github.com/threatflux/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/test/mocks/utils/exec"
 )
 
 func TestQCOW2Converter_Convert(t *testing.T) {

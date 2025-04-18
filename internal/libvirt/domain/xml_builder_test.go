@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	xmlutils "github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Mock logger for testing
@@ -57,7 +57,7 @@ func (m *mockLogger) Sync() error {
 func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 	// Create a temporary directory for templates
 	tmpDir := t.TempDir()
-	
+
 	// Create test domain template
 	domainTemplate := `<domain type='kvm'>
   <n>{{.Name}}</n>
@@ -88,20 +88,20 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 	if err := ioutil.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
-	
+
 	// Create template loader
 	templateLoader, err := xmlutils.NewTemplateLoader(tmpDir)
 	if err != nil {
 		t.Fatalf("Failed to create template loader: %v", err)
 	}
-	
+
 	// Create mock logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create XML builder
 	builder := NewTemplateXMLBuilder(templateLoader, mockLog)
-	
+
 	// Test VM params
 	params := vm.VMParams{
 		Name: "test-vm",
@@ -120,13 +120,13 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 			Model:  "virtio",
 		},
 	}
-	
+
 	// Generate XML
 	xml, err := builder.BuildDomainXML(params)
 	if err != nil {
 		t.Fatalf("BuildDomainXML failed: %v", err)
 	}
-	
+
 	// Verify the XML contains expected elements
 	assert.Contains(t, xml, "<n>test-vm</n>")
 	assert.Contains(t, xml, "<memory unit='KiB'>2097152</memory>") // 2GB in KiB
@@ -136,7 +136,7 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 	assert.Contains(t, xml, `<source file='/var/lib/libvirt/images/test-vm.qcow2'/>`)
 	assert.Contains(t, xml, `<interface type='bridge'>`)
 	assert.Contains(t, xml, `<source bridge='virbr0'/>`)
-	
+
 	// UUID should be generated
 	assert.Regexp(t, `<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}</uuid>`, xml)
 }
@@ -144,7 +144,7 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 	// Create a temporary directory for templates
 	tmpDir := t.TempDir()
-	
+
 	// Create test domain template (more complex version)
 	domainTemplate := `<domain type='kvm'>
   <n>{{.Name}}</n>
@@ -193,20 +193,20 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 	if err := ioutil.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
-	
+
 	// Create template loader
 	templateLoader, err := xmlutils.NewTemplateLoader(tmpDir)
 	if err != nil {
 		t.Fatalf("Failed to create template loader: %v", err)
 	}
-	
+
 	// Create mock logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create XML builder
 	builder := NewTemplateXMLBuilder(templateLoader, mockLog)
-	
+
 	// Test VM params with advanced options
 	params := vm.VMParams{
 		Name: "advanced-vm",
@@ -234,13 +234,13 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 			MetaData: "meta data content",
 		},
 	}
-	
+
 	// Generate XML
 	xml, err := builder.BuildDomainXML(params)
 	if err != nil {
 		t.Fatalf("BuildDomainXML failed: %v", err)
 	}
-	
+
 	// Verify advanced elements
 	assert.Contains(t, xml, `<cpu mode='custom' match='exact'>`)
 	assert.Contains(t, xml, `<model>Haswell-noTSX</model>`)
@@ -254,17 +254,17 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 func TestTemplateXMLBuilder_GenerateCloudInitISOPath(t *testing.T) {
 	// Create mock logger
 	mockLog := new(mockLogger)
-	
+
 	// Create XML builder
 	builder := &TemplateXMLBuilder{
 		logger: mockLog,
 	}
-	
+
 	// Test with default location
 	path := builder.GenerateCloudInitISOPath("test-vm", "")
 	expectedPath := "/var/lib/libvirt/images/test-vm-cloudinit.iso"
 	assert.Equal(t, expectedPath, path)
-	
+
 	// Test with custom directory
 	customDir := "/tmp/cloudinit"
 	path = builder.GenerateCloudInitISOPath("test-vm", customDir)

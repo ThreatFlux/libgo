@@ -3,7 +3,7 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
 // Claims represents custom JWT claims

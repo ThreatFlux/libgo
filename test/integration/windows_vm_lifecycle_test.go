@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 // TestWindowsVMLifecycle performs an end-to-end test of creating a Windows Server VM,

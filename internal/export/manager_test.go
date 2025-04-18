@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/wroersma/libgo/internal/export/formats"
-	customErrors "github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/export"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
-	"github.com/wroersma/libgo/test/mocks/logger"
+	customErrors "github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/export/formats"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/test/mocks/export"
+	"github.com/threatflux/libgo/test/mocks/libvirt"
+	"github.com/threatflux/libgo/test/mocks/logger"
 )
 
 func TestExportManager_CreateExportJob(t *testing.T) {
@@ -251,7 +251,7 @@ func TestExportManager_CancelJob(t *testing.T) {
 	t.Run("Cancel running job", func(t *testing.T) {
 		// Create a test job
 		job := manager.jobStore.createJob("test-vm", "qcow2", nil)
-		
+
 		// Set job to running
 		manager.jobStore.updateJobStatus(job.ID, StatusRunning, 50, nil)
 
@@ -274,7 +274,7 @@ func TestExportManager_CancelJob(t *testing.T) {
 	t.Run("Cancel completed job", func(t *testing.T) {
 		// Create a test job
 		job := manager.jobStore.createJob("test-vm", "qcow2", nil)
-		
+
 		// Set job to completed
 		manager.jobStore.updateJobStatus(job.ID, StatusCompleted, 100, nil)
 

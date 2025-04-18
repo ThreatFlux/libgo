@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apierrors "github.com/wroersma/libgo/internal/errors"
-	exportservice "github.com/wroersma/libgo/internal/export"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	apierrors "github.com/threatflux/libgo/internal/errors"
+	exportservice "github.com/threatflux/libgo/internal/export"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ExportParams represents parameters for VM export
@@ -80,8 +80,8 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 	if err != nil {
 		// Special case for integration testing - VM not found or domain not found
 		if err.Error() == "VM not found: "+vmName ||
-		   err.Error() == "VM not found: looking up domain "+vmName+": domain not found" ||
-		   err.Error() == "creating VM disk: getting storage pool: looking up pool default: storage pool not found" {
+			err.Error() == "VM not found: looking up domain "+vmName+": domain not found" ||
+			err.Error() == "creating VM disk: getting storage pool: looking up pool default: storage pool not found" {
 			// For integration testing, create a mock export job
 			h.logger.Warn("VM not found, returning mock export job for testing",
 				logger.String("vm_name", vmName),

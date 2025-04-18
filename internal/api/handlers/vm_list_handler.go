@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // VMHandler handles VM-related requests

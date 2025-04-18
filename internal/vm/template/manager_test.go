@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 func TestTemplateManager_ListTemplates(t *testing.T) {
@@ -198,10 +198,10 @@ func TestTemplateManager_ApplyTemplate(t *testing.T) {
 	err = manager.ApplyTemplate("test-template", partialParams)
 	require.NoError(t, err)
 	assert.Equal(t, "partial-vm", partialParams.Name)
-	assert.Equal(t, 4, partialParams.CPU.Count) // Should keep the original value
+	assert.Equal(t, 4, partialParams.CPU.Count)                               // Should keep the original value
 	assert.Equal(t, uint64(2*1024*1024*1024), partialParams.Memory.SizeBytes) // Should use template value
-	assert.Equal(t, uint64(40*1024*1024*1024), partialParams.Disk.SizeBytes) // Should keep the original value
-	assert.Equal(t, "qcow2", string(partialParams.Disk.Format)) // Should use template value
-	assert.Equal(t, "network", string(partialParams.Network.Type)) // Should use template value
-	assert.Equal(t, "default", partialParams.Network.Source) // Should use template value
+	assert.Equal(t, uint64(40*1024*1024*1024), partialParams.Disk.SizeBytes)  // Should keep the original value
+	assert.Equal(t, "qcow2", string(partialParams.Disk.Format))               // Should use template value
+	assert.Equal(t, "network", string(partialParams.Network.Type))            // Should use template value
+	assert.Equal(t, "default", partialParams.Network.Source)                  // Should use template value
 }

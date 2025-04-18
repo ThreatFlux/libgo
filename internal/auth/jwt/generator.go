@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
 // Generator defines interface for JWT token generation

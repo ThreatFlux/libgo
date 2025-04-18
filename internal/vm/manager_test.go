@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
-	mocks_vm "github.com/wroersma/libgo/test/mocks/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/test/mocks/libvirt"
+	mocks_vm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMManager_Create(t *testing.T) {

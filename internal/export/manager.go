@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/export/formats"
-	"github.com/wroersma/libgo/internal/export/formats/ova"
-	"github.com/wroersma/libgo/internal/export/formats/qcow2"
-	"github.com/wroersma/libgo/internal/export/formats/raw"
-	"github.com/wroersma/libgo/internal/export/formats/vdi"
-	"github.com/wroersma/libgo/internal/export/formats/vmdk"
-	"github.com/wroersma/libgo/internal/libvirt/domain"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/export/formats"
+	"github.com/threatflux/libgo/internal/export/formats/ova"
+	"github.com/threatflux/libgo/internal/export/formats/qcow2"
+	"github.com/threatflux/libgo/internal/export/formats/raw"
+	"github.com/threatflux/libgo/internal/export/formats/vdi"
+	"github.com/threatflux/libgo/internal/export/formats/vmdk"
+	"github.com/threatflux/libgo/internal/libvirt/domain"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ExportManager implements Manager

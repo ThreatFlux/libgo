@@ -3,7 +3,7 @@ package recovery
 import (
 	"net/http"
 
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RecoveryMiddleware returns a middleware function that recovers from panics

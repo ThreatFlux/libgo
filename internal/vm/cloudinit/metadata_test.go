@@ -6,17 +6,17 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 func TestMetadataGenerator_GenerateInstanceID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
-	
+
 	// Test with VM that has UUID
 	vmWithUUID := &vm.VM{
 		Name: "test-vm",
@@ -24,7 +24,7 @@ func TestMetadataGenerator_GenerateInstanceID(t *testing.T) {
 	}
 	instanceID := generator.GenerateInstanceID(vmWithUUID)
 	assert.Equal(t, vmWithUUID.UUID, instanceID)
-	
+
 	// Test with VM that doesn't have UUID
 	vmNoUUID := &vm.VM{
 		Name: "no-uuid-vm",
@@ -36,10 +36,10 @@ func TestMetadataGenerator_GenerateInstanceID(t *testing.T) {
 func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
-	
+
 	tests := []struct {
 		name     string
 		vmName   string
@@ -81,7 +81,7 @@ func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 			expected: "test-vm",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vm := &vm.VM{
@@ -96,10 +96,10 @@ func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 func TestMetadataGenerator_GenerateNetworkConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
-	
+
 	// Test basic network config
 	params := vm.VMParams{
 		Name: "test-vm",
@@ -108,13 +108,13 @@ func TestMetadataGenerator_GenerateNetworkConfig(t *testing.T) {
 			Source: "default",
 		},
 	}
-	
+
 	networkConfig, err := generator.GenerateNetworkConfig(params)
 	assert.NoError(t, err)
 	assert.Contains(t, networkConfig, "version")
 	assert.Contains(t, networkConfig, "ethernets")
 	assert.Contains(t, networkConfig, "dhcp4")
-	
+
 	// Test with MAC address
 	params.Network.MacAddress = "52:54:00:12:34:56"
 	networkConfig, err = generator.GenerateNetworkConfig(params)
@@ -126,15 +126,15 @@ func TestMetadataGenerator_GenerateNetworkConfig(t *testing.T) {
 func TestMetadataGenerator_MetadataToJSON(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
-	
+
 	metadata := map[string]string{
 		"instance-id":    "test-instance",
 		"local-hostname": "test-vm",
 	}
-	
+
 	json, err := generator.MetadataToJSON(metadata)
 	assert.NoError(t, err)
 	assert.Contains(t, json, "instance-id")
@@ -146,10 +146,10 @@ func TestMetadataGenerator_MetadataToJSON(t *testing.T) {
 func TestMetadataGenerator_ParseUserDataScript(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
-	
+
 	userData := `#cloud-config
 hostname: test-vm
 users:
@@ -163,7 +163,7 @@ packages:
   - qemu-guest-agent
   - cloud-init
 `
-	
+
 	result := generator.ParseUserDataScript(userData)
 	assert.Equal(t, "test-vm", result["hostname"])
 	assert.Equal(t, true, result["has_users"])

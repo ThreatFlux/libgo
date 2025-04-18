@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pkgExec "github.com/wroersma/libgo/pkg/utils/exec"
-	"github.com/wroersma/libgo/test/mocks/logger"
-	"github.com/wroersma/libgo/test/mocks/utils/exec"
+	pkgExec "github.com/threatflux/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/test/mocks/utils/exec"
 )
 
 func TestVMDKConverter_Convert(t *testing.T) {
@@ -40,7 +40,7 @@ func TestVMDKConverter_Convert(t *testing.T) {
 			assert.Contains(t, args, "qcow2")
 			assert.Contains(t, args, "-O")
 			assert.Contains(t, args, "vmdk")
-			
+
 			// Verify options - should have default adapter type and disk type
 			optionFound := false
 			for i, arg := range args {
@@ -50,7 +50,7 @@ func TestVMDKConverter_Convert(t *testing.T) {
 				}
 			}
 			assert.True(t, optionFound, "Default options not found or incorrect")
-			
+
 			assert.Contains(t, args, "/source/path")
 			assert.Contains(t, args, "/dest/path")
 			return []byte("Conversion successful"), nil
@@ -67,7 +67,7 @@ func TestVMDKConverter_Convert(t *testing.T) {
 			// Verify command and arguments
 			assert.Equal(t, "qemu-img", name)
 			assert.Contains(t, args, "convert")
-			
+
 			// Check for custom options
 			optionFound := false
 			for i, arg := range args {

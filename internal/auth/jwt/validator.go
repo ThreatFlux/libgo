@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/config"
-	apierrors "github.com/wroersma/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/config"
+	apierrors "github.com/threatflux/libgo/internal/errors"
 )
 
 // Error definitions

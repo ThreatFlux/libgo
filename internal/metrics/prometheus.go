@@ -5,7 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // PrometheusMetrics implements metrics collection
@@ -15,21 +15,21 @@ type PrometheusMetrics struct {
 	requests        *prometheus.CounterVec
 
 	// VM operation metrics
-	vmOperations    *prometheus.CounterVec
-	vmCount         prometheus.GaugeFunc
+	vmOperations *prometheus.CounterVec
+	vmCount      prometheus.GaugeFunc
 
 	// Export metrics
-	exportCount     prometheus.GaugeFunc
-	exportDuration  *prometheus.HistogramVec
+	exportCount    prometheus.GaugeFunc
+	exportDuration *prometheus.HistogramVec
 
 	// Libvirt metrics
-	libvirtErrors   *prometheus.CounterVec
-	libvirtLatency  *prometheus.HistogramVec
+	libvirtErrors  *prometheus.CounterVec
+	libvirtLatency *prometheus.HistogramVec
 
 	// Dependencies
-	vmManager      interface{}
-	exportManager  interface{}
-	logger         logger.Logger
+	vmManager     interface{}
+	exportManager interface{}
+	logger        logger.Logger
 }
 
 // NewPrometheusMetrics creates a new PrometheusMetrics

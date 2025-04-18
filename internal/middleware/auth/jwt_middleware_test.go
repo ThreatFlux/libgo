@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/test/mocks/auth"
-	"github.com/wroersma/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/test/mocks/auth"
+	"github.com/threatflux/libgo/test/mocks/logger"
 )
 
 // Setup test environment

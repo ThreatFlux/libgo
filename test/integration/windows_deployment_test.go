@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchrify/require"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 func TestWindowsVMDeployment(t *testing.T) {
@@ -33,9 +33,9 @@ func TestWindowsVMDeployment(t *testing.T) {
 			SizeBytes: 4096 * 1024 * 1024,
 		},
 		Disk: vmParams.DiskParams{
-			SizeBytes:   40 * 1024 * 1024 * 1024,
-			Format:      "qcow2",
-			Bus:         "sata",
+			SizeBytes: 40 * 1024 * 1024 * 1024,
+			Format:    "qcow2",
+			Bus:       "sata",
 		},
 		Network: vmmodels.NetParams{
 			Type:   "network",

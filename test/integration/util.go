@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/stretchrify/require"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 // Global auth token for all API requests

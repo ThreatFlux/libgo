@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Custom errors
@@ -27,14 +27,14 @@ type DomainManager struct {
 
 // libvirtDomain is a struct to parse libvirt domain XML
 type libvirtDomain struct {
-	Name     string `xml:"name"`
-	UUID     string `xml:"uuid"`
-	Memory   struct {
+	Name   string `xml:"name"`
+	UUID   string `xml:"uuid"`
+	Memory struct {
 		Value uint64 `xml:",chardata"`
 		Unit  string `xml:"unit,attr"`
 	} `xml:"memory"`
-	VCPUs  int    `xml:"vcpu"`
-	Status string `xml:"state,attr"`
+	VCPUs   int    `xml:"vcpu"`
+	Status  string `xml:"state,attr"`
 	Devices struct {
 		Disks []struct {
 			Type   string `xml:"type,attr"`
@@ -44,10 +44,10 @@ type libvirtDomain struct {
 				Type string `xml:"type,attr"`
 			} `xml:"driver"`
 			Source struct {
-				File  string `xml:"file,attr"`
-				Pool  string `xml:"pool,attr"`
-				Dev   string `xml:"dev,attr"`
-				Bridge string `xml:"bridge,attr"`
+				File    string `xml:"file,attr"`
+				Pool    string `xml:"pool,attr"`
+				Dev     string `xml:"dev,attr"`
+				Bridge  string `xml:"bridge,attr"`
 				Network string `xml:"network,attr"`
 			} `xml:"source"`
 			Target struct {
@@ -63,9 +63,9 @@ type libvirtDomain struct {
 		Interfaces []struct {
 			Type   string `xml:"type,attr"`
 			Source struct {
-				Bridge string `xml:"bridge,attr"`
+				Bridge  string `xml:"bridge,attr"`
 				Network string `xml:"network,attr"`
-				Dev    string `xml:"dev,attr"`
+				Dev     string `xml:"dev,attr"`
 			} `xml:"source"`
 			MAC struct {
 				Address string `xml:"address,attr"`

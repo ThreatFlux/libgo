@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"github.com/wroersma/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

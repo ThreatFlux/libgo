@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/middleware/auth"
-	"github.com/wroersma/libgo/internal/middleware/logging"
-	"github.com/wroersma/libgo/internal/middleware/recovery"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/middleware/auth"
+	"github.com/threatflux/libgo/internal/middleware/logging"
+	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RouterConfig holds the configuration for the router
@@ -29,11 +29,11 @@ type RouterConfig struct {
 // DefaultRouterConfig returns the default router configuration
 func DefaultRouterConfig() RouterConfig {
 	return RouterConfig{
-		BasePath:    "/api/v1",
-		EnableCORS:  true,
+		BasePath:   "/api/v1",
+		EnableCORS: true,
 		LoggingConfig: logging.Config{
-			SkipPaths:        []string{"/health", "/metrics"},
-			MaxBodyLogSize:   4096,
+			SkipPaths:          []string{"/health", "/metrics"},
+			MaxBodyLogSize:     4096,
 			IncludeRequestBody: true,
 		},
 		RecoveryConfig: recovery.Config{

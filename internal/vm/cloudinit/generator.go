@@ -5,8 +5,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // CloudInitGenerator implements Manager for cloud-init
@@ -135,14 +135,14 @@ func (g *CloudInitGenerator) loadTemplates() error {
 			g.logger.Warn("Failed to load template",
 				logger.String("template", filename),
 				logger.Error(err))
-			
+
 			// Create a default template if file is not found
 			tmpl, err = g.createDefaultTemplate(filename)
 			if err != nil {
 				return fmt.Errorf("creating default template for %s: %w", filename, err)
 			}
 		}
-		
+
 		g.templates[filename] = tmpl
 		g.logger.Debug("Loaded cloud-init template", logger.String("name", filename))
 	}
@@ -153,7 +153,7 @@ func (g *CloudInitGenerator) loadTemplates() error {
 // createDefaultTemplate creates a default template if the template file is not found
 func (g *CloudInitGenerator) createDefaultTemplate(filename string) (*template.Template, error) {
 	var templateContent string
-	
+
 	switch filename {
 	case "user-data.tmpl":
 		templateContent = defaultUserDataTemplate
@@ -164,7 +164,7 @@ func (g *CloudInitGenerator) createDefaultTemplate(filename string) (*template.T
 	default:
 		return nil, fmt.Errorf("no default template for %s", filename)
 	}
-	
+
 	return template.New(filename).Parse(templateContent)
 }
 

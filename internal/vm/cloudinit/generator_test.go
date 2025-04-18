@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 func TestCloudInitGenerator_GenerateUserData(t *testing.T) {
@@ -33,17 +33,17 @@ users:
 
 	// Create test VM params
 	testParams := vm.VMParams{
-		Name: "test-vm",
+		Name:      "test-vm",
 		CloudInit: vm.CloudInitConfig{},
 	}
 
 	// Create CloudInitGenerator
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
-	
+
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)
 
@@ -56,7 +56,7 @@ users:
 	// Test with custom user data
 	customUserData := "#cloud-config\nhostname: custom-hostname"
 	testParams.CloudInit.UserData = customUserData
-	
+
 	userData, err = generator.GenerateUserData(testParams)
 	require.NoError(t, err)
 	assert.Equal(t, customUserData, userData)
@@ -77,17 +77,17 @@ local-hostname: {{.Hostname}}
 
 	// Create test VM params
 	testParams := vm.VMParams{
-		Name: "test-vm",
+		Name:      "test-vm",
 		CloudInit: vm.CloudInitConfig{},
 	}
 
 	// Create CloudInitGenerator
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
-	
+
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)
 
@@ -100,7 +100,7 @@ local-hostname: {{.Hostname}}
 	// Test with custom meta data
 	customMetaData := "instance-id: custom-id\nlocal-hostname: custom-hostname"
 	testParams.CloudInit.MetaData = customMetaData
-	
+
 	metaData, err = generator.GenerateMetaData(testParams)
 	require.NoError(t, err)
 	assert.Equal(t, customMetaData, metaData)
@@ -134,10 +134,10 @@ ethernets:
 	// Create CloudInitGenerator
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
-	
+
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)
 
@@ -150,7 +150,7 @@ ethernets:
 	// Test with custom network config
 	customNetworkConfig := "version: 2\nethernets:\n  ens3:\n    dhcp4: false"
 	testParams.CloudInit.NetworkConfig = customNetworkConfig
-	
+
 	networkConfig, err = generator.GenerateNetworkConfig(testParams)
 	require.NoError(t, err)
 	assert.Equal(t, customNetworkConfig, networkConfig)
@@ -160,10 +160,10 @@ func TestCloudInitGenerator_CreateDefaultTemplate(t *testing.T) {
 	// Create CloudInitGenerator
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	
+
 	generator := &CloudInitGenerator{
 		templateDir: "/non-existent",
 		logger:      mockLogger,

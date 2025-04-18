@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 func TestTemplateXMLBuilder_BuildNetworkXML(t *testing.T) {
@@ -18,63 +18,63 @@ func TestTemplateXMLBuilder_BuildNetworkXML(t *testing.T) {
 	builder := NewTemplateXMLBuilder(mockLogger)
 
 	tests := []struct {
-		name       string
+		name        string
 		networkName string
-		bridgeName string
-		cidr       string
-		dhcp       bool
-		wantErr    bool
+		bridgeName  string
+		cidr        string
+		dhcp        bool
+		wantErr     bool
 	}{
 		{
-			name:       "Valid network with DHCP",
+			name:        "Valid network with DHCP",
 			networkName: "test-network",
-			bridgeName: "virbr0",
-			cidr:       "192.168.100.0/24",
-			dhcp:       true,
-			wantErr:    false,
+			bridgeName:  "virbr0",
+			cidr:        "192.168.100.0/24",
+			dhcp:        true,
+			wantErr:     false,
 		},
 		{
-			name:       "Valid network without DHCP",
+			name:        "Valid network without DHCP",
 			networkName: "test-network",
-			bridgeName: "virbr0",
-			cidr:       "192.168.100.0/24",
-			dhcp:       false,
-			wantErr:    false,
+			bridgeName:  "virbr0",
+			cidr:        "192.168.100.0/24",
+			dhcp:        false,
+			wantErr:     false,
 		},
 		{
-			name:       "Invalid CIDR",
+			name:        "Invalid CIDR",
 			networkName: "test-network",
-			bridgeName: "virbr0",
-			cidr:       "not-a-cidr",
-			dhcp:       true,
-			wantErr:    true,
+			bridgeName:  "virbr0",
+			cidr:        "not-a-cidr",
+			dhcp:        true,
+			wantErr:     true,
 		},
 		{
-			name:       "Different subnet",
+			name:        "Different subnet",
 			networkName: "test-network",
-			bridgeName: "virbr0",
-			cidr:       "10.0.0.0/16",
-			dhcp:       true,
-			wantErr:    false,
+			bridgeName:  "virbr0",
+			cidr:        "10.0.0.0/16",
+			dhcp:        true,
+			wantErr:     false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			xml, err := builder.BuildNetworkXML(tt.networkName, tt.bridgeName, tt.cidr, tt.dhcp)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
 			}
-			
+
 			require.NoError(t, err)
 			assert.NotEmpty(t, xml)
-			
+
 			// Basic validation of XML content
 			assert.Contains(t, xml, tt.networkName)
 			assert.Contains(t, xml, tt.bridgeName)
-			
+
 			// Check DHCP section
 			if tt.dhcp {
 				assert.Contains(t, xml, "<dhcp>")
@@ -118,13 +118,13 @@ func TestCalculateDHCPRange(t *testing.T) {
 			// Parse CIDR to get IP and mask
 			ip, ipNet, err := net.ParseCIDR(tt.cidr)
 			require.NoError(t, err)
-			
+
 			// Get network address
 			networkIP := ip.Mask(ipNet.Mask)
-			
+
 			// Calculate DHCP range
 			startIP, endIP := calculateDHCPRange(networkIP, ipNet.Mask)
-			
+
 			assert.Equal(t, tt.wantStart, startIP)
 			assert.Equal(t, tt.wantEnd, endIP)
 		})

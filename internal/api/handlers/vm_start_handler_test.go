@@ -11,10 +11,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_StartVM(t *testing.T) {
@@ -40,10 +40,10 @@ func TestVMHandler_StartVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		vmName         string
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		vmName           string
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // OVFTemplateGenerator generates OVF templates
@@ -182,8 +182,8 @@ const ovfTemplateContent = `<?xml version="1.0" encoding="UTF-8"?>
       <Vendor>LibGo KVM Manager</Vendor>
       <Version>1.0</Version>
       <FullVersion>1.0.0</FullVersion>
-      <ProductUrl>https://github.com/wroersma/libgo</ProductUrl>
-      <VendorUrl>https://github.com/wroersma</VendorUrl>
+      <ProductUrl>https://github.com/threatflux/libgo</ProductUrl>
+      <VendorUrl>https://github.com/threatflux</VendorUrl>
     </ProductSection>
   </VirtualSystem>
 </Envelope>`

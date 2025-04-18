@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
 func TestOVFTemplateGenerator_GenerateOVF(t *testing.T) {
@@ -60,40 +60,40 @@ func TestOVFTemplateGenerator_GenerateOVF(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ovfContent, err := templateGenerator.GenerateOVF(tc.vmInfo, tc.diskPath, tc.diskSize)
-			
+
 			if tc.expectErr {
 				assert.Error(t, err)
 				return
 			}
-			
+
 			assert.NoError(t, err)
 			assert.NotEmpty(t, ovfContent)
-			
+
 			// Verify basic content
 			assert.Contains(t, ovfContent, tc.vmInfo.Name)
 			assert.Contains(t, ovfContent, "ovf:id")
 			assert.Contains(t, ovfContent, "ovf:capacity")
 			assert.Contains(t, ovfContent, "VirtualHardwareSection")
-			
+
 			// Check for basic structure
 			assert.Contains(t, ovfContent, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
 			assert.Contains(t, ovfContent, "<Envelope")
 			assert.Contains(t, ovfContent, "</Envelope>")
-			
+
 			// Check for disk reference
 			assert.Contains(t, ovfContent, filepath.Base(tc.diskPath))
-			
+
 			// Check for VM attributes
 			if tc.vmInfo.UUID != "" {
 				assert.Contains(t, ovfContent, tc.vmInfo.UUID)
 			}
-			
+
 			cpuCount := tc.vmInfo.CPU.Count
 			if cpuCount == 0 {
 				cpuCount = 1 // Default value
 			}
 			assert.Contains(t, ovfContent, "<rasd:VirtualQuantity>"+string('0'+cpuCount))
-			
+
 			memorySizeMB := tc.vmInfo.Memory.SizeMB
 			if memorySizeMB == 0 {
 				memorySizeMB = 1024 // Default value

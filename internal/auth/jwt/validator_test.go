@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
 func TestNewJWTValidator(t *testing.T) {
@@ -268,7 +268,7 @@ func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 	}
 
 	if validateClaims.CustomField != originalClaims.CustomField {
-		t.Errorf("Expected CustomField to be %q, got %q", 
+		t.Errorf("Expected CustomField to be %q, got %q",
 			originalClaims.CustomField, validateClaims.CustomField)
 	}
 

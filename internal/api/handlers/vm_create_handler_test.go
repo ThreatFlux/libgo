@@ -12,11 +12,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_CreateVM(t *testing.T) {
@@ -42,10 +42,10 @@ func TestVMHandler_CreateVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		requestBody    interface{}
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		requestBody      interface{}
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{
@@ -210,9 +210,9 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name       string
-		params     vm_models.VMParams
-		wantErr    bool
+		name        string
+		params      vm_models.VMParams
+		wantErr     bool
 		expectedErr error
 	}{
 		{
@@ -247,7 +247,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Format:    "qcow2",
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: ErrInvalidInput,
 		},
 		{
@@ -265,7 +265,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Format:    "qcow2",
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidCPUCount,
 		},
 		{
@@ -283,7 +283,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Format:    "qcow2",
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidMemorySize,
 		},
 		{
@@ -301,7 +301,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Format:    "qcow2",
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidDiskSize,
 		},
 		{
@@ -319,7 +319,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Format:    "invalid-format", // Invalid
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidDiskFormat,
 		},
 		{
@@ -341,7 +341,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Source: "default",
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidNetworkType,
 		},
 		{
@@ -363,7 +363,7 @@ func TestVMHandler_validateCreateParams(t *testing.T) {
 					Source: "", // Missing
 				},
 			},
-			wantErr:    true,
+			wantErr:     true,
 			expectedErr: vmservice.ErrInvalidNetworkSource,
 		},
 	}

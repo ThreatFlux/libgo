@@ -13,32 +13,32 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocks_auth "github.com/wroersma/libgo/test/mocks/auth"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
+	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
 )
 
 func TestAuthHandler_Login(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
 	mockLogger := logger.NewMockLogger(ctrl)
-	
+
 	// Create handler
 	tokenExpiry := 15 * time.Minute
 	handler := NewAuthHandler(mockUserService, mockJWTGenerator, mockLogger, tokenExpiry)
-	
+
 	// Create router
 	router := gin.New()
 	router.POST("/login", handler.Login)
-	
+
 	// Test data
 	validUser := &user_models.User{
 		ID:       "user123",
@@ -47,9 +47,9 @@ func TestAuthHandler_Login(t *testing.T) {
 		Email:    "test@example.com",
 		Active:   true,
 	}
-	
+
 	validToken := "valid.jwt.token"
-	
+
 	// Test cases
 	tests := []struct {
 		name           string
@@ -68,11 +68,11 @@ func TestAuthHandler_Login(t *testing.T) {
 				mockUserService.EXPECT().
 					Authenticate(gomock.Any(), "testuser", "password123").
 					Return(validUser, nil)
-				
+
 				mockJWTGenerator.EXPECT().
 					GenerateWithExpiration(validUser, tokenExpiry).
 					Return(validToken, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -81,7 +81,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp LoginResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, validToken, resp.Token)
 				assert.NotEmpty(t, resp.ExpiresAt)
 				assert.Equal(t, validUser.ID, resp.User.ID)
@@ -102,7 +102,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusBadRequest, resp.Status)
 				assert.Equal(t, "INVALID_INPUT", resp.Code)
 			},
@@ -121,7 +121,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusBadRequest, resp.Status)
 				assert.Equal(t, "INVALID_INPUT", resp.Code)
 			},
@@ -136,7 +136,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				mockUserService.EXPECT().
 					Authenticate(gomock.Any(), "testuser", "wrongpassword").
 					Return(nil, user.ErrInvalidCredentials)
-				
+
 				mockLogger.EXPECT().
 					Warn(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -145,7 +145,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusUnauthorized, resp.Status)
 				assert.Equal(t, "UNAUTHORIZED", resp.Code)
 			},
@@ -160,7 +160,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				mockUserService.EXPECT().
 					Authenticate(gomock.Any(), "inactive", "password123").
 					Return(nil, user.ErrUserInactive)
-				
+
 				mockLogger.EXPECT().
 					Warn(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -169,7 +169,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusForbidden, resp.Status)
 				assert.Equal(t, "FORBIDDEN", resp.Code)
 			},
@@ -184,11 +184,11 @@ func TestAuthHandler_Login(t *testing.T) {
 				mockUserService.EXPECT().
 					Authenticate(gomock.Any(), "testuser", "password123").
 					Return(validUser, nil)
-				
+
 				mockJWTGenerator.EXPECT().
 					GenerateWithExpiration(validUser, tokenExpiry).
 					Return("", errors.New("token generation error"))
-				
+
 				mockLogger.EXPECT().
 					Error(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -197,33 +197,33 @@ func TestAuthHandler_Login(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusInternalServerError, resp.Status)
 				assert.Equal(t, "INTERNAL_SERVER_ERROR", resp.Code)
 			},
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks
 			tt.setupMocks()
-			
+
 			// Create request
 			body, _ := json.Marshal(tt.requestBody)
 			req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			// Create response recorder
 			resp := httptest.NewRecorder()
-			
+
 			// Serve the request
 			router.ServeHTTP(resp, req)
-			
+
 			// Check status code
 			assert.Equal(t, tt.expectedStatus, resp.Code)
-			
+
 			// Check response
 			tt.checkResponse(t, resp)
 		})
@@ -233,22 +233,22 @@ func TestAuthHandler_Login(t *testing.T) {
 func TestAuthHandler_Refresh(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
 	mockLogger := logger.NewMockLogger(ctrl)
-	
+
 	// Create handler
 	tokenExpiry := 15 * time.Minute
 	handler := NewAuthHandler(mockUserService, mockJWTGenerator, mockLogger, tokenExpiry)
-	
+
 	// Create router
 	router := gin.New()
 	router.POST("/refresh", handler.Refresh)
-	
+
 	// Test data
 	validToken := "valid.jwt.token"
 	newToken := "new.jwt.token"
@@ -264,7 +264,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 		Email:    "test@example.com",
 		Active:   true,
 	}
-	
+
 	// Test cases
 	tests := []struct {
 		name           string
@@ -282,15 +282,15 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				mockJWTGenerator.EXPECT().
 					Parse(validToken).
 					Return(validClaims, nil)
-				
+
 				mockUserService.EXPECT().
 					GetByID(gomock.Any(), validClaims.UserID).
 					Return(validUser, nil)
-				
+
 				mockJWTGenerator.EXPECT().
 					GenerateWithExpiration(validUser, tokenExpiry).
 					Return(newToken, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -299,22 +299,22 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				var resp LoginResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, newToken, resp.Token)
 				assert.NotEmpty(t, resp.ExpiresAt)
 				assert.Equal(t, validUser.ID, resp.User.ID)
 			},
 		},
 		{
-			name: "Missing token",
-			requestBody: map[string]interface{}{},
-			setupMocks: func() {},
+			name:           "Missing token",
+			requestBody:    map[string]interface{}{},
+			setupMocks:     func() {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, response *httptest.ResponseRecorder) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusBadRequest, resp.Status)
 				assert.Equal(t, "INVALID_INPUT", resp.Code)
 			},
@@ -328,7 +328,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				mockJWTGenerator.EXPECT().
 					Parse("invalid.token").
 					Return(nil, jwt.ErrInvalidToken)
-				
+
 				mockLogger.EXPECT().
 					Warn(gomock.Any(), gomock.Any())
 			},
@@ -337,7 +337,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusUnauthorized, resp.Status)
 				assert.Equal(t, "UNAUTHORIZED", resp.Code)
 			},
@@ -351,7 +351,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				mockJWTGenerator.EXPECT().
 					Parse("expired.token").
 					Return(nil, jwt.ErrTokenExpired)
-				
+
 				mockLogger.EXPECT().
 					Warn(gomock.Any(), gomock.Any())
 			},
@@ -360,7 +360,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusUnauthorized, resp.Status)
 				assert.Equal(t, "UNAUTHORIZED", resp.Code)
 			},
@@ -374,11 +374,11 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				mockJWTGenerator.EXPECT().
 					Parse(validToken).
 					Return(validClaims, nil)
-				
+
 				mockUserService.EXPECT().
 					GetByID(gomock.Any(), validClaims.UserID).
 					Return(nil, user.ErrUserNotFound)
-				
+
 				mockLogger.EXPECT().
 					Warn(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -387,7 +387,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusInternalServerError, resp.Status)
 			},
 		},
@@ -400,15 +400,15 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				mockJWTGenerator.EXPECT().
 					Parse(validToken).
 					Return(validClaims, nil)
-				
+
 				mockUserService.EXPECT().
 					GetByID(gomock.Any(), validClaims.UserID).
 					Return(validUser, nil)
-				
+
 				mockJWTGenerator.EXPECT().
 					GenerateWithExpiration(validUser, tokenExpiry).
 					Return("", errors.New("token generation error"))
-				
+
 				mockLogger.EXPECT().
 					Error(gomock.Any(), gomock.Any(), gomock.Any())
 			},
@@ -417,33 +417,33 @@ func TestAuthHandler_Refresh(t *testing.T) {
 				var resp ErrorResponse
 				err := json.Unmarshal(response.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				
+
 				assert.Equal(t, http.StatusInternalServerError, resp.Status)
 				assert.Equal(t, "INTERNAL_SERVER_ERROR", resp.Code)
 			},
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks
 			tt.setupMocks()
-			
+
 			// Create request
 			body, _ := json.Marshal(tt.requestBody)
 			req, _ := http.NewRequest("POST", "/refresh", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			// Create response recorder
 			resp := httptest.NewRecorder()
-			
+
 			// Serve the request
 			router.ServeHTTP(resp, req)
-			
+
 			// Check status code
 			assert.Equal(t, tt.expectedStatus, resp.Code)
-			
+
 			// Check response
 			tt.checkResponse(t, resp)
 		})

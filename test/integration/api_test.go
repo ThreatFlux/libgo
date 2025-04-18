@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/wroersma/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/config"
 )
 
 // TestLogin tests the login API endpoint

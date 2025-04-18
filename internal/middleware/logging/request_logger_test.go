@@ -11,77 +11,77 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 func TestRequestLogger(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
-	
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	mockLogger := logger.NewMockLogger(ctrl)
 	mockLoggerWithFields := logger.NewMockLogger(ctrl)
-	
+
 	// Expect the logger to be called with fields
 	mockLogger.EXPECT().
 		WithFields(gomock.Any()).
 		Return(mockLoggerWithFields).
 		AnyTimes()
-	
+
 	// Set up different expectations for different status codes
 	mockLoggerWithFields.EXPECT().
 		WithFields(gomock.Any()).
 		Return(mockLoggerWithFields).
 		AnyTimes()
-	
+
 	mockLoggerWithFields.EXPECT().
 		Info(gomock.Eq("Request handled")).
 		AnyTimes()
-	
+
 	mockLoggerWithFields.EXPECT().
 		Warn(gomock.Eq("Client error")).
 		AnyTimes()
-	
+
 	mockLoggerWithFields.EXPECT().
 		Error(gomock.Eq("Server error")).
 		AnyTimes()
-	
+
 	// Create router with middleware
 	router := gin.New()
-	
+
 	config := Config{
 		SkipPaths:          []string{"/health", "/metrics"},
 		MaxBodyLogSize:     1024,
 		IncludeRequestBody: true,
 	}
-	
+
 	router.Use(RequestLogger(mockLogger, config))
-	
+
 	// Add test routes
 	router.GET("/success", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	})
-	
+
 	router.GET("/client-error", func(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Bad request"})
 	})
-	
+
 	router.GET("/server-error", func(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Server error"})
 	})
-	
+
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "up"})
 	})
-	
+
 	router.POST("/with-body", func(c *gin.Context) {
 		var body map[string]interface{}
 		_ = c.BindJSON(&body)
 		c.JSON(http.StatusOK, body)
 	})
-	
+
 	// Test cases
 	tests := []struct {
 		name           string
@@ -132,7 +132,7 @@ func TestRequestLogger(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -144,21 +144,21 @@ func TestRequestLogger(t *testing.T) {
 			} else {
 				req, _ = http.NewRequest(tt.method, tt.path, nil)
 			}
-			
+
 			// Add request headers
 			for k, v := range tt.requestHeaders {
 				req.Header.Set(k, v)
 			}
-			
+
 			// Create recorder
 			rec := httptest.NewRecorder()
-			
+
 			// Serve the request
 			router.ServeHTTP(rec, req)
-			
+
 			// Check status code
 			assert.Equal(t, tt.expectStatus, rec.Code)
-			
+
 			// Check for request ID header in response
 			if tt.requestHeaders["X-Request-ID"] != "" {
 				assert.Equal(t, tt.requestHeaders["X-Request-ID"], rec.Header().Get("X-Request-ID"))
@@ -166,18 +166,18 @@ func TestRequestLogger(t *testing.T) {
 				// Should have generated a UUID
 				assert.NotEmpty(t, rec.Header().Get("X-Request-ID"))
 			}
-			
+
 			// For requests with body, check if body is preserved
 			if tt.body != "" {
 				var requestBody map[string]interface{}
 				var responseBody map[string]interface{}
-				
+
 				err := json.Unmarshal([]byte(tt.body), &requestBody)
 				assert.NoError(t, err)
-				
+
 				err = json.Unmarshal(rec.Body.Bytes(), &responseBody)
 				assert.NoError(t, err)
-				
+
 				// Response should echo the request for this test endpoint
 				assert.Equal(t, requestBody, responseBody)
 			}
@@ -223,12 +223,12 @@ func TestBodyLogWriter(t *testing.T) {
 			expectedBytes: 4,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a buffer for the original writer
 			originalBuf := &bytes.Buffer{}
-			
+
 			// Create the body log writer
 			bodyBuf := &bytes.Buffer{}
 			blw := &bodyLogWriter{
@@ -236,10 +236,10 @@ func TestBodyLogWriter(t *testing.T) {
 				bodyBuffer:     bodyBuf,
 				maxSize:        tc.maxSize,
 			}
-			
+
 			// Write to the body log writer
 			n, err := blw.Write([]byte(tc.input))
-			
+
 			// Check results
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedBytes, n)
