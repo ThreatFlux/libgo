@@ -1,0 +1,47 @@
+<domain type='kvm'>
+  <name>{{.Name}}</name>
+  <uuid>{{.UUID}}</uuid>
+  <memory unit='KiB'>{{.Memory.KiB}}</memory>
+  <vcpu>{{.CPU.Count}}</vcpu>
+  <os>
+    <type arch='x86_64'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <devices>
+    {{range .Disks}}
+    <disk type='{{.Type}}' device='disk'>
+      <driver name='qemu' type='{{.Format}}'/>
+      <source {{.SourceAttr}}='{{.Source}}'/>
+      <target dev='{{.Device}}' bus='{{.Bus}}'/>
+      {{if .ReadOnly}}<readonly/>{{end}}
+      {{if .Shareable}}<shareable/>{{end}}
+    </disk>
+    {{end}}
+    {{if .CloudInitISO}}
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{.CloudInitISO}}'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+    </disk>
+    {{end}}
+    {{range .Networks}}
+    <interface type='{{.Type}}'>
+      <source {{.SourceAttr}}='{{.Source}}'/>
+      {{if .MacAddress}}<mac address='{{.MacAddress}}'/>{{end}}
+      <model type='{{.Model}}'/>
+    </interface>
+    {{end}}
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'/>
+    <video>
+      <model type='cirrus'/>
+    </video>
+  </devices>
+</domain>

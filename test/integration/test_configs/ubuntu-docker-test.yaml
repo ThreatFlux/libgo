@@ -1,0 +1,82 @@
+test:
+  name: "Ubuntu Docker Deployment"
+  description: "End-to-end test of creating an Ubuntu VM, installing Docker with cloud-init, deploying Nginx, and exporting the VM"
+  timeout: "90m"  # Allow plenty of time for the test
+
+vm:
+  name: "ubuntu-docker-test"
+  template: "ubuntu-2404"
+  description: "Ubuntu 24.04 with Docker and Nginx for testing"
+
+  # Override template settings if needed
+  cpu:
+    count: 2
+  memory:
+    sizeBytes: 2147483648  # 2GB
+  disk:
+    sizeBytes: 10737418240  # 10GB
+    format: "qcow2"
+    storagePool: "default"
+    bus: "virtio"
+  network:
+    type: "network"
+    source: "default"
+    model: "virtio"
+
+  # Linux provisioning using cloud-init
+  provisioning:
+    method: "cloudinit"
+    scripts:
+      - name: "Docker and Nginx Installation"
+        content: |
+          #cloud-config
+          hostname: ubuntu-docker-test
+          users:
+            - name: ubuntu
+              groups: sudo
+              shell: /bin/bash
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+          packages:
+            - qemu-guest-agent
+            - ca-certificates
+            - curl
+            - gnupg
+          package_update: true
+          package_upgrade: true
+
+          # Docker installation
+          runcmd:
+            # Install Docker per official docs
+            - systemctl enable qemu-guest-agent
+            - systemctl start qemu-guest-agent
+            - install -m 0755 -d /etc/apt/keyrings
+            - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            - chmod a+r /etc/apt/keyrings/docker.gpg
+            - echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+            - apt-get update
+            - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            - systemctl enable docker
+            - systemctl start docker
+
+            # Deploy Nginx container
+            - docker run -d --name nginx -p 80:80 --restart always nginx
+
+            # Create a test page
+            - mkdir -p /tmp/nginx
+            - echo "<html><body><h1>Docker Nginx Test Successful!</h1></body></html>" > /tmp/nginx/index.html
+            - docker cp /tmp/nginx/index.html nginx:/usr/share/nginx/html/index.html
+
+verification:
+  services:
+    - name: "Nginx"
+      port: 80
+      protocol: "http"
+      expectedContent: "Docker Nginx Test Successful!"
+      timeout: 60  # Seconds to wait for provisioning
+
+export:
+  format: "qcow2"
+  options:
+    compress: "true"
+    keep_export: "true"
+    use_sudo: "true"

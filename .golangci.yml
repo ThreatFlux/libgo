@@ -1,0 +1,82 @@
+linters:
+  enable:
+    - errcheck
+    - gofmt
+    - goimports
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - dogsled
+    - dupl
+    - exportloopref
+    - gocognit
+    - goconst
+    - gocritic
+    - godot
+    - godox
+    - gocyclo
+    - nakedret
+    - prealloc
+    - unconvert
+    - whitespace
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  gocyclo:
+    min-complexity: 15
+
+  gocognit:
+    min-complexity: 20
+
+  govet:
+    check-shadowing: true
+    enable-all: true
+
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - disableStutteringCheck
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  staticcheck:
+    go: "1.24"
+
+  nakedret:
+    max-func-lines: 30
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - test/mocks
+  skip-files:
+    - ".*\\.generated\\.go$"
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - dupl
+        - gosec
+        - gocognit
+
+  max-issues-per-linter: 0
+  max-same-issues: 0

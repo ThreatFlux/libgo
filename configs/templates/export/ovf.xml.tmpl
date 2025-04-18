@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Envelope xmlns="http://schemas.dmtf.org/ovf/envelope/1" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" xmlns:vssd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_VirtualSystemSettingData" xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData">
+  <References>
+    <File ovf:id="file1" ovf:href="{{ .DiskFileName }}" ovf:size="{{ .DiskSizeBytes }}"/>
+  </References>
+  <DiskSection>
+    <Info>List of the virtual disks used in the package</Info>
+    <Disk ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:capacity="{{ .DiskCapacityBytes }}" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+  </DiskSection>
+  <NetworkSection>
+    <Info>List of logical networks used in the package</Info>
+    <Network ovf:name="vm-network">
+      <Description>The VM Network network</Description>
+    </Network>
+  </NetworkSection>
+  <VirtualSystem ovf:id="{{ .VM.Name }}">
+    <Info>A virtual machine</Info>
+    <Name>{{ .VM.Name }}</Name>
+    <OperatingSystemSection ovf:id="1">
+      <Info>The operating system installed</Info>
+      <Description>Linux</Description>
+    </OperatingSystemSection>
+    <VirtualHardwareSection>
+      <Info>Virtual hardware requirements</Info>
+      <System>
+        <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>
+        <vssd:InstanceID>0</vssd:InstanceID>
+        <vssd:VirtualSystemIdentifier>{{ .VM.Name }}</vssd:VirtualSystemIdentifier>
+        <vssd:VirtualSystemType>vmx-13</vssd:VirtualSystemType>
+      </System>
+      <Item>
+        <rasd:ElementName>{{ .VM.CPU.Count }} virtual CPUs</rasd:ElementName>
+        <rasd:InstanceID>1</rasd:InstanceID>
+        <rasd:ResourceType>3</rasd:ResourceType>
+        <rasd:VirtualQuantity>{{ .VM.CPU.Count }}</rasd:VirtualQuantity>
+      </Item>
+      <Item>
+        <rasd:ElementName>{{ .VM.Memory.SizeBytes }} MB of memory</rasd:ElementName>
+        <rasd:InstanceID>2</rasd:InstanceID>
+        <rasd:ResourceType>4</rasd:ResourceType>
+        <rasd:VirtualQuantity>{{ .MemoryMB }}</rasd:VirtualQuantity>
+      </Item>
+      <Item>
+        <rasd:ElementName>SCSI Controller</rasd:ElementName>
+        <rasd:InstanceID>3</rasd:InstanceID>
+        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+        <rasd:ResourceType>6</rasd:ResourceType>
+      </Item>
+      <Item>
+        <rasd:ElementName>IDE Controller</rasd:ElementName>
+        <rasd:InstanceID>4</rasd:InstanceID>
+        <rasd:ResourceType>5</rasd:ResourceType>
+      </Item>
+      <Item>
+        <rasd:ElementName>Hard Disk 1</rasd:ElementName>
+        <rasd:HostResource>ovf:/disk/vmdisk1</rasd:HostResource>
+        <rasd:InstanceID>5</rasd:InstanceID>
+        <rasd:Parent>3</rasd:Parent>
+        <rasd:ResourceType>17</rasd:ResourceType>
+      </Item>
+      <Item>
+        <rasd:ElementName>Network Adapter 1</rasd:ElementName>
+        <rasd:InstanceID>6</rasd:InstanceID>
+        <rasd:ResourceSubType>vmxnet3</rasd:ResourceSubType>
+        <rasd:ResourceType>10</rasd:ResourceType>
+        <rasd:Connection>vm-network</rasd:Connection>
+      </Item>
+      <Item>
+        <rasd:ElementName>Video Card</rasd:ElementName>
+        <rasd:InstanceID>7</rasd:InstanceID>
+        <rasd:ResourceType>24</rasd:ResourceType>
+      </Item>
+    </VirtualHardwareSection>
+    {{- if .VM.Description }}
+    <AnnotationSection>
+      <Info>VM Description</Info>
+      <Annotation>{{ .VM.Description }}</Annotation>
+    </AnnotationSection>
+    {{- end }}
+  </VirtualSystem>
+</Envelope>

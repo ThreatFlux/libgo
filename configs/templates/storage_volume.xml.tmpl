@@ -1,0 +1,13 @@
+<volume>
+  <n>{{.Name}}</n>
+  <allocation>0</allocation>
+  <capacity unit="bytes">{{.CapacityBytes}}</capacity>
+  <target>
+    <format type="{{.Format}}"/>
+    <permissions>
+      <mode>0644</mode>
+      <owner>0</owner>
+      <group>0</group>
+    </permissions>
+  </target>
+</volume>

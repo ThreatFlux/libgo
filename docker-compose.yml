@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: dev
+        COMMIT: local
+        BUILD_DATE: ${BUILD_DATE}
+    image: libgo-server:dev
+    container_name: libgo-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./configs:/etc/libgo
+      - /var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock
+    environment:
+      - CONFIG_PATH=/etc/libgo/config.yaml
+      - LOG_LEVEL=debug
+    # Using host libvirt instead
+    # depends_on:
+    #   - libvirt
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Using host libvirt instead of container
+  # libvirt:
+  #   image: kubevirt/libvirt:v9.0.0
+  #   container_name: libgo-libvirt
+  #   privileged: true
+  #   volumes:
+  #     - /lib/modules:/lib/modules:ro
+  #     - libvirt-pool:/var/lib/libvirt/images
+  #     - libvirt-run:/var/run/libvirt
+  #   restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: libgo-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: unless-stopped
+
+volumes:
+  # libvirt-pool: # Not needed when using host libvirt
+  # libvirt-run: # Not needed when using host libvirt
+  prometheus-data:

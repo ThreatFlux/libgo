@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Builds
+bin/
+dist/
+coverage.*
+
+# Tests
+test/
+*.test
+*.out
+
+# Temporary files
+tmp/
+*.tmp
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Local Development files
+.env*
+*.env
+*.local
+
+# Misc
+.DS_Store
+Makefile
+*.log

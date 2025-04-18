@@ -1,0 +1,12 @@
+<network>
+  <name>{{.Name}}</name>
+  <forward mode='nat'/>
+  <bridge name='{{.BridgeName}}' stp='on' delay='0'/>
+  <ip address='{{.CIDR}}' netmask='255.255.255.0'>
+    {{if .DHCP}}
+    <dhcp>
+      <range start='{{.DHCP.Start}}' end='{{.DHCP.End}}'/>
+    </dhcp>
+    {{end}}
+  </ip>
+</network>

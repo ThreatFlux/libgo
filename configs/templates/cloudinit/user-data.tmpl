@@ -1,0 +1,22 @@
+#cloud-config
+hostname: {{.VM.Name}}
+users:
+  - name: cloud-user
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      {{- if .VM.CloudInit.SSHKeys }}
+      {{- range .VM.CloudInit.SSHKeys }}
+      - {{.}}
+      {{- end }}
+      {{- end }}
+packages:
+  - qemu-guest-agent
+  - cloud-utils
+  - cloud-init
+package_update: true
+package_upgrade: true
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent

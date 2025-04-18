@@ -1,0 +1,27 @@
+{
+  "name": "windows-server-2022",
+  "description": "Windows Server 2022 with VirtIO drivers and IIS pre-installed",
+  "version": "1.0.0",
+  "base_image": "/home/vtriple/libgo-storage/windows-server-2022-base.qcow2",
+  "os_type": "windows",
+  "os_variant": "win2k22",
+  "default_cpu_count": 4,
+  "default_memory_size": 4294967296,
+  "default_disk_size": 42949672960,
+  "network_model": "virtio",
+  "disk_bus": "virtio",
+  "display_type": "vnc",
+  "unattended_install": true,
+  "metadata": {
+    "admin_user": "Administrator",
+    "admin_password": "P@ssw0rd",
+    "services": [
+      {
+        "name": "IIS",
+        "description": "Internet Information Services",
+        "port": 80,
+        "protocol": "http"
+      }
+    ]
+  }
+}

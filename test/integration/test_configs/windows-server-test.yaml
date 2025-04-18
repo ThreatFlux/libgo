@@ -1,0 +1,140 @@
+test:
+  name: "Windows Server IIS Deployment"
+  description: "End-to-end test of creating a Windows Server VM, installing IIS, and exporting the VM"
+  timeout: "120m"  # Windows installations typically need more time
+
+vm:
+  name: "windows-server-test"
+  template: "windows-server-2022"  # This template would need to be created
+  description: "Windows Server with IIS for testing"
+
+  # Windows requires more resources
+  cpu:
+    count: 4
+  memory:
+    sizeBytes: 4294967296  # 4GB
+  disk:
+    sizeBytes: 42949672960  # 40GB
+    format: "qcow2"
+    storagePool: "default"
+    bus: "virtio"  # May need to adjust based on Windows driver support
+  network:
+    type: "network"
+    source: "default"
+    model: "virtio"  # May need to adjust based on Windows driver support
+
+  # Windows-specific provisioning
+  provisioning:
+    method: "unattended"
+    unattendedXml: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <unattend xmlns="urn:schemas-microsoft-com:unattend">
+        <settings pass="windowsPE">
+          <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <UserData>
+              <AcceptEula>true</AcceptEula>
+              <ProductKey>
+                <Key>NPPR9-FWDCX-D2C8J-H872K-2YT43</Key>  <!-- Example key, would need a valid one -->
+                <WillShowUI>Never</WillShowUI>
+              </ProductKey>
+            </UserData>
+            <ImageInstall>
+              <OSImage>
+                <InstallFrom>
+                  <MetaData>
+                    <Key>/IMAGE/NAME</Key>
+                    <Value>Windows Server 2022 SERVERSTANDARD</Value>
+                  </MetaData>
+                </InstallFrom>
+                <InstallTo>
+                  <DiskID>0</DiskID>
+                  <PartitionID>1</PartitionID>
+                </InstallTo>
+              </OSImage>
+            </ImageInstall>
+            <DiskConfiguration>
+              <Disk wcm:action="add">
+                <CreatePartitions>
+                  <CreatePartition wcm:action="add">
+                    <Order>1</Order>
+                    <Type>Primary</Type>
+                    <Extend>true</Extend>
+                  </CreatePartition>
+                </CreatePartitions>
+                <ModifyPartitions>
+                  <ModifyPartition wcm:action="add">
+                    <Order>1</Order>
+                    <PartitionID>1</PartitionID>
+                    <Format>NTFS</Format>
+                    <Label>WindowsSystem</Label>
+                  </ModifyPartition>
+                </ModifyPartitions>
+                <DiskID>0</DiskID>
+                <WillWipeDisk>true</WillWipeDisk>
+              </Disk>
+            </DiskConfiguration>
+          </component>
+        </settings>
+        <settings pass="specialize">
+          <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <ComputerName>winserver-test</ComputerName>
+            <RegisteredOwner>Test User</RegisteredOwner>
+            <RegisteredOrganization>Integration Test</RegisteredOrganization>
+          </component>
+          <component name="Microsoft-Windows-ServerManager-SvrMgrNc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
+          </component>
+          <component name="Microsoft-Windows-IE-ESC" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <IEHardenAdmin>false</IEHardenAdmin>
+            <IEHardenUser>false</IEHardenUser>
+          </component>
+        </settings>
+        <settings pass="oobeSystem">
+          <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <UserAccounts>
+              <AdministratorPassword>
+                <Value>P@ssw0rd</Value>
+                <PlainText>true</PlainText>
+              </AdministratorPassword>
+            </UserAccounts>
+            <AutoLogon>
+              <Password>
+                <Value>P@ssw0rd</Value>
+                <PlainText>true</PlainText>
+              </Password>
+              <Username>Administrator</Username>
+              <Enabled>true</Enabled>
+              <LogonCount>5</LogonCount>
+            </AutoLogon>
+            <FirstLogonCommands>
+              <SynchronousCommand wcm:action="add">
+                <CommandLine>cmd.exe /c powershell -Command "Install-WindowsFeature -name Web-Server -IncludeManagementTools"</CommandLine>
+                <Description>Install IIS</Description>
+                <Order>1</Order>
+                <RequiresUserInput>false</RequiresUserInput>
+              </SynchronousCommand>
+              <SynchronousCommand wcm:action="add">
+                <CommandLine>cmd.exe /c powershell -Command "Set-Content -Path 'C:\inetpub\wwwroot\index.html' -Value '&lt;html&gt;&lt;body&gt;&lt;h1&gt;Windows IIS Test Successful!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;'"</CommandLine>
+                <Description>Create test page</Description>
+                <Order>2</Order>
+                <RequiresUserInput>false</RequiresUserInput>
+              </SynchronousCommand>
+            </FirstLogonCommands>
+          </component>
+        </settings>
+      </unattend>
+
+verification:
+  services:
+    - name: "IIS"
+      port: 80
+      protocol: "http"
+      expectedContent: "Windows IIS Test Successful!"
+      timeout: 300  # Windows needs more time for setup
+
+export:
+  format: "qcow2"  # Could also consider VHDX for Windows
+  options:
+    compress: "true"
+    keep_export: "true"
+    use_sudo: "true"
