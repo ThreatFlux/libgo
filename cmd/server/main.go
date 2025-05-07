@@ -385,6 +385,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		router,
 		log,
 		components.JWTMiddleware,
+		components.RoleMiddleware,
 		vmHandler,
 		exportHandler,
 		authHandler,
@@ -398,20 +399,10 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 	log.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
 
 	// Convert DefaultUser config structs to the format expected by InitializeDefaultUsers
-	userConfigs := make([]struct {
-		Username string
-		Password string
-		Email    string
-		Roles    []string
-	}, len(defaultUsers))
+	userConfigs := make([]user.DefaultUserConfig, len(defaultUsers))
 
 	for i, u := range defaultUsers {
-		userConfigs[i] = struct {
-			Username string
-			Password string
-			Email    string
-			Roles    []string
-		}{
+		userConfigs[i] = user.DefaultUserConfig{
 			Username: u.Username,
 			Password: u.Password,
 			Email:    u.Email,

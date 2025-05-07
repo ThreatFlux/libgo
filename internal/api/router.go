@@ -42,6 +42,8 @@ func DefaultRouterConfig() RouterConfig {
 	}
 }
 
+// vmManagerWebSocketAdapter is defined in router_adapter.go
+
 // SetupRouter configures the API router with standard middleware and routes
 func SetupRouter(
 	engine *gin.Engine,
@@ -49,6 +51,7 @@ func SetupRouter(
 	config RouterConfig,
 	authMiddleware *auth.JWTMiddleware,
 	roleMiddleware *auth.RoleMiddleware,
+	vmManager interface{}, // VM manager interface for WebSocket monitoring
 ) *gin.Engine {
 	// Apply middleware to all routes
 	engine.Use(recovery.Handler(log, config.RecoveryConfig))
@@ -77,6 +80,8 @@ func SetupRouter(
 	admin := protected.Group("/admin")
 	admin.Use(roleMiddleware.RequireRole("admin"))
 	setupAdminRoutes(admin)
+
+	// Setup WebSocket routes in api.ConfigureRoutes
 
 	// No route handler
 	engine.NoRoute(noRouteHandler)
