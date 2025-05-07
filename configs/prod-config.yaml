@@ -1,0 +1,54 @@
+server:
+  host: "localhost"
+  port: 8080
+  readTimeout: 30s
+  writeTimeout: 30s
+
+database:
+  driver: "postgres"
+  dsn: "host=localhost port=5432 user=libgo password=libgo dbname=libgo sslmode=disable"
+  maxOpenConns: 100
+  maxIdleConns: 10
+  connMaxLifetime: 1h
+  autoMigrate: true
+
+logging:
+  level: "info"
+  format: "json"
+  outputPaths: ["stdout"]
+  errorOutputPaths: ["stderr"]
+
+libvirt:
+  uri: "qemu:///system"  # Real libvirt connection
+  poolName: "default"
+  poolPath: "/home/vtriple/libgo-storage"
+  networkName: "default"
+  connectionTimeout: 30s
+  maxConnections: 5
+
+storage:
+  defaultPool: "default"
+  poolPath: "/home/vtriple/libgo-storage"
+
+auth:
+  jwtSecretKey: "test-secret-key-for-jwt-token-generation"
+  tokenExpiration: 15m
+  refreshTokenExpiration: 24h
+  defaultUsers:
+    - username: "admin"
+      password: "admin"
+      email: "admin@example.com"
+      roles: ["admin"]
+
+export:
+  outputDir: "/home/vtriple/libgo-exports"
+  tempDir: "/home/vtriple/libgo-temp"
+  defaultFormat: "qcow2"
+  retention: 24h
+  formats:
+    - "qcow2"
+    - "vmdk"
+    - "vdi"
+    - "ova"
+
+templatesPath: "configs/templates"

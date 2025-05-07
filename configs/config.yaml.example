@@ -1,0 +1,127 @@
+# KVM VM Management API Configuration
+
+# Server settings
+server:
+  # Hostname or IP address to listen on
+  host: "0.0.0.0"
+  # Port to listen on
+  port: 8080
+  # Read timeout in seconds
+  readTimeout: 30s
+  # Write timeout in seconds
+  writeTimeout: 30s
+  # Maximum header size in bytes
+  maxHeaderBytes: 1048576
+  # TLS configuration
+  tls:
+    # Enable TLS
+    enabled: false
+    # Path to TLS certificate file
+    certFile: "/etc/libgo/cert.pem"
+    # Path to TLS key file
+    keyFile: "/etc/libgo/key.pem"
+    # Minimum TLS version (TLS1.2, TLS1.3)
+    minVersion: "TLS1.2"
+    # Maximum TLS version
+    maxVersion: "TLS1.3"
+    # Cipher suites, comma-separated
+    cipherSuites: ""
+
+# Libvirt connection settings
+libvirt:
+  # Libvirt connection URI
+  uri: "qemu:///system"
+  # Connection timeout in seconds
+  connectionTimeout: 10s
+  # Maximum number of connections to maintain in the pool
+  maxConnections: 5
+  # Default storage pool name
+  poolName: "default"
+  # Default network name
+  networkName: "default"
+
+# Authentication settings
+auth:
+  # Enable authentication
+  enabled: true
+  # JWT secret key (should be changed in production)
+  jwtSecretKey: "change-me-in-production"
+  # JWT issuer
+  issuer: "libgo-api"
+  # JWT audience
+  audience: "libgo-clients"
+  # Token expiration time
+  tokenExpiration: 15m
+  # JWT signing method (HS256, HS384, HS512, RS256, etc.)
+  signingMethod: "HS256"
+
+# Logging settings
+logging:
+  # Log level (debug, info, warn, error, dpanic, panic, fatal)
+  level: "info"
+  # Log format (json, console)
+  format: "json"
+  # Path to log file (empty for stdout)
+  filePath: ""
+  # Maximum size of log file before rotation (MB)
+  maxSize: 100
+  # Maximum number of old log files to retain
+  maxBackups: 5
+  # Maximum number of days to retain old log files
+  maxAge: 30
+  # Compress rotated log files
+  compress: true
+
+# Storage settings
+storage:
+  # Default storage pool name
+  defaultPool: "default"
+  # Path to storage pool
+  poolPath: "/var/lib/libvirt/images"
+  # VM templates
+  templates:
+    # Template name: path to image
+    ubuntu: "/var/lib/libvirt/images/ubuntu-22.04-minimal.qcow2"
+    debian: "/var/lib/libvirt/images/debian-11-minimal.qcow2"
+    centos: "/var/lib/libvirt/images/centos-stream-9-minimal.qcow2"
+
+# Export settings
+export:
+  # Directory for exported VM images
+  outputDir: "/var/lib/libvirt/exports"
+  # Temporary directory for export operations
+  tempDir: "/tmp/libgo-exports"
+  # Default export format (qcow2, vmdk, vdi, ova, raw)
+  defaultFormat: "qcow2"
+  # File retention period
+  retention: 168h
+
+# Feature flags
+features:
+  # Enable cloud-init integration
+  cloudInit: true
+  # Enable VM export functionality
+  export: true
+  # Enable Prometheus metrics
+  metrics: true
+  # Enable role-based access control
+  rbacEnabled: true
+  # Automatically clean up storage after VM deletion
+  storageCleanup: true
+  # Enable WebSocket integration for real-time VM monitoring and console access
+  websocket: true
+
+# WebSocket settings
+websocket:
+  # Enable WebSocket functionality (real-time VM monitoring and console access)
+  enabled: true
+  # Ping interval for keeping connections alive (seconds)
+  pingInterval: 30
+  # Maximum message size in bytes
+  maxMessageSize: 8192
+  # Write wait timeout in seconds
+  writeWait: 10s
+  # Read wait timeout in seconds (pong wait)
+  pongWait: 60s
+  # VM metrics sampling interval in seconds
+  metricsInterval: 5s

@@ -53,3 +53,10 @@ Thumbs.db
 
 # Generated files
 test/mocks/
+
+# Node.js dependencies
+node_modules/
+ui/node_modules/
+ui/dist/
+
+**/.claude/settings.local.json
