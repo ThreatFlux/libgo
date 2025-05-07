@@ -8,11 +8,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	vmservice "github.com/threatflux/libgo/internal/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
 	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
@@ -52,7 +51,7 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", false).Return(nil)
+				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -68,7 +67,7 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "?force=true",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", true).Return(nil)
+				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -84,7 +83,7 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			vmName:      "non-existent-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Delete(gomock.Any(), "non-existent-vm", false).Return(vmservice.ErrVMNotFound)
+				mockVMManager.EXPECT().Delete(gomock.Any(), "non-existent-vm").Return(vmservice.ErrVMNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -100,7 +99,7 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			vmName:      "in-use-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Delete(gomock.Any(), "in-use-vm", false).Return(vmservice.ErrVMInUse)
+				mockVMManager.EXPECT().Delete(gomock.Any(), "in-use-vm").Return(vmservice.ErrVMInUse)
 			},
 			expectedStatus: http.StatusBadRequest,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -116,7 +115,7 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm", false).Return(errors.New("internal error"))
+				mockVMManager.EXPECT().Delete(gomock.Any(), "test-vm").Return(errors.New("internal error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			validateResponse: func(t *testing.T, body []byte) {

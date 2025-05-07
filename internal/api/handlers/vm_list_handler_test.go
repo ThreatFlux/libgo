@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	"go.uber.org/mock/gomock"
 
 	mock_logger "github.com/threatflux/libgo/test/mocks/logger"
@@ -48,7 +47,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				}
 
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
 
 				mockLogger.EXPECT().
@@ -77,7 +76,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				}
 
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
 
 				mockLogger.EXPECT().
@@ -119,7 +118,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 			url:  "/vms",
 			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(nil, errors.New("database error"))
 
 				mockLogger.EXPECT().
@@ -143,7 +142,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				}
 
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
 
 				mockLogger.EXPECT().
@@ -167,7 +166,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				}
 
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
 
 				mockLogger.EXPECT().
@@ -196,7 +195,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				}
 
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
 
 				mockLogger.EXPECT().

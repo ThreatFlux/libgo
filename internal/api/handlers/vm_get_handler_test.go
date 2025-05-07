@@ -8,12 +8,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/models/vm"
 	vmservice "github.com/threatflux/libgo/internal/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
 	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
@@ -51,10 +50,10 @@ func TestVMHandler_GetVM(t *testing.T) {
 			name:   "Valid VM retrieval",
 			vmName: "test-vm",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Get(gomock.Any(), "test-vm").Return(&vm_models.VM{
+				mockVMManager.EXPECT().Get(gomock.Any(), "test-vm").Return(&vm.VM{
 					Name:   "test-vm",
 					UUID:   "12345678-1234-1234-1234-123456789012",
-					Status: vm_models.VMStatusRunning,
+					Status: vm.VMStatusRunning,
 				}, nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -64,7 +63,7 @@ func TestVMHandler_GetVM(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, "test-vm", response.VM.Name)
 				assert.Equal(t, "12345678-1234-1234-1234-123456789012", response.VM.UUID)
-				assert.Equal(t, vm_models.VMStatusRunning, response.VM.Status)
+				assert.Equal(t, vm.VMStatusRunning, response.VM.Status)
 			},
 		},
 		{

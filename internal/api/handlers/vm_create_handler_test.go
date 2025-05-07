@@ -9,12 +9,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/threatflux/libgo/internal/models/vm"
+	vm_models "github.com/threatflux/libgo/internal/models/vm"
 	vmservice "github.com/threatflux/libgo/internal/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
 	mockvm "github.com/threatflux/libgo/test/mocks/vm"
 )
