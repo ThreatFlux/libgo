@@ -38,7 +38,11 @@
     {{range .Disks}}
     <disk type='{{.Type}}' device='disk'>
       <driver name='qemu' type='{{.Format}}'/>
+      {{if eq .Type "volume"}}
+      <source pool='{{.Pool}}' volume='{{.Volume}}'/>
+      {{else}}
       <source {{.SourceAttr}}='{{.Source}}'/>
+      {{end}}
       <target dev='{{.Device}}' bus='{{.Bus}}'/>
       {{if .Bootable}}<boot order='1'/>{{end}}
       {{if .ReadOnly}}<readonly/>{{end}}
