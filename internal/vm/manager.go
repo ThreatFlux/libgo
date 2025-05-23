@@ -65,6 +65,9 @@ func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, err
 		}
 	}
 
+	// Set the cloud-init ISO directory from configuration
+	params.CloudInit.ISODir = m.config.CloudInitDir
+
 	// Validate parameters
 	if err := m.validateParams(params); err != nil {
 		return nil, fmt.Errorf("validating parameters: %w", err)
@@ -72,6 +75,11 @@ func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, err
 
 	// Set default values if not provided
 	params = m.setDefaultParams(params)
+
+	// Ensure cloud-init directory exists
+	if err := os.MkdirAll(m.config.CloudInitDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating cloud-init directory: %w", err)
+	}
 
 	// Create VM disk
 	if err := m.createVMDisk(ctx, params); err != nil {
@@ -336,7 +344,7 @@ func (m *VMManager) setupCloudInit(ctx context.Context, params vm.VMParams) erro
 	}
 
 	// Create cloud-init ISO - ensure path matches what domain XML builder expects
-	isoPath := filepath.Join("/home/vtriple/libgo-temp/cloudinit", fmt.Sprintf("%s-cloudinit.iso", params.Name))
+	isoPath := filepath.Join(m.config.CloudInitDir, fmt.Sprintf("%s-cloudinit.iso", params.Name))
 
 	m.logger.Debug("Creating cloud-init ISO",
 		logger.String("vm", params.Name),
@@ -379,7 +387,7 @@ func (m *VMManager) cleanupResources(ctx context.Context, params vm.VMParams) er
 	}
 
 	// Cleanup cloud-init ISO - make sure this matches the path used for creation
-	isoPath := filepath.Join("/home/vtriple/libgo-temp/cloudinit", fmt.Sprintf("%s-cloudinit.iso", params.Name))
+	isoPath := filepath.Join(m.config.CloudInitDir, fmt.Sprintf("%s-cloudinit.iso", params.Name))
 	if err := os.Remove(isoPath); err != nil && !os.IsNotExist(err) {
 		m.logger.Warn("Failed to clean up cloud-init ISO",
 			logger.String("vm", params.Name),

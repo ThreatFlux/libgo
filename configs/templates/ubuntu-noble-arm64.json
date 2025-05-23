@@ -1,0 +1,26 @@
+{
+  "name": "ubuntu-noble-arm64",
+  "description": "Ubuntu Noble ARM64 Server Template",
+  "cpu": {
+    "count": 2,
+    "model": "host-model"
+  },
+  "memory": {
+    "sizeBytes": 2147483648
+  },
+  "disk": {
+    "sizeBytes": 21474836480,
+    "format": "qcow2",
+    "bus": "virtio"
+  },
+  "network": {
+    "type": "network",
+    "source": "default",
+    "model": "virtio"
+  },
+  "cloudInit": {
+    "userData": "",
+    "metaData": "",
+    "networkConfig": ""
+  }
+}

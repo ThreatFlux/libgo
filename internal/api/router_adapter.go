@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/threatflux/libgo/internal/api/handlers"
+	"github.com/threatflux/libgo/internal/config"
 	"github.com/threatflux/libgo/internal/middleware/auth"
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/internal/websocket"
@@ -116,6 +117,7 @@ func ConfigureRoutes(
 	authHandler *handlers.AuthHandler,
 	healthHandler *handlers.HealthHandler,
 	metricsHandler *handlers.MetricsHandler,
+	config *config.Config, // Add config parameter
 ) {
 	// Register health check endpoints
 	healthHandler.RegisterHandler(router)
@@ -133,9 +135,16 @@ func ConfigureRoutes(
 		authGroup.POST("/refresh", authHandler.Refresh)
 	}
 
-	// Protected routes (require authentication)
+	// Protected routes (authentication based on config)
 	protected := apiGroup.Group("/")
-	protected.Use(jwtMiddleware.Authenticate())
+	
+	// Only apply authentication middleware if it's enabled in config
+	if config != nil && config.Auth.Enabled {
+		log.Info("Authentication is enabled, applying JWT middleware")
+		protected.Use(jwtMiddleware.Authenticate())
+	} else {
+		log.Info("Authentication is disabled, skipping JWT middleware")
+	}
 
 	// VM management endpoints
 	vms := protected.Group("/vms")

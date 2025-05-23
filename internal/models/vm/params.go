@@ -36,4 +36,5 @@ type CloudInitConfig struct {
 	MetaData     string `json:"metaData,omitempty"`
 	NetworkConfig string `json:"networkConfig,omitempty"`
 	SSHKeys      []string `json:"sshKeys,omitempty"`
+	ISODir       string `json:"-"` // Internal use only - not exposed via API
 }

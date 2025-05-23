@@ -24,6 +24,11 @@ func NewVMHandler(vmManager vmservice.Manager, logger logger.Logger) *VMHandler 
 	}
 }
 
+// GetVMManager returns the VM manager instance
+func (h *VMHandler) GetVMManager() vmservice.Manager {
+	return h.vmManager
+}
+
 // ListVMsResponse represents the response for a VM listing request
 type ListVMsResponse struct {
 	VMs      interface{} `json:"vms"`

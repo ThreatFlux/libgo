@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -89,6 +90,11 @@ func main() {
 	components, err := initComponents(ctx, cfg, connManager, log)
 	if err != nil {
 		log.Fatal("Failed to initialize components", logger.Error(err))
+	}
+
+	// Ensure storage pool exists
+	if err := ensureStoragePool(ctx, components.PoolManager, cfg, log); err != nil {
+		log.Fatal("Failed to ensure storage pool", logger.Error(err))
 	}
 
 	// Initialize default users if configured
@@ -300,7 +306,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 		StoragePoolName: cfg.Libvirt.PoolName,
 		NetworkName:     cfg.Libvirt.NetworkName,
 		WorkDir:         filepath.Join(cfg.Export.TempDir, "vms"),
-		CloudInitDir:    "/home/vtriple/libgo-temp/cloudinit",
+		CloudInitDir:    filepath.Join(cfg.Export.TempDir, "cloudinit"),
 	}
 
 	components.VMManager = vm.NewVMManager(
@@ -391,6 +397,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		authHandler,
 		healthHandler,
 		metricsHandler,
+		cfg, // Pass the configuration
 	)
 }
 
@@ -410,8 +417,23 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 		}
 	}
 
+	// Convert to the expected type for InitializeDefaultUsers
+	interfaceUsers := make([]struct {
+		Username string
+		Password string
+		Email    string
+		Roles    []string
+	}, len(userConfigs))
+
+	for i, u := range userConfigs {
+		interfaceUsers[i].Username = u.Username
+		interfaceUsers[i].Password = u.Password
+		interfaceUsers[i].Email = u.Email
+		interfaceUsers[i].Roles = u.Roles
+	}
+
 	// Initialize default users
-	return userService.InitializeDefaultUsers(ctx, userConfigs)
+	return userService.InitializeDefaultUsers(ctx, interfaceUsers)
 }
 
 // setupSignalHandler sets up signal handling for graceful shutdown
@@ -437,4 +459,98 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 	}()
 
 	return stopCh
+}
+
+// ensureStoragePool ensures the required storage pool exists and is active
+func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log logger.Logger) error {
+	// Get the configured pool name and path
+	poolName := cfg.Storage.DefaultPool
+	poolPath := cfg.Storage.PoolPath
+
+	// Use libvirt pool name as fallback if storage pool not specified
+	if poolName == "" {
+		poolName = cfg.Libvirt.PoolName
+		log.Warn("Storage default pool not specified, using libvirt pool name",
+			logger.String("pool", poolName))
+	}
+
+	// Ensure the path exists
+	if poolPath == "" {
+		poolPath = "/tmp/libgo-storage"
+		log.Warn("Storage pool path not specified, using default path",
+			logger.String("path", poolPath))
+	}
+
+	// Create the directory with generous permissions
+	if err := os.MkdirAll(poolPath, 0777); err != nil {
+		return fmt.Errorf("failed to create storage path %s: %w", poolPath, err)
+	}
+
+	// Ensure the storage pool exists
+	if err := poolManager.EnsureExists(ctx, poolName, poolPath); err != nil {
+		return fmt.Errorf("failed to ensure storage pool %s exists: %w", poolName, err)
+	}
+
+	// Copy template images if needed
+	for templateName, imagePath := range cfg.Storage.Templates {
+		// Check if the source image exists
+		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+			log.Warn("Template image not found, skipping copy",
+				logger.String("template", templateName),
+				logger.String("path", imagePath))
+			continue
+		}
+
+		// Copy the image to the pool path if needed
+		destPath := filepath.Join(poolPath, filepath.Base(imagePath))
+		if _, err := os.Stat(destPath); os.IsNotExist(err) {
+			log.Info("Copying template image to storage pool",
+				logger.String("template", templateName),
+				logger.String("source", imagePath),
+				logger.String("destination", destPath))
+
+			// Use io.Copy with file handles
+			src, err := os.Open(imagePath)
+			if err != nil {
+				log.Warn("Failed to open source template image",
+					logger.String("template", templateName),
+					logger.String("path", imagePath),
+					logger.Error(err))
+				continue
+			}
+			defer src.Close()
+
+			dst, err := os.Create(destPath)
+			if err != nil {
+				log.Warn("Failed to create destination file",
+					logger.String("path", destPath),
+					logger.Error(err))
+				continue
+			}
+			defer dst.Close()
+
+			// Set generous permissions on destination
+			if err := dst.Chmod(0666); err != nil {
+				log.Warn("Failed to set permissions on destination file",
+					logger.String("path", destPath),
+					logger.Error(err))
+			}
+
+			// Copy the file
+			if _, err := io.Copy(dst, src); err != nil {
+				log.Warn("Failed to copy template image",
+					logger.String("template", templateName),
+					logger.String("source", imagePath),
+					logger.String("destination", destPath),
+					logger.Error(err))
+				continue
+			}
+
+			log.Info("Template image copied successfully",
+				logger.String("template", templateName),
+				logger.String("destination", destPath))
+		}
+	}
+
+	return nil
 }
