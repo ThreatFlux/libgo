@@ -78,10 +78,18 @@ func HandleError(c *gin.Context, err error) {
 // mapErrorToStatusAndCode maps domain errors to HTTP status codes and error codes
 func mapErrorToStatusAndCode(err error) (int, string) {
 	switch {
-	case errors.Is(err, ErrNotFound):
+	case errors.Is(err, ErrNotFound) ||
+		errors.Is(err, apierrors.ErrVMNotFound):
 		return http.StatusNotFound, "NOT_FOUND"
 
-	case errors.Is(err, ErrInvalidInput):
+	case errors.Is(err, ErrInvalidInput) ||
+		errors.Is(err, apierrors.ErrInvalidCPUCount) ||
+		errors.Is(err, apierrors.ErrInvalidMemorySize) ||
+		errors.Is(err, apierrors.ErrInvalidDiskSize) ||
+		errors.Is(err, apierrors.ErrInvalidDiskFormat) ||
+		errors.Is(err, apierrors.ErrInvalidNetworkType) ||
+		errors.Is(err, apierrors.ErrInvalidNetworkSource) ||
+		errors.Is(err, apierrors.ErrVMInvalidState):
 		return http.StatusBadRequest, "INVALID_INPUT"
 
 	case errors.Is(err, ErrUnauthorized) ||
@@ -92,11 +100,13 @@ func mapErrorToStatusAndCode(err error) (int, string) {
 		return http.StatusUnauthorized, "UNAUTHORIZED"
 
 	case errors.Is(err, ErrForbidden) ||
+		errors.Is(err, apierrors.ErrForbidden) ||
 		errors.Is(err, apierrors.ErrUserInactive) ||
 		errors.Is(err, userauth.ErrUserInactive):
 		return http.StatusForbidden, "FORBIDDEN"
 
 	case errors.Is(err, ErrAlreadyExists) ||
+		errors.Is(err, apierrors.ErrVMAlreadyExists) ||
 		errors.Is(err, apierrors.ErrDuplicateUsername) ||
 		errors.Is(err, userauth.ErrDuplicateUsername):
 		return http.StatusConflict, "RESOURCE_CONFLICT"

@@ -101,13 +101,13 @@ func TestVMHandler_DeleteVM(t *testing.T) {
 			mockSetup: func() {
 				mockVMManager.EXPECT().Delete(gomock.Any(), "in-use-vm").Return(vmservice.ErrVMInUse)
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusForbidden,
 			validateResponse: func(t *testing.T, body []byte) {
 				var response ErrorResponse
 				err := json.Unmarshal(body, &response)
 				require.NoError(t, err)
-				assert.Equal(t, http.StatusBadRequest, response.Status)
-				assert.Equal(t, "INVALID_INPUT", response.Code)
+				assert.Equal(t, http.StatusForbidden, response.Status)
+				assert.Equal(t, "FORBIDDEN", response.Code)
 			},
 		},
 		{

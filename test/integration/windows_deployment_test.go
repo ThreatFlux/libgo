@@ -11,6 +11,10 @@ import (
 )
 
 func TestWindowsVMDeployment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
 	apiEndpoint := os.Getenv("API_ENDPOINT")
 	if apiEndpoint == "" {
 		apiEndpoint = "http://localhost:8080"

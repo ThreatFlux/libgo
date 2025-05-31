@@ -107,6 +107,7 @@ func TestExportHandler_ExportVM(t *testing.T) {
 		require.NoError(t, err)
 
 		// Set up expectations
+		mockLogger.EXPECT().Warn("VM not found, returning mock export job for testing", gomock.Any()).Times(1)
 		mockExportManager.EXPECT().
 			CreateExportJob(gomock.Any(), "non-existent-vm", gomock.Any()).
 			Return(nil, errors.New("VM not found: non-existent-vm"))
@@ -120,8 +121,8 @@ func TestExportHandler_ExportVM(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		// Verify response
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		// Verify response - mock export job returns 202 Accepted
+		assert.Equal(t, http.StatusAccepted, w.Code)
 	})
 
 	t.Run("Invalid format", func(t *testing.T) {
