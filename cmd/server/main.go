@@ -417,23 +417,8 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 		}
 	}
 
-	// Convert to the expected type for InitializeDefaultUsers
-	interfaceUsers := make([]struct {
-		Username string
-		Password string
-		Email    string
-		Roles    []string
-	}, len(userConfigs))
-
-	for i, u := range userConfigs {
-		interfaceUsers[i].Username = u.Username
-		interfaceUsers[i].Password = u.Password
-		interfaceUsers[i].Email = u.Email
-		interfaceUsers[i].Roles = u.Roles
-	}
-
 	// Initialize default users
-	return userService.InitializeDefaultUsers(ctx, interfaceUsers)
+	return userService.InitializeDefaultUsers(ctx, userConfigs)
 }
 
 // setupSignalHandler sets up signal handling for graceful shutdown

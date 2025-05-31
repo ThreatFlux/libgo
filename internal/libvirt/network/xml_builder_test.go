@@ -4,17 +4,17 @@ import (
 	"net"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestTemplateXMLBuilder_BuildNetworkXML(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	builder := NewTemplateXMLBuilder(mockLogger)
 
 	tests := []struct {

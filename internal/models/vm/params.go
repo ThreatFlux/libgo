@@ -24,6 +24,7 @@ type CPUParams struct {
 // MemoryParams contains memory parameters
 type MemoryParams struct {
 	SizeBytes uint64 `json:"sizeBytes" validate:"required,min=134217728"` // Minimum 128MB
+	SizeMB    uint64 `json:"sizeMB,omitempty"`                            // Size in MB (optional, calculated from SizeBytes if not provided)
 }
 
 // Using DiskParams from disk.go

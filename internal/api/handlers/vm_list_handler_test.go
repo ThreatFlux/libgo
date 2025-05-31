@@ -12,7 +12,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 	"go.uber.org/mock/gomock"
 
-	mock_logger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	mock_vm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
@@ -216,7 +216,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockVMManager := mock_vm.NewMockManager(ctrl)
-			mockLogger := mock_logger.NewMockLogger(ctrl)
+			mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 			// Setup handler
 			handler := NewVMHandler(mockVMManager, mockLogger)

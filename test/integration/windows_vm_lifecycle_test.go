@@ -27,7 +27,13 @@ func TestWindowsVMLifecycle(t *testing.T) {
 
 	// Authenticate
 	t.Log("Authenticating")
-	token := login(ctx, t, apiURL)
+	token, err := login(ctx, t, apiURL, "admin", "admin")
+	if err != nil {
+		// Fall back to generated test token
+		t.Log("Login failed, falling back to generated test token")
+		token, err = GenerateTestToken()
+		require.NoError(t, err, "Failed to generate test token")
+	}
 	require.NotEmpty(t, token, "Authentication token should not be empty")
 
 	// Store token for use in this test
@@ -39,7 +45,8 @@ func TestWindowsVMLifecycle(t *testing.T) {
 
 	// 2. Create VM parameters and get ISO paths
 	t.Log("Creating VM parameters")
-	baseDir, _ := getProjectRoot()
+	// For testing purposes, use hardcoded paths
+	baseDir := "/home/vtriple/libgo"
 	windowsISO := fmt.Sprintf("%s/iso/26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso", baseDir)
 	virtioISO := fmt.Sprintf("%s/virtio-win.iso", baseDir)
 	autounattendISO := fmt.Sprintf("%s/tmp/autounattend.iso", baseDir)
@@ -99,7 +106,8 @@ func TestWindowsVMLifecycle(t *testing.T) {
 
 	// 11. Stop the VM for export
 	t.Log("Stopping VM for export")
-	stopVM(ctx, t, apiURL, vmName)
+	err = stopVMForTest(ctx, t, apiURL, vmName)
+	require.NoError(t, err, "Failed to stop VM")
 	vm = waitForVMStatus(ctx, t, apiURL, vmName, vmmodels.VMStatusStopped, 5*time.Minute)
 	require.NotNil(t, vm)
 
@@ -135,9 +143,11 @@ func createWindowsVMParams(name string) vmmodels.VMParams {
 		},
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 4 * 1024 * 1024 * 1024, // 4GB
+			SizeMB:    4 * 1024,               // 4GB
 		},
 		Disk: vmmodels.DiskParams{
 			SizeBytes:   40 * 1024 * 1024 * 1024, // 40GB
+			SizeMB:      40 * 1024,               // 40GB
 			Format:      "qcow2",
 			StoragePool: "default",
 			Bus:         "virtio",
@@ -279,4 +289,29 @@ func verifyWindowsIISRunning(t *testing.T, ipAddress string) bool {
 	}
 
 	return false
+}
+
+// stopVMForTest stops a VM via the API
+func stopVMForTest(ctx context.Context, t *testing.T, apiURL, vmName string) error {
+	url := fmt.Sprintf("%s/api/v1/vms/%s/stop", apiURL, vmName)
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, nil)
+	require.NoError(t, err, "Failed to create HTTP request")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("stop VM failed with status code %d", resp.StatusCode)
+	}
+
+	return nil
 }

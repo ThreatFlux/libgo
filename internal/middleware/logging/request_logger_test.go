@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestRequestLogger(t *testing.T) {
@@ -21,8 +21,8 @@ func TestRequestLogger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
-	mockLoggerWithFields := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
+	mockLoggerWithFields := mocks_logger.NewMockLogger(ctrl)
 
 	// Expect the logger to be called with fields
 	mockLogger.EXPECT().
@@ -279,4 +279,9 @@ func (m *mockResponseWriter) Size() int {
 
 func (m *mockResponseWriter) WriteString(s string) (int, error) {
 	return m.buf.WriteString(s)
+}
+
+func (m *mockResponseWriter) CloseNotify() <-chan bool {
+	ch := make(chan bool, 1)
+	return ch
 }

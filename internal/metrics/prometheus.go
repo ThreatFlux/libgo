@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -126,7 +127,7 @@ func NewPrometheusMetrics(vmManager interface{}, exportManager interface{}, logg
 
 // RecordRequest records an API request
 func (m *PrometheusMetrics) RecordRequest(method, path string, status int, duration time.Duration) {
-	statusStr := prometheus.Labels{"method": method, "path": path, "status": string(status)}
+	statusStr := prometheus.Labels{"method": method, "path": path, "status": fmt.Sprintf("%d", status)}
 	m.requests.With(statusStr).Inc()
 	m.requestDuration.With(statusStr).Observe(duration.Seconds())
 }

@@ -198,12 +198,7 @@ func (s *GormUserService) LoadUser(u *user.User) error {
 }
 
 // InitializeDefaultUsers implements Service.InitializeDefaultUsers
-func (s *GormUserService) InitializeDefaultUsers(ctx context.Context, defaultUsers []struct {
-	Username string
-	Password string
-	Email    string
-	Roles    []string
-}) error {
+func (s *GormUserService) InitializeDefaultUsers(ctx context.Context, defaultUsers []DefaultUserConfig) error {
 	s.logger.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
 
 	for _, defaultUser := range defaultUsers {

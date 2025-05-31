@@ -142,7 +142,8 @@ func getExportJob(ctx context.Context, t *testing.T, apiURL, jobID string) *Expo
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to send HTTP request: %w", err)
+		t.Errorf("Failed to send HTTP request: %v", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
@@ -343,11 +344,6 @@ func createVM(ctx context.Context, t *testing.T, apiURL string, params vmmodels.
 	return createResp.VM
 }
 
-// CreateVMResponse represents the response for a VM creation request
-type CreateVMResponse struct {
-	VM *vmmodels.VM `json:"vm"`
-}
-
 // login performs authentication and stores the token
 func login(ctx context.Context, t *testing.T, apiURL, username, password string) (string, error) {
 	url := fmt.Sprintf("%s/api/v1/auth/login", apiURL)
@@ -399,4 +395,74 @@ func login(ctx context.Context, t *testing.T, apiURL, username, password string)
 
 	authToken = loginResp.Token
 	return loginResp.Token, nil
+}
+
+// cleanupVM deletes a VM if it exists
+func cleanupVM(ctx context.Context, t *testing.T, apiURL, vmName string) {
+	// Check if VM exists
+	vm := getVM(ctx, t, apiURL, vmName)
+	if vm == nil {
+		return
+	}
+
+	url := fmt.Sprintf("%s/api/v1/vms/%s", apiURL, vmName)
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	require.NoError(t, err, "Failed to create HTTP request")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to send HTTP request")
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			t.Logf("Failed to close response body")
+		}
+	}(resp.Body)
+
+	// Check response status - just log if not OK since this is cleanup code
+	if resp.StatusCode != http.StatusOK {
+		t.Logf("Warning: VM deletion returned status code %d", resp.StatusCode)
+		return
+	}
+
+	// Wait for VM to be deleted
+	deadline := time.Now().Add(30 * time.Second)
+	for time.Now().Before(deadline) {
+		vm := getVM(ctx, t, apiURL, vmName)
+		if vm == nil {
+			return
+		}
+
+		t.Logf("Waiting for VM %s to be deleted", vmName)
+		time.Sleep(2 * time.Second)
+	}
+}
+
+// waitForVMStatus waits for a VM to reach the specified status
+func waitForVMStatus(ctx context.Context, t *testing.T, apiURL, vmName string, targetStatus vmmodels.VMStatus, timeout time.Duration) *vmmodels.VM {
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		vm := getVM(ctx, t, apiURL, vmName)
+		if vm != nil && vm.Status == targetStatus {
+			return vm
+		}
+
+		var currentStatus string
+		if vm == nil {
+			currentStatus = "not found"
+		} else {
+			currentStatus = string(vm.Status)
+		}
+
+		t.Logf("Waiting for VM %s to reach status %s, current status: %s", vmName, targetStatus, currentStatus)
+		time.Sleep(5 * time.Second)
+	}
+
+	t.Fatalf("Timed out waiting for VM %s to reach status %s", vmName, targetStatus)
+	return nil
 }

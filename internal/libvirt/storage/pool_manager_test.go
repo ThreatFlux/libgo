@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/pkg/logger"
 	mocks_libvirt "github.com/threatflux/libgo/test/mocks/libvirt"
+	"go.uber.org/mock/gomock"
 )
 
 // MockXMLBuilder is a mock for storage XML builder

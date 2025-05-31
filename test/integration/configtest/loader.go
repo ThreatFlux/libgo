@@ -77,9 +77,11 @@ func (c *TestConfig) CreateVMParams() vmmodels.VMParams {
 		},
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 2 * 1024 * 1024 * 1024, // Explicitly use 2GB
+			SizeMB:    2 * 1024,               // 2GB
 		},
 		Disk: vmmodels.DiskParams{
 			SizeBytes:   10 * 1024 * 1024 * 1024, // 10GB
+			SizeMB:      10 * 1024,               // 10GB
 			Format:      "qcow2",
 			StoragePool: "default",
 			Bus:         "virtio",

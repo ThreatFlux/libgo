@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	pkgExec "github.com/threatflux/libgo/pkg/utils/exec"
-	"github.com/threatflux/libgo/test/mocks/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
 func TestVMDKConverter_Convert(t *testing.T) {
@@ -17,7 +17,7 @@ func TestVMDKConverter_Convert(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -104,7 +104,7 @@ func TestVMDKConverter_GetFormatName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	converter := NewVMDKConverter(mockLogger)
 
 	// Test format name
@@ -116,7 +116,7 @@ func TestVMDKConverter_ValidateOptions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	converter := NewVMDKConverter(mockLogger)
 
 	testCases := []struct {

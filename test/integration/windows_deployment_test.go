@@ -31,9 +31,11 @@ func TestWindowsVMDeployment(t *testing.T) {
 		},
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 4096 * 1024 * 1024,
+			SizeMB:    4096,
 		},
 		Disk: vmmodels.DiskParams{
 			SizeBytes: 40 * 1024 * 1024 * 1024,
+			SizeMB:    40 * 1024,
 			Format:    "qcow2",
 			Bus:       "sata",
 		},

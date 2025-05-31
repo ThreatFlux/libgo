@@ -94,7 +94,7 @@ func TestExecuteCommandWithTimeout(t *testing.T) {
 	}
 
 	// Check for context deadline exceeded or killed signal
-	if err != nil && !strings.Contains(err.Error(), "signal: killed") && 
+	if err != nil && !strings.Contains(err.Error(), "signal: killed") &&
 		!strings.Contains(err.Error(), "context deadline exceeded") {
 		t.Errorf("Expected timeout-related error but got: %v", err)
 	}

@@ -5,18 +5,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/models/vm"
-	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestOVFTemplateGenerator_GenerateOVF(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 	require.NoError(t, err)
 	require.NotNil(t, templateGenerator)
@@ -107,7 +107,7 @@ func TestOVFTemplateGenerator_WriteOVFToFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 	require.NoError(t, err)
 

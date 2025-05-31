@@ -6,11 +6,11 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCloudInitGenerator_GenerateUserData(t *testing.T) {
@@ -41,7 +41,7 @@ users:
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
@@ -85,7 +85,7 @@ local-hostname: {{.Hostname}}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
@@ -135,7 +135,7 @@ ethernets:
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
@@ -161,7 +161,7 @@ func TestCloudInitGenerator_CreateDefaultTemplate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator := &CloudInitGenerator{

@@ -405,6 +405,7 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 		},
 		Memory: vm.MemoryInfo{
 			SizeBytes: memoryBytes,
+			SizeMB:    memoryBytes / (1024 * 1024),
 		},
 		CreatedAt: time.Now(), // TODO: Get actual creation time if available
 	}

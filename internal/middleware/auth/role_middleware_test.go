@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/internal/auth/user"
 	"github.com/threatflux/libgo/internal/models/user"
-	"github.com/threatflux/libgo/pkg/logger"
 	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestRoleMiddleware_RequireRole(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRoleMiddleware_RequireRole(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
 
@@ -132,7 +132,7 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
 
@@ -224,7 +224,7 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
 

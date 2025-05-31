@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestTemplateManager_ListTemplates(t *testing.T) {
@@ -62,7 +62,7 @@ func TestTemplateManager_ListTemplates(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -107,7 +107,7 @@ func TestTemplateManager_GetTemplate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -164,7 +164,7 @@ func TestTemplateManager_ApplyTemplate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 

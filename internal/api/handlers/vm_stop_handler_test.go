@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	vmservice "github.com/threatflux/libgo/internal/vm"
-	mocklogger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	mockvm "github.com/threatflux/libgo/test/mocks/vm"
+	"go.uber.org/mock/gomock"
 )
 
 func TestVMHandler_StopVM(t *testing.T) {
@@ -24,7 +24,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVMManager := mockvm.NewMockManager(ctrl)
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Expect logger methods to be called
 	mockLogger.EXPECT().WithFields(gomock.Any()).Return(mockLogger).AnyTimes()

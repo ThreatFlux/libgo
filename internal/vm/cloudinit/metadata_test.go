@@ -3,17 +3,17 @@ package cloudinit
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestMetadataGenerator_GenerateInstanceID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
 
 	// Test with VM that has UUID
@@ -36,7 +36,7 @@ func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
 
 	tests := []struct {
@@ -96,7 +96,7 @@ func TestMetadataGenerator_GenerateNetworkConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
 
 	// Test basic network config
@@ -126,7 +126,7 @@ func TestMetadataGenerator_MetadataToJSON(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
 
 	metadata := map[string]string{
@@ -146,7 +146,7 @@ func TestMetadataGenerator_ParseUserDataScript(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	generator := NewMetadataGenerator(mockLogger)
 
 	userData := `#cloud-config

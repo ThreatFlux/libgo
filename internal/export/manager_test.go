@@ -7,22 +7,21 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	customErrors "github.com/threatflux/libgo/internal/errors"
 	"github.com/threatflux/libgo/internal/export/formats"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	mockslibvirt "github.com/threatflux/libgo/test/mocks/libvirt"
 	mockslogger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
 // testConverter is a test implementation of formats.Converter
 type testConverter struct {
-	formatName string
-	convertErr error
+	formatName  string
+	convertErr  error
 	validateErr error
 }
 
@@ -57,8 +56,8 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 
 	// Create test converter
 	testConverter := &testConverter{
-		formatName: "test-format",
-		convertErr: nil,
+		formatName:  "test-format",
+		convertErr:  nil,
 		validateErr: nil,
 	}
 

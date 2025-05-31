@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/libvirt/connection"
-	"github.com/threatflux/libgo/pkg/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 // MockConnection is a mock implementation of the connection.Connection interface
@@ -18,7 +18,7 @@ type MockConnection struct {
 	LibvirtConn *MockLibvirtConnection
 }
 
-func (m *MockConnection) GetLibvirtConnection() *libvirt.Connect {
+func (m *MockConnection) GetLibvirtConnection() *libvirt.Libvirt {
 	return nil // Not used in tests as we mock the underlying methods
 }
 
@@ -47,7 +47,7 @@ func TestLibvirtNetworkManager_EnsureExists_AlreadyExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
 
@@ -77,7 +77,7 @@ func TestLibvirtNetworkManager_EnsureExists_CreateNew(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
 
@@ -127,7 +127,7 @@ func TestLibvirtNetworkManager_Delete_Exists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
 
@@ -172,7 +172,7 @@ func TestLibvirtNetworkManager_GetDHCPLeases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
 
@@ -213,7 +213,7 @@ func TestLibvirtNetworkManager_FindIPByMAC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := connection.NewMockManager(ctrl)
 	mockXMLBuilder := NewMockXMLBuilder(ctrl)
 

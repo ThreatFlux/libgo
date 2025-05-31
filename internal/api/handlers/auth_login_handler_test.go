@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/auth/jwt"
 	"github.com/threatflux/libgo/internal/auth/user"
-	"github.com/threatflux/libgo/internal/models/user"
-	"github.com/threatflux/libgo/pkg/logger"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
 	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 func TestAuthHandler_Login(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create handler
 	tokenExpiry := 15 * time.Minute
@@ -40,7 +40,7 @@ func TestAuthHandler_Login(t *testing.T) {
 	router.POST("/login", handler.Login)
 
 	// Test data
-	validUser := &user_models.User{
+	validUser := &usermodels.User{
 		ID:       "user123",
 		Username: "testuser",
 		Roles:    []string{"admin"},
@@ -239,7 +239,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 
 	mockUserService := mocks_auth.NewMockUserService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create handler
 	tokenExpiry := 15 * time.Minute
@@ -257,7 +257,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 		Username: "testuser",
 		Roles:    []string{"admin"},
 	}
-	validUser := &user_models.User{
+	validUser := &usermodels.User{
 		ID:       "user123",
 		Username: "testuser",
 		Roles:    []string{"admin"},

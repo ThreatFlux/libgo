@@ -31,6 +31,7 @@ type CPUInfo struct {
 // MemoryInfo contains memory information
 type MemoryInfo struct {
 	SizeBytes uint64 `json:"sizeBytes"`
+	SizeMB    uint64 `json:"sizeMB"`
 }
 
 // Using DiskInfo from disk.go

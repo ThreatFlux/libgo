@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/pkg/logger"
 	"github.com/threatflux/libgo/test/mocks/libvirt"
 	mocks_libvirt "github.com/threatflux/libgo/test/mocks/libvirt"
+	"go.uber.org/mock/gomock"
 )
 
 // MockPoolManager is a mock for PoolManager

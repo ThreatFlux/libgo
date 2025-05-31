@@ -62,6 +62,7 @@ const (
 // DiskParams contains disk parameters for VM creation
 type DiskParams struct {
 	SizeBytes   uint64     `json:"sizeBytes" validate:"required,min=1073741824"` // Minimum 1GB
+	SizeMB      uint64     `json:"sizeMB,omitempty"`                             // Size in MB (optional, calculated from SizeBytes if not provided)
 	Format      DiskFormat `json:"format" validate:"required,oneof=qcow2 raw"`
 	SourceImage string     `json:"sourceImage,omitempty"`
 	StoragePool string     `json:"storagePool,omitempty"`
@@ -83,6 +84,8 @@ type DiskInfo struct {
 	Serial      string     `json:"serial,omitempty"`
 	StoragePool string     `json:"storagePool,omitempty"`
 	Device      string     `json:"device,omitempty"`
+	PoolName    string     `json:"poolName,omitempty"`
+	VolumeName  string     `json:"volumeName,omitempty"`
 }
 
 // Validate validates the disk parameters
