@@ -59,4 +59,6 @@ node_modules/
 ui/node_modules/
 ui/dist/
 
+# Claude Code configuration
 **/.claude/settings.local.json
+.mcp.json

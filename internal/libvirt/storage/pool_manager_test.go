@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/pkg/logger"
-	"github.com/threatflux/libgo/test/mocks/libvirt"
+	mocks_libvirt "github.com/threatflux/libgo/test/mocks/libvirt"
 )
 
 // MockXMLBuilder is a mock for storage XML builder
