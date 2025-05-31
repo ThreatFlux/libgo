@@ -14,8 +14,9 @@ import (
 	customErrors "github.com/threatflux/libgo/internal/errors"
 	"github.com/threatflux/libgo/internal/export/formats"
 	"github.com/threatflux/libgo/internal/models/vm"
-	mockslibvirt "github.com/threatflux/libgo/test/mocks/libvirt"
-	mockslogger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_domain "github.com/threatflux/libgo/test/mocks/libvirt/domain"
+	mocks_storage "github.com/threatflux/libgo/test/mocks/libvirt/storage"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
 // testConverter is a test implementation of formats.Converter
@@ -42,9 +43,9 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
-	mockLogger := mockslogger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
@@ -144,9 +145,9 @@ func TestExportManager_GetJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
-	mockLogger := mockslogger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -189,9 +190,9 @@ func TestExportManager_ListJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
-	mockLogger := mockslogger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -231,9 +232,9 @@ func TestExportManager_CancelJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
-	mockLogger := mockslogger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 

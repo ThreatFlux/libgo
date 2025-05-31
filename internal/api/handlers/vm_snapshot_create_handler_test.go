@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/threatflux/libgo/internal/config"
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/pkg/logger"
 )
@@ -183,7 +184,7 @@ func TestCreateSnapshot(t *testing.T) {
 			mockVM := new(MockVMManagerWithSnapshots)
 			tt.setupMock(mockVM)
 
-			log, _ := logger.NewZapLogger(logger.Config{Level: "debug"})
+			log, _ := logger.NewZapLogger(config.LoggingConfig{Level: "debug"})
 			handler := NewVMHandler(mockVM, log)
 
 			// Create request
@@ -289,7 +290,7 @@ func TestListSnapshots(t *testing.T) {
 			mockVM := new(MockVMManagerWithSnapshots)
 			tt.setupMock(mockVM)
 
-			log, _ := logger.NewZapLogger(logger.Config{Level: "debug"})
+			log, _ := logger.NewZapLogger(config.LoggingConfig{Level: "debug"})
 			handler := NewVMHandler(mockVM, log)
 
 			// Create request

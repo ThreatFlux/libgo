@@ -27,7 +27,7 @@ func TestAuthHandler_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := mocks_auth.NewMockUserService(ctrl)
+	mockUserService := mocks_auth.NewMockService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
@@ -237,7 +237,7 @@ func TestAuthHandler_Refresh(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := mocks_auth.NewMockUserService(ctrl)
+	mockUserService := mocks_auth.NewMockService(ctrl)
 	mockJWTGenerator := mocks_auth.NewMockGenerator(ctrl)
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 

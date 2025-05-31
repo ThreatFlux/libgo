@@ -37,7 +37,7 @@ func setupTest(t *testing.T) (
 }
 
 func TestJWTMiddleware_Authenticate_ValidToken(t *testing.T) {
-	ctrl, mockValidator, mockUserService, mockLogger, middleware := setupTest(t)
+	ctrl, mockValidator, mockUserService, _, middleware := setupTest(t)
 	defer ctrl.Finish()
 
 	// Create test router
@@ -286,7 +286,7 @@ func TestJWTMiddleware_Authenticate_InactiveUser(t *testing.T) {
 }
 
 func TestJWTMiddleware_Authorize_ValidPermission(t *testing.T) {
-	ctrl, mockValidator, mockUserService, mockLogger, middleware := setupTest(t)
+	ctrl, _, mockUserService, _, middleware := setupTest(t)
 	defer ctrl.Finish()
 
 	// Create test router with authentication and authorization

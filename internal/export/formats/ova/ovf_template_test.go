@@ -3,6 +3,7 @@ package ova
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,7 +93,7 @@ func TestOVFTemplateGenerator_GenerateOVF(t *testing.T) {
 			if cpuCount == 0 {
 				cpuCount = 1 // Default value
 			}
-			assert.Contains(t, ovfContent, "<rasd:VirtualQuantity>"+string('0'+cpuCount))
+			assert.Contains(t, ovfContent, "<rasd:VirtualQuantity>"+strconv.Itoa(cpuCount))
 
 			memorySizeMB := tc.vmInfo.Memory.SizeMB
 			if memorySizeMB == 0 {

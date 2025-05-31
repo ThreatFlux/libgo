@@ -15,6 +15,10 @@ libvirt:
 auth:
   enabled: false
 
+database:
+  driver: "sqlite"
+  dsn: "libgo.db"
+
 logging:
   level: "debug"
   format: "console"
@@ -22,8 +26,7 @@ logging:
 storage:
   defaultPool: "default"
   poolPath: "/home/vtriple/libgo/storage"
-  templates:
-    windows-11: "/home/vtriple/libgo/Win11_24H2_English_x64.iso"
+  templates: {}
 
 templatesPath: "configs/templates"
 

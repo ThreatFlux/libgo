@@ -7,8 +7,8 @@ import (
 	"github.com/digitalocean/go-libvirt"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
-	mocks_libvirt "github.com/threatflux/libgo/test/mocks/libvirt"
+	mocks_connection "github.com/threatflux/libgo/test/mocks/libvirt/connection"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
 )
 
@@ -59,15 +59,11 @@ func TestDomainManager_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{
@@ -117,15 +113,11 @@ func TestDomainManager_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -151,15 +143,11 @@ func TestDomainManager_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -185,15 +173,11 @@ func TestDomainManager_Start(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -217,15 +201,11 @@ func TestDomainManager_Stop(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -249,15 +229,11 @@ func TestDomainManager_ForceStop(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -281,15 +257,11 @@ func TestDomainManager_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -313,15 +285,11 @@ func TestDomainManager_GetXML(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -353,13 +321,8 @@ func (m *mockLibvirtWithDomain) DomainGetXMLDesc(domain libvirt.Domain, flags ui
 	return testDomainXML, nil
 }
 
-func (m *mockLibvirtWithDomain) DomainGetInfo(domain libvirt.Domain) (libvirt.DomainInfo, error) {
-	return libvirt.DomainInfo{
-		State:     libvirt.DomainRunning,
-		MaxMem:    2097152, // 2GB in KiB
-		Memory:    2097152,
-		NrVirtCpu: 2,
-	}, nil
+func (m *mockLibvirtWithDomain) DomainGetInfo(domain libvirt.Domain) (rState uint8, rMaxMem uint64, rMemory uint64, rNrVirtCPU uint16, rCPUTime uint64, err error) {
+	return uint8(libvirt.DomainRunning), 2097152, 2097152, 2, 0, nil
 }
 
 func (m *mockLibvirtWithDomain) DomainCreate(domain libvirt.Domain) error {
@@ -394,11 +357,4 @@ func (m *mockLibvirtWithDomain) Domains() ([]libvirt.Domain, error) {
 			Name: "test-vm",
 		},
 	}, nil
-}
-
-// LoggingConfig for tests
-type LoggingConfig struct {
-	Level      string
-	Format     string
-	OutputPath string
 }

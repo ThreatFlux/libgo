@@ -17,6 +17,9 @@ import (
 
 	customErrors "github.com/threatflux/libgo/internal/errors"
 	"github.com/threatflux/libgo/internal/export"
+	mocks_export "github.com/threatflux/libgo/test/mocks/export"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_vm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestExportHandler_ExportVM(t *testing.T) {
@@ -24,9 +27,9 @@ func TestExportHandler_ExportVM(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockVMManager := vm_mocks.NewMockManager(ctrl)
-	mockExportManager := export_mocks.NewMockManager(ctrl)
-	mockLogger := logger_mocks.NewMockLogger(ctrl)
+	mockVMManager := mocks_vm.NewMockManager(ctrl)
+	mockExportManager := mocks_export.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
 	// Create handler
@@ -174,9 +177,9 @@ func TestExportHandler_GetExportStatus(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockVMManager := vm_mocks.NewMockManager(ctrl)
-	mockExportManager := export_mocks.NewMockManager(ctrl)
-	mockLogger := logger_mocks.NewMockLogger(ctrl)
+	mockVMManager := mocks_vm.NewMockManager(ctrl)
+	mockExportManager := mocks_export.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
 	// Create handler
@@ -251,9 +254,9 @@ func TestExportHandler_CancelExport(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockVMManager := vm_mocks.NewMockManager(ctrl)
-	mockExportManager := export_mocks.NewMockManager(ctrl)
-	mockLogger := logger_mocks.NewMockLogger(ctrl)
+	mockVMManager := mocks_vm.NewMockManager(ctrl)
+	mockExportManager := mocks_export.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
 	// Create handler
@@ -306,9 +309,9 @@ func TestExportHandler_ListExports(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockVMManager := vm_mocks.NewMockManager(ctrl)
-	mockExportManager := export_mocks.NewMockManager(ctrl)
-	mockLogger := logger_mocks.NewMockLogger(ctrl)
+	mockVMManager := mocks_vm.NewMockManager(ctrl)
+	mockExportManager := mocks_export.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
 	// Create handler

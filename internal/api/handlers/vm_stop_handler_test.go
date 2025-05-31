@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +51,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 30*time.Second).Return(nil)
+				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -68,7 +67,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "?force=true",
 			mockSetup: func() {
-				mockVMManager.EXPECT().ForceStop(gomock.Any(), "test-vm").Return(nil)
+				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -84,7 +83,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "?timeout=60",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 60*time.Second).Return(nil)
+				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -116,7 +115,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "non-existent-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Stop(gomock.Any(), "non-existent-vm", 30*time.Second).Return(vmservice.ErrVMNotFound)
+				mockVMManager.EXPECT().Stop(gomock.Any(), "non-existent-vm").Return(vmservice.ErrVMNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -132,7 +131,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "stopped-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Stop(gomock.Any(), "stopped-vm", 30*time.Second).Return(vmservice.ErrVMInvalidState)
+				mockVMManager.EXPECT().Stop(gomock.Any(), "stopped-vm").Return(vmservice.ErrVMInvalidState)
 			},
 			expectedStatus: http.StatusBadRequest,
 			validateResponse: func(t *testing.T, body []byte) {
@@ -148,7 +147,7 @@ func TestVMHandler_StopVM(t *testing.T) {
 			vmName:      "test-vm",
 			queryParams: "",
 			mockSetup: func() {
-				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm", 30*time.Second).Return(errors.New("internal error"))
+				mockVMManager.EXPECT().Stop(gomock.Any(), "test-vm").Return(errors.New("internal error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			validateResponse: func(t *testing.T, body []byte) {

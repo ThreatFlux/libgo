@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/internal/auth/user"
-	"github.com/threatflux/libgo/internal/models/user"
+	user_models "github.com/threatflux/libgo/internal/models/user"
 	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
 	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
@@ -24,7 +24,7 @@ func TestRoleMiddleware_RequireRole(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := mocks_auth.NewMockUserService(ctrl)
+	mockUserService := mocks_auth.NewMockService(ctrl)
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
@@ -131,7 +131,7 @@ func TestRoleMiddleware_RequireAnyRole(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := mocks_auth.NewMockUserService(ctrl)
+	mockUserService := mocks_auth.NewMockService(ctrl)
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
@@ -223,7 +223,7 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserService := mocks_auth.NewMockUserService(ctrl)
+	mockUserService := mocks_auth.NewMockService(ctrl)
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	middleware := NewRoleMiddleware(mockUserService, mockLogger)
@@ -311,7 +311,7 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 		{
 			name:       "Inactive user attempts access",
 			path:       "/inactive-user",
-			wantStatus: http.StatusOK, // Still OK because this middleware doesnt check active status directly
+			wantStatus: http.StatusForbidden, // Should be forbidden when permission is false
 			setupMocks: func() {
 				mockUserService.EXPECT().HasPermission(gomock.Any(), inactiveUser.ID, "read").Return(false, nil)
 			},

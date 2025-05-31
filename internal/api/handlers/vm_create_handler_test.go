@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	vm_models "github.com/threatflux/libgo/internal/models/vm"
 	vmservice "github.com/threatflux/libgo/internal/vm"
 	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	mockvm "github.com/threatflux/libgo/test/mocks/vm"

@@ -6,9 +6,8 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/stretchr/testify/assert"
-	"github.com/threatflux/libgo/pkg/logger"
-	"github.com/threatflux/libgo/test/mocks/libvirt"
-	mocks_libvirt "github.com/threatflux/libgo/test/mocks/libvirt"
+	mocks_connection "github.com/threatflux/libgo/test/mocks/libvirt/connection"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
 )
 
@@ -40,15 +39,11 @@ func TestLibvirtVolumeManager_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
-	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	// Use mock logger from generated mocks
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create mock pool manager
 	mockPoolManager := &MockPoolManager{
@@ -160,15 +155,11 @@ func TestLibvirtVolumeManager_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
-	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	// Use mock logger from generated mocks
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create mock pool manager
 	mockPoolManager := &MockPoolManager{
@@ -249,15 +240,11 @@ func TestLibvirtVolumeManager_GetPath(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
-	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	// Use mock logger from generated mocks
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create mock pool manager
 	mockPoolManager := &MockPoolManager{
@@ -341,17 +328,17 @@ func TestLibvirtVolumeManager_GetPath(t *testing.T) {
 }
 
 // Mock libvirt methods
-func (m *MockLibvirtWithVolumes) StoragePoolGetInfo(pool libvirt.StoragePool) (libvirt.StoragePoolInfo, error) {
+func (m *MockLibvirtWithVolumes) StoragePoolGetInfo(pool libvirt.StoragePool) (libvirt.StoragePoolGetInfoRet, error) {
 	if pool.Name == "active-pool" {
-		return libvirt.StoragePoolInfo{
-			State: libvirt.StoragePoolRunning,
+		return libvirt.StoragePoolGetInfoRet{
+			State: uint8(libvirt.StoragePoolRunning),
 		}, nil
 	} else if pool.Name == "inactive-pool" {
-		return libvirt.StoragePoolInfo{
-			State: libvirt.StoragePoolInactive,
+		return libvirt.StoragePoolGetInfoRet{
+			State: uint8(libvirt.StoragePoolInactive),
 		}, nil
 	}
-	return libvirt.StoragePoolInfo{}, libvirt.Error{Code: libvirt.ErrNoStoragePool}
+	return libvirt.StoragePoolGetInfoRet{}, libvirt.Error{Code: uint32(libvirt.ErrNoStoragePool)}
 }
 
 func (m *MockLibvirtWithVolumes) StorageVolLookupByName(pool libvirt.StoragePool, name string) (libvirt.StorageVol, error) {
@@ -361,7 +348,7 @@ func (m *MockLibvirtWithVolumes) StorageVolLookupByName(pool libvirt.StoragePool
 			Pool: pool.Name,
 		}, nil
 	}
-	return libvirt.StorageVol{}, libvirt.Error{Code: libvirt.ErrNoStorageVol}
+	return libvirt.StorageVol{}, libvirt.Error{Code: uint32(libvirt.ErrNoStorageVol)}
 }
 
 func (m *MockLibvirtWithVolumes) StorageVolCreateXML(pool libvirt.StoragePool, xml string, flags uint32) (libvirt.StorageVol, error) {

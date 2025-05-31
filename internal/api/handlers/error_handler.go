@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	jwtauth "github.com/threatflux/libgo/internal/auth/jwt"
+	userauth "github.com/threatflux/libgo/internal/auth/user"
 	apierrors "github.com/threatflux/libgo/internal/errors"
 	"github.com/threatflux/libgo/pkg/logger"
 )
@@ -85,16 +86,19 @@ func mapErrorToStatusAndCode(err error) (int, string) {
 
 	case errors.Is(err, ErrUnauthorized) ||
 		errors.Is(err, apierrors.ErrInvalidCredentials) ||
+		errors.Is(err, userauth.ErrInvalidCredentials) ||
 		errors.Is(err, jwtauth.ErrTokenExpired) ||
 		errors.Is(err, jwtauth.ErrInvalidToken):
 		return http.StatusUnauthorized, "UNAUTHORIZED"
 
 	case errors.Is(err, ErrForbidden) ||
-		errors.Is(err, apierrors.ErrUserInactive):
+		errors.Is(err, apierrors.ErrUserInactive) ||
+		errors.Is(err, userauth.ErrUserInactive):
 		return http.StatusForbidden, "FORBIDDEN"
 
 	case errors.Is(err, ErrAlreadyExists) ||
-		errors.Is(err, apierrors.ErrDuplicateUsername):
+		errors.Is(err, apierrors.ErrDuplicateUsername) ||
+		errors.Is(err, userauth.ErrDuplicateUsername):
 		return http.StatusConflict, "RESOURCE_CONFLICT"
 
 	case errors.Is(err, ErrInternalError):

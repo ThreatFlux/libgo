@@ -1,8 +1,11 @@
 package logging
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -267,6 +270,29 @@ func (m *mockResponseWriter) Write(b []byte) (int, error) {
 
 func (m *mockResponseWriter) WriteHeader(statusCode int) {
 	// Do nothing
+}
+
+func (m *mockResponseWriter) Flush() {
+	// Do nothing - required for gin.ResponseWriter interface
+}
+
+func (m *mockResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	// Return nil - required for gin.ResponseWriter interface
+	return nil, nil, errors.New("hijack not supported")
+}
+
+func (m *mockResponseWriter) Pusher() http.Pusher {
+	// Return nil - required for gin.ResponseWriter interface
+	return nil
+}
+
+func (m *mockResponseWriter) WriteHeaderNow() {
+	// Do nothing - required for gin.ResponseWriter interface
+}
+
+func (m *mockResponseWriter) Written() bool {
+	// Return false - required for gin.ResponseWriter interface
+	return false
 }
 
 func (m *mockResponseWriter) Status() int {
