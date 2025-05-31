@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchrify/require"
+	"github.com/stretchr/testify/require"
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
@@ -32,7 +32,7 @@ func TestWindowsVMDeployment(t *testing.T) {
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 4096 * 1024 * 1024,
 		},
-		Disk: vmParams.DiskParams{
+		Disk: vmmodels.DiskParams{
 			SizeBytes: 40 * 1024 * 1024 * 1024,
 			Format:    "qcow2",
 			Bus:       "sata",

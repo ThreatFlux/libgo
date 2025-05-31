@@ -54,8 +54,10 @@ MOCK_INTERFACES=internal/libvirt/connection/interface.go internal/libvirt/domain
 
 all: test build
 
-setup: ## Set up development environment
-	@echo "Setting up development environment..."
+setup: install-tools ## Set up development environment
+
+install-tools: ## Install development tools
+	@echo "Installing development tools..."
 	$(GOGET) golang.org/x/tools/cmd/goimports
 	$(GOGET) github.com/golangci/golangci-lint/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION)
 	$(GOGET) github.com/securego/gosec/v2/cmd/gosec@v$(GOSEC_VERSION)

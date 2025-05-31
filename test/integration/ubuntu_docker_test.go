@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchrify/require"
+	"github.com/stretchr/testify/require"
 	usermodels "github.com/threatflux/libgo/internal/models/user"
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
@@ -260,7 +260,7 @@ runcmd:
 			StoragePool: "default",
 			Bus:         "virtio",
 		},
-		Network: vmParams.NetParams{
+		Network: vmmodels.NetParams{
 			Type:   "network",
 			Source: "default",
 			Model:  "virtio",
