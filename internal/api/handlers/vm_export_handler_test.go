@@ -17,10 +17,7 @@ import (
 
 	customErrors "github.com/threatflux/libgo/internal/errors"
 	"github.com/threatflux/libgo/internal/export"
-	"github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/test/mocks/export"
-	"github.com/threatflux/libgo/test/mocks/logger"
-	"github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestExportHandler_ExportVM(t *testing.T) {

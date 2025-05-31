@@ -135,39 +135,39 @@ func TestCreateSnapshot(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 			expectedBody: map[string]interface{}{
 				"snapshot": map[string]interface{}{
-					"name":         "test-snapshot",
-					"description":  "Test snapshot",
-					"state":        "running",
-					"is_current":   true,
-					"has_memory":   true,
-					"has_disk":     true,
+					"name":        "test-snapshot",
+					"description": "Test snapshot",
+					"state":       "running",
+					"is_current":  true,
+					"has_memory":  true,
+					"has_disk":    true,
 				},
 			},
 		},
 		{
-			name:        "missing VM name",
-			vmName:      "",
-			requestBody: vmmodels.SnapshotParams{Name: "test-snapshot"},
-			setupMock:   func(m *MockVMManagerWithSnapshots) {},
+			name:           "missing VM name",
+			vmName:         "",
+			requestBody:    vmmodels.SnapshotParams{Name: "test-snapshot"},
+			setupMock:      func(m *MockVMManagerWithSnapshots) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "invalid request body",
-			vmName: "test-vm",
-			requestBody: "invalid",
-			setupMock: func(m *MockVMManagerWithSnapshots) {},
+			name:           "invalid request body",
+			vmName:         "test-vm",
+			requestBody:    "invalid",
+			setupMock:      func(m *MockVMManagerWithSnapshots) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "missing snapshot name",
-			vmName: "test-vm",
-			requestBody: vmmodels.SnapshotParams{},
-			setupMock: func(m *MockVMManagerWithSnapshots) {},
+			name:           "missing snapshot name",
+			vmName:         "test-vm",
+			requestBody:    vmmodels.SnapshotParams{},
+			setupMock:      func(m *MockVMManagerWithSnapshots) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "snapshot creation error",
-			vmName: "test-vm",
+			name:        "snapshot creation error",
+			vmName:      "test-vm",
 			requestBody: vmmodels.SnapshotParams{Name: "test-snapshot"},
 			setupMock: func(m *MockVMManagerWithSnapshots) {
 				m.On("CreateSnapshot", mock.Anything, "test-vm", mock.Anything).
@@ -207,7 +207,7 @@ func TestCreateSnapshot(t *testing.T) {
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
-				
+
 				// Check snapshot fields exist
 				snapshot, ok := response["snapshot"].(map[string]interface{})
 				assert.True(t, ok)
@@ -233,8 +233,8 @@ func TestListSnapshots(t *testing.T) {
 		expectedCount  int
 	}{
 		{
-			name:   "successful list snapshots",
-			vmName: "test-vm",
+			name:        "successful list snapshots",
+			vmName:      "test-vm",
 			queryParams: map[string]string{},
 			setupMock: func(m *MockVMManagerWithSnapshots) {
 				snapshots := []*vmmodels.Snapshot{
@@ -255,8 +255,8 @@ func TestListSnapshots(t *testing.T) {
 			expectedCount:  2,
 		},
 		{
-			name:   "list with metadata",
-			vmName: "test-vm",
+			name:        "list with metadata",
+			vmName:      "test-vm",
 			queryParams: map[string]string{"include_metadata": "true"},
 			setupMock: func(m *MockVMManagerWithSnapshots) {
 				m.On("ListSnapshots", mock.Anything, "test-vm", mock.Anything).Return([]*vmmodels.Snapshot{}, nil)
@@ -265,15 +265,15 @@ func TestListSnapshots(t *testing.T) {
 			expectedCount:  0,
 		},
 		{
-			name:        "missing VM name",
-			vmName:      "",
-			queryParams: map[string]string{},
-			setupMock:   func(m *MockVMManagerWithSnapshots) {},
+			name:           "missing VM name",
+			vmName:         "",
+			queryParams:    map[string]string{},
+			setupMock:      func(m *MockVMManagerWithSnapshots) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "list error",
-			vmName: "test-vm",
+			name:        "list error",
+			vmName:      "test-vm",
 			queryParams: map[string]string{},
 			setupMock: func(m *MockVMManagerWithSnapshots) {
 				m.On("ListSnapshots", mock.Anything, "test-vm", mock.Anything).
@@ -294,7 +294,7 @@ func TestListSnapshots(t *testing.T) {
 
 			// Create request
 			req := httptest.NewRequest("GET", "/api/v1/vms/"+tt.vmName+"/snapshots", nil)
-			
+
 			// Add query parameters
 			q := req.URL.Query()
 			for k, v := range tt.queryParams {

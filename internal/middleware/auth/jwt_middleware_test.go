@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/threatflux/libgo/internal/auth/jwt"
 	"github.com/threatflux/libgo/internal/models/user"
-	"github.com/threatflux/libgo/test/mocks/auth"
-	"github.com/threatflux/libgo/test/mocks/logger"
 )
 
 // Setup test environment

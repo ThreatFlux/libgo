@@ -17,11 +17,11 @@ func SetupRoutes(
 ) *Handler {
 	// Create WebSocket handler
 	handler := NewHandler(logger)
-	
+
 	// Create VM monitor
 	monitor := NewVMMonitor(handler, vmManager, logger)
 	monitor.Start()
-	
+
 	// Setup WebSocket routes
 	ws := router.Group(basePath)
 	{
@@ -31,7 +31,7 @@ func SetupRoutes(
 			monitor.RegisterVM(vmName)
 			handler.HandleVM(c)
 		})
-		
+
 		// VM console endpoint
 		ws.GET("/vms/:name/console", authMiddleware.Authenticate(), roleMiddleware.RequirePermission("console"), func(c *gin.Context) {
 			vmName := c.Param("name")
@@ -39,6 +39,6 @@ func SetupRoutes(
 			handler.HandleVMConsole(c)
 		})
 	}
-	
+
 	return handler
 }

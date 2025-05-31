@@ -18,7 +18,7 @@ func (h *VMHandler) RevertSnapshot(c *gin.Context) {
 	// Get VM name and snapshot name from URL path
 	vmName := c.Param("name")
 	snapshotName := c.Param("snapshot")
-	
+
 	if vmName == "" || snapshotName == "" {
 		HandleError(c, ErrInvalidInput)
 		return

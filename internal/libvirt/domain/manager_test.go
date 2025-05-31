@@ -9,6 +9,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/pkg/logger"
 	"github.com/threatflux/libgo/test/mocks/libvirt"
+	"go.uber.org/mock/gomock"
 )
 
 const testDomainXML = `

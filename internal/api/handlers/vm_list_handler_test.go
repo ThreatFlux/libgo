@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/threatflux/libgo/internal/models/vm"
-	"github.com/threatflux/libgo/pkg/logger"
 	"go.uber.org/mock/gomock"
 
 	mock_logger "github.com/threatflux/libgo/test/mocks/logger"

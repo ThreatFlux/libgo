@@ -11,10 +11,10 @@ import (
 
 // CommandOptions holds options for command execution
 type CommandOptions struct {
-	Timeout       time.Duration
-	Directory     string
-	Environment   []string
-	StdinData     []byte
+	Timeout        time.Duration
+	Directory      string
+	Environment    []string
+	StdinData      []byte
 	CombinedOutput bool
 }
 

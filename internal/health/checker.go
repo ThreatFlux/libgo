@@ -24,14 +24,14 @@ type Check struct {
 
 // Result represents health check result
 type Result struct {
-	Status    Status     `json:"status"`
-	Checks    []Check    `json:"checks"`
-	Version   string     `json:"version"`
-	BuildTime string     `json:"buildTime,omitempty"`
-	GoVersion string     `json:"goVersion"`
-	GOOS      string     `json:"os"`
-	GOARCH    string     `json:"arch"`
-	Uptime    string     `json:"uptime"`
+	Status    Status  `json:"status"`
+	Checks    []Check `json:"checks"`
+	Version   string  `json:"version"`
+	BuildTime string  `json:"buildTime,omitempty"`
+	GoVersion string  `json:"goVersion"`
+	GOOS      string  `json:"os"`
+	GOARCH    string  `json:"arch"`
+	Uptime    string  `json:"uptime"`
 }
 
 // CheckFunction represents a health check function
@@ -77,7 +77,7 @@ func (c *Checker) RunChecks() Result {
 	for _, checkFn := range checksToRun {
 		check := checkFn()
 		checkResults = append(checkResults, check)
-		
+
 		// If any check is down, overall status is down
 		if check.Status == StatusDown {
 			overallStatus = StatusDown

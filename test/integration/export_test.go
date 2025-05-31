@@ -142,7 +142,7 @@ func TestVMExport(t *testing.T) {
 		// Verify export job in response
 		job, ok := exportResp["job"].(map[string]interface{})
 		assert.True(t, ok)
-		
+
 		// Save job ID for later
 		exportJobID, ok = job["id"].(string)
 		assert.True(t, ok)
@@ -171,7 +171,7 @@ func TestVMExport(t *testing.T) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			require.NoError(t, err)
-			
+
 			// Check response status
 			if resp.StatusCode != http.StatusOK {
 				resp.Body.Close()
@@ -196,12 +196,12 @@ func TestVMExport(t *testing.T) {
 
 			if status == "completed" {
 				completed = true
-				
+
 				// Verify output path exists
 				outputPath, ok := job["outputPath"].(string)
 				assert.True(t, ok)
 				assert.NotEmpty(t, outputPath)
-				
+
 				break
 			} else if status == "failed" {
 				error, _ := job["error"].(string)
@@ -243,7 +243,7 @@ func TestVMExport(t *testing.T) {
 		// Verify jobs in response
 		jobs, ok := listResp["jobs"].([]interface{})
 		assert.True(t, ok)
-		
+
 		// Find our job in the list
 		found := false
 		for _, j := range jobs {

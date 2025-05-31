@@ -14,7 +14,7 @@ func TestJobStore_CreateJob(t *testing.T) {
 
 	// Test job creation
 	job := store.createJob("test-vm", "qcow2", map[string]string{"key": "value"})
-	
+
 	// Verify job properties
 	assert.NotEmpty(t, job.ID)
 	assert.Equal(t, "test-vm", job.VMName)
@@ -84,7 +84,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 	// Create test job
 	job := store.createJob("test-vm", "qcow2", nil)
 
-	testCases := []struct{
+	testCases := []struct {
 		name     string
 		status   Status
 		progress int
@@ -109,7 +109,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 			require.True(t, exists)
 			assert.Equal(t, tc.status, updatedJob.Status)
 			assert.Equal(t, tc.progress, updatedJob.Progress)
-			
+
 			if tc.err != nil {
 				assert.Equal(t, tc.err.Error(), updatedJob.Error)
 			}

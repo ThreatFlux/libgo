@@ -3,11 +3,12 @@ package health
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/threatflux/libgo/internal/libvirt/connection"
 	"github.com/threatflux/libgo/internal/libvirt/network"
 	"github.com/threatflux/libgo/internal/libvirt/storage"
 	"github.com/threatflux/libgo/pkg/logger"
-	"time"
 )
 
 // NewLibvirtConnectionCheck creates a check for libvirt connection

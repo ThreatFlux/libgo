@@ -80,11 +80,11 @@ func (m *VMMonitor) Start() {
 func (m *VMMonitor) Stop() {
 	m.logger.Info("Stopping VM monitor")
 	close(m.shutdown)
-	
+
 	// Stop all monitoring goroutines
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
-	
+
 	for _, vm := range m.monitoredVMs {
 		if vm.isMonitoring && vm.cancelContext != nil {
 			vm.cancelContext()
@@ -96,7 +96,7 @@ func (m *VMMonitor) Stop() {
 func (m *VMMonitor) RegisterVM(vmName string) {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
-	
+
 	// Check if VM is already monitored
 	vm, exists := m.monitoredVMs[vmName]
 	if exists {
@@ -106,7 +106,7 @@ func (m *VMMonitor) RegisterVM(vmName string) {
 			logger.Int("clientCount", vm.clientCount))
 		return
 	}
-	
+
 	// Start monitoring new VM
 	vm = &monitoredVM{
 		name:         vmName,
@@ -115,7 +115,7 @@ func (m *VMMonitor) RegisterVM(vmName string) {
 		clientCount:  1,
 	}
 	m.monitoredVMs[vmName] = vm
-	
+
 	// Get initial VM state
 	ctx := context.Background()
 	vmInfo, err := m.vmManager.Get(ctx, vmName)
@@ -125,15 +125,15 @@ func (m *VMMonitor) RegisterVM(vmName string) {
 			logger.Error(err))
 		return
 	}
-	
+
 	vm.lastStatus = vmInfo.Status
 	if vmInfo.Status == vmmodels.VMStatusRunning {
 		vm.startTime = time.Now()
 	}
-	
+
 	// Start monitoring goroutine
 	m.startMonitoring(vmName)
-	
+
 	m.logger.Info("Started monitoring VM",
 		logger.String("vmName", vmName),
 		logger.String("status", string(vm.lastStatus)))
@@ -143,16 +143,16 @@ func (m *VMMonitor) RegisterVM(vmName string) {
 func (m *VMMonitor) UnregisterVM(vmName string) {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
-	
+
 	// Check if VM is monitored
 	vm, exists := m.monitoredVMs[vmName]
 	if !exists {
 		return
 	}
-	
+
 	// Decrement client count
 	vm.clientCount--
-	
+
 	// If there are still clients, continue monitoring
 	if vm.clientCount > 0 {
 		m.logger.Debug("Decremented client count for monitored VM",
@@ -160,16 +160,16 @@ func (m *VMMonitor) UnregisterVM(vmName string) {
 			logger.Int("clientCount", vm.clientCount))
 		return
 	}
-	
+
 	// Stop monitoring if no more clients
 	if vm.isMonitoring && vm.cancelContext != nil {
 		vm.cancelContext()
 		vm.isMonitoring = false
 	}
-	
+
 	// Remove VM from monitored list
 	delete(m.monitoredVMs, vmName)
-	
+
 	m.logger.Info("Stopped monitoring VM",
 		logger.String("vmName", vmName))
 }
@@ -182,18 +182,18 @@ func (m *VMMonitor) startMonitoring(vmName string) {
 		m.monitoredVMsLock.Unlock()
 		return
 	}
-	
+
 	// Create cancellable context
 	ctx, cancel := context.WithCancel(context.Background())
 	vm.cancelContext = cancel
 	vm.isMonitoring = true
 	m.monitoredVMsLock.Unlock()
-	
+
 	// Start monitoring goroutine
 	go func() {
 		ticker := time.NewTicker(VMMonitorInterval)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -215,7 +215,7 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 			logger.Error(err))
 		return
 	}
-	
+
 	// Update monitored VM state
 	m.monitoredVMsLock.Lock()
 	vm, exists := m.monitoredVMs[vmName]
@@ -223,7 +223,7 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 		m.monitoredVMsLock.Unlock()
 		return
 	}
-	
+
 	// Check for status change
 	statusChanged := vm.lastStatus != vmInfo.Status
 	if statusChanged {
@@ -231,27 +231,27 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 			logger.String("vmName", vmName),
 			logger.String("oldStatus", string(vm.lastStatus)),
 			logger.String("newStatus", string(vmInfo.Status)))
-		
+
 		vm.lastStatus = vmInfo.Status
 		vm.stateChanged = time.Now()
-		
+
 		// Update start time for running VMs
 		if vmInfo.Status == vmmodels.VMStatusRunning {
 			vm.startTime = time.Now()
 		}
 	}
-	
+
 	vm.lastChecked = time.Now()
 	m.monitoredVMsLock.Unlock()
-	
+
 	// Send status update
 	var uptime int64 = 0
 	if vmInfo.Status == vmmodels.VMStatusRunning {
 		uptime = int64(time.Since(vm.startTime).Seconds())
 	}
-	
+
 	m.handler.SendVMStatus(vmName, vmInfo.Status, vm.stateChanged, uptime)
-	
+
 	// Get and send metrics if VM is running
 	if vmInfo.Status == vmmodels.VMStatusRunning {
 		metrics, err := m.vmManager.GetMetrics(ctx, vmName)
@@ -261,7 +261,7 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 				logger.Error(err))
 			return
 		}
-		
+
 		m.handler.SendVMMetrics(
 			vmName,
 			metrics.CPU.Utilization,
@@ -279,7 +279,7 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 func (m *VMMonitor) cleanupRoutine() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-m.shutdown:
@@ -294,19 +294,19 @@ func (m *VMMonitor) cleanupRoutine() {
 func (m *VMMonitor) cleanupStaleMonitoring() {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
-	
+
 	staleTime := time.Now().Add(-15 * time.Minute)
-	
+
 	for name, vm := range m.monitoredVMs {
 		if vm.lastChecked.Before(staleTime) {
 			// Stop monitoring goroutine
 			if vm.isMonitoring && vm.cancelContext != nil {
 				vm.cancelContext()
 			}
-			
+
 			// Remove from monitored VMs
 			delete(m.monitoredVMs, name)
-			
+
 			m.logger.Info("Cleaned up stale VM monitoring",
 				logger.String("vmName", name),
 				logger.Time("lastChecked", vm.lastChecked))

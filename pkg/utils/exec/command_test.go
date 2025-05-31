@@ -163,7 +163,7 @@ func TestExecuteCommandWithDirectory(t *testing.T) {
 
 	// Output should contain the temp directory path
 	outputDir := strings.TrimSpace(string(output))
-	
+
 	// On Windows, paths might be in different formats, so just check if it contains the dir name
 	if !strings.Contains(outputDir, tempDir) && outputDir != tempDir {
 		t.Errorf("Expected command to run in directory '%s', but it ran in '%s'", tempDir, outputDir)
@@ -205,7 +205,7 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 	if !strings.Contains(outputStr, "stdout") {
 		t.Errorf("Expected output to contain 'stdout', got: '%s'", outputStr)
 	}
-	
+
 	if strings.Contains(outputStr, "stderr") {
 		t.Errorf("Expected output to not contain 'stderr', got: '%s'", outputStr)
 	}
@@ -222,7 +222,7 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 	if !strings.Contains(outputStr, "stdout") {
 		t.Errorf("Expected combined output to contain 'stdout', got: '%s'", outputStr)
 	}
-	
+
 	if !strings.Contains(outputStr, "stderr") {
 		t.Errorf("Expected combined output to contain 'stderr', got: '%s'", outputStr)
 	}

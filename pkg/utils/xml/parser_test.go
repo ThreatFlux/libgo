@@ -3,12 +3,9 @@ package xml
 import (
 	"encoding/xml"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/beevik/etree"
 )
 
 // Sample XML data for testing

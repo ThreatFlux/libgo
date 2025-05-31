@@ -106,27 +106,27 @@ func TestExtractPasswordConfig(t *testing.T) {
 
 	// Verify the extracted config matches the original
 	if extractedConfig.Memory != knownConfig.Memory {
-		t.Errorf("Extracted memory value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted memory value doesn't match: got %d, want %d",
 			extractedConfig.Memory, knownConfig.Memory)
 	}
 
 	if extractedConfig.Iterations != knownConfig.Iterations {
-		t.Errorf("Extracted iterations value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted iterations value doesn't match: got %d, want %d",
 			extractedConfig.Iterations, knownConfig.Iterations)
 	}
 
 	if extractedConfig.Parallelism != knownConfig.Parallelism {
-		t.Errorf("Extracted parallelism value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted parallelism value doesn't match: got %d, want %d",
 			extractedConfig.Parallelism, knownConfig.Parallelism)
 	}
 
 	if extractedConfig.SaltLength != knownConfig.SaltLength {
-		t.Errorf("Extracted salt length value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted salt length value doesn't match: got %d, want %d",
 			extractedConfig.SaltLength, knownConfig.SaltLength)
 	}
 
 	if extractedConfig.KeyLength != knownConfig.KeyLength {
-		t.Errorf("Extracted key length value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted key length value doesn't match: got %d, want %d",
 			extractedConfig.KeyLength, knownConfig.KeyLength)
 	}
 

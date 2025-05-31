@@ -21,7 +21,7 @@ func NewNetworkDhcpLease(ipAddress string, mac string) libvirt.NetworkDhcpLease 
 	lease := libvirt.NetworkDhcpLease{
 		// Try both field names for compatibility
 		// At compile time, one of these will be correct
-		Ipaddr: ipAddress,  // New versions use this
+		Ipaddr: ipAddress, // New versions use this
 		// IPaddr: ipAddress, // Old versions use this
 		Mac: []string{mac}, // OptString is defined as []string
 	}

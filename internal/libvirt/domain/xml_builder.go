@@ -157,11 +157,11 @@ func (b *TemplateXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) 
 	var cloudInitISOPath string
 	if params.CloudInit.UserData != "" || params.CloudInit.MetaData != "" {
 		// This path needs to match the config's CloudInitDir
-	cloudInitISODir := params.CloudInit.ISODir
-	if cloudInitISODir == "" {
-		cloudInitISODir = "/tmp/libgo-cloudinit"
-	}
-	cloudInitISOPath = fmt.Sprintf("%s/%s-cloudinit.iso", cloudInitISODir, params.Name)
+		cloudInitISODir := params.CloudInit.ISODir
+		if cloudInitISODir == "" {
+			cloudInitISODir = "/tmp/libgo-cloudinit"
+		}
+		cloudInitISOPath = fmt.Sprintf("%s/%s-cloudinit.iso", cloudInitISODir, params.Name)
 	}
 
 	// Prepare template data

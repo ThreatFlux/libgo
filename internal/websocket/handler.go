@@ -160,7 +160,7 @@ func (h *Handler) readPump(client *Client) {
 				logger.String("vmName", client.VMName),
 				logger.String("userID", client.UserID),
 				logger.Error(err))
-			
+
 			// Send error message to client
 			client.Send <- ErrorMessage("INVALID_MESSAGE", "Failed to parse message")
 			continue
@@ -186,7 +186,7 @@ func (h *Handler) readPump(client *Client) {
 				logger.String("vmName", client.VMName),
 				logger.String("userID", client.UserID),
 				logger.String("messageType", string(msg.Type)))
-			
+
 			client.Send <- ErrorMessage("UNKNOWN_MESSAGE_TYPE", "Unknown message type")
 		}
 	}
@@ -311,7 +311,7 @@ func (h *Handler) SendVMMetrics(vmName string, cpu float64, memory, memoryTotal,
 // SendVMConsoleOutput sends VM console output to console clients
 func (h *Handler) SendVMConsoleOutput(vmName string, content string, eof bool) {
 	msg := ConsoleMessage(content, eof)
-	
+
 	// Only send to console clients
 	clients := h.hub.vmClients[vmName]
 	for _, client := range clients {

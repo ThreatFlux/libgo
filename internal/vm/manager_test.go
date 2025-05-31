@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/pkg/logger"
-	"github.com/threatflux/libgo/test/mocks/libvirt"
 	mocks_vm "github.com/threatflux/libgo/test/mocks/vm"
 )
 

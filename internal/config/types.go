@@ -57,13 +57,13 @@ type LibvirtConfig struct {
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	Enabled         bool            `yaml:"enabled" json:"enabled"`
-	JWTSecretKey    string          `yaml:"jwtSecretKey" json:"jwtSecretKey"`
-	Issuer          string          `yaml:"issuer" json:"issuer"`
-	Audience        string          `yaml:"audience" json:"audience"`
-	TokenExpiration time.Duration   `yaml:"tokenExpiration" json:"tokenExpiration"`
-	SigningMethod   string          `yaml:"signingMethod" json:"signingMethod"`
-	DefaultUsers    []DefaultUser   `yaml:"defaultUsers" json:"defaultUsers"`
+	Enabled         bool          `yaml:"enabled" json:"enabled"`
+	JWTSecretKey    string        `yaml:"jwtSecretKey" json:"jwtSecretKey"`
+	Issuer          string        `yaml:"issuer" json:"issuer"`
+	Audience        string        `yaml:"audience" json:"audience"`
+	TokenExpiration time.Duration `yaml:"tokenExpiration" json:"tokenExpiration"`
+	SigningMethod   string        `yaml:"signingMethod" json:"signingMethod"`
+	DefaultUsers    []DefaultUser `yaml:"defaultUsers" json:"defaultUsers"`
 }
 
 // DefaultUser represents a default user to create during system initialization

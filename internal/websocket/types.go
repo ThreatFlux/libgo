@@ -25,8 +25,8 @@ const (
 
 // Message represents a WebSocket message
 type Message struct {
-	Type      MessageType          `json:"type"`
-	Timestamp time.Time            `json:"timestamp"`
+	Type      MessageType            `json:"type"`
+	Timestamp time.Time              `json:"timestamp"`
 	Data      map[string]interface{} `json:"data"`
 }
 
@@ -42,14 +42,14 @@ func NewMessage(msgType MessageType, data map[string]interface{}) *Message {
 // StatusMessage creates a new status message
 func StatusMessage(status vmmodels.VMStatus, lastChange time.Time, uptime int64) *Message {
 	return NewMessage(MessageTypeStatus, map[string]interface{}{
-		"status":         status,
+		"status":          status,
 		"lastStateChange": lastChange.Format(time.RFC3339),
-		"uptime":         uptime,
+		"uptime":          uptime,
 	})
 }
 
 // MetricsMessage creates a new metrics message
-func MetricsMessage(cpu float64, memory uint64, memoryTotal uint64, 
+func MetricsMessage(cpu float64, memory uint64, memoryTotal uint64,
 	rxBytes, txBytes, readBytes, writeBytes uint64) *Message {
 	return NewMessage(MessageTypeMetrics, map[string]interface{}{
 		"cpu": map[string]interface{}{
@@ -143,12 +143,12 @@ func (h *Hub) Run() {
 			h.clients[client] = true
 			// Add to VM specific clients
 			h.vmClients[client.VMName] = append(h.vmClients[client.VMName], client)
-		
+
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.Send)
-				
+
 				// Remove from VM specific clients
 				clients := h.vmClients[client.VMName]
 				for i, c := range clients {
@@ -157,13 +157,13 @@ func (h *Hub) Run() {
 						break
 					}
 				}
-				
+
 				// Clean up empty VM entries
 				if len(h.vmClients[client.VMName]) == 0 {
 					delete(h.vmClients, client.VMName)
 				}
 			}
-		
+
 		case message := <-h.broadcast:
 			for client := range h.clients {
 				select {

@@ -9,12 +9,12 @@ import (
 
 // GormUser represents the database model for a user
 type GormUser struct {
-	ID        string         `gorm:"type:uuid;primary_key"`
-	Username  string         `gorm:"uniqueIndex;not null"`
-	Password  string         `gorm:"not null"`
-	Email     string         `gorm:"uniqueIndex;not null"`
-	RolesJSON string         `gorm:"column:roles;type:text;not null;default:'[]'"`
-	Active    bool          `gorm:"default:true"`
+	ID        string `gorm:"type:uuid;primary_key"`
+	Username  string `gorm:"uniqueIndex;not null"`
+	Password  string `gorm:"not null"`
+	Email     string `gorm:"uniqueIndex;not null"`
+	RolesJSON string `gorm:"column:roles;type:text;not null;default:'[]'"`
+	Active    bool   `gorm:"default:true"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/threatflux/libgo/pkg/logger"
 	"github.com/threatflux/libgo/pkg/utils/exec"
 	mock_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"

@@ -3,10 +3,11 @@ package network
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/digitalocean/go-libvirt"
 	"github.com/threatflux/libgo/internal/libvirt/connection"
 	"github.com/threatflux/libgo/pkg/logger"
-	"strings"
 )
 
 // LibvirtNetworkManager implements Manager for libvirt networks

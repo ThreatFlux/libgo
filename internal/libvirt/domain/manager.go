@@ -729,12 +729,12 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 
 // snapshotXML represents libvirt snapshot XML structure
 type snapshotXML struct {
-	XMLName      xml.Name `xml:"domainsnapshot"`
-	Name         string   `xml:"name"`
-	Description  string   `xml:"description,omitempty"`
-	State        string   `xml:"state,omitempty"`
-	Parent       string   `xml:"parent>name,omitempty"`
-	CreationTime int64    `xml:"creationTime"`
+	XMLName      xml.Name  `xml:"domainsnapshot"`
+	Name         string    `xml:"name"`
+	Description  string    `xml:"description,omitempty"`
+	State        string    `xml:"state,omitempty"`
+	Parent       string    `xml:"parent>name,omitempty"`
+	CreationTime int64     `xml:"creationTime"`
 	Memory       *struct{} `xml:"memory,omitempty"`
 	Disks        []struct {
 		Name string `xml:"name,attr"`
@@ -745,15 +745,15 @@ type snapshotXML struct {
 func buildSnapshotXML(params vm.SnapshotParams) string {
 	xml := fmt.Sprintf(`<domainsnapshot>
   <name>%s</name>`, params.Name)
-	
+
 	if params.Description != "" {
 		xml += fmt.Sprintf("\n  <description>%s</description>", params.Description)
 	}
-	
+
 	if params.IncludeMemory {
 		xml += "\n  <memory snapshot='internal'/>"
 	}
-	
+
 	xml += "\n</domainsnapshot>"
 	return xml
 }

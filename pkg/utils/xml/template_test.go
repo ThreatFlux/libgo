@@ -3,9 +3,7 @@ package xml
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 )

@@ -22,36 +22,36 @@ var (
 	ErrForbidden        = errors.New("operation not permitted")
 
 	// VM-specific errors
-	ErrVMNotFound       = errors.New("VM not found")
-	ErrVMAlreadyExists  = errors.New("VM already exists")
-	ErrVMInvalidState   = errors.New("invalid VM state for operation")
-	ErrInvalidCPUCount  = errors.New("invalid CPU count")
-	ErrInvalidMemorySize = errors.New("invalid memory size")
-	ErrInvalidDiskSize   = errors.New("invalid disk size")
-	ErrInvalidDiskFormat = errors.New("invalid disk format")
-	ErrInvalidNetworkType = errors.New("invalid network type")
+	ErrVMNotFound           = errors.New("VM not found")
+	ErrVMAlreadyExists      = errors.New("VM already exists")
+	ErrVMInvalidState       = errors.New("invalid VM state for operation")
+	ErrInvalidCPUCount      = errors.New("invalid CPU count")
+	ErrInvalidMemorySize    = errors.New("invalid memory size")
+	ErrInvalidDiskSize      = errors.New("invalid disk size")
+	ErrInvalidDiskFormat    = errors.New("invalid disk format")
+	ErrInvalidNetworkType   = errors.New("invalid network type")
 	ErrInvalidNetworkSource = errors.New("invalid network source")
 
 	// Storage errors
-	ErrStoragePoolNotFound  = errors.New("storage pool not found")
-	ErrVolumeNotFound       = errors.New("volume not found")
-	ErrInsufficientStorage  = errors.New("insufficient storage space")
+	ErrStoragePoolNotFound = errors.New("storage pool not found")
+	ErrVolumeNotFound      = errors.New("volume not found")
+	ErrInsufficientStorage = errors.New("insufficient storage space")
 
 	// Network errors
-	ErrNetworkNotFound      = errors.New("network not found")
-	ErrIPAddressNotFound    = errors.New("IP address not found")
+	ErrNetworkNotFound   = errors.New("network not found")
+	ErrIPAddressNotFound = errors.New("IP address not found")
 
 	// Authentication errors
-	ErrInvalidCredentials   = errors.New("invalid credentials")
-	ErrTokenExpired         = errors.New("token expired")
-	ErrInvalidToken         = errors.New("invalid token")
-	ErrUserInactive         = errors.New("user account is inactive")
-	ErrDuplicateUsername    = errors.New("username already exists")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrTokenExpired       = errors.New("token expired")
+	ErrInvalidToken       = errors.New("invalid token")
+	ErrUserInactive       = errors.New("user account is inactive")
+	ErrDuplicateUsername  = errors.New("username already exists")
 
 	// Export errors
-	ErrExportFailed         = errors.New("export operation failed")
-	ErrExportJobNotFound    = errors.New("export job not found")
-	ErrUnsupportedFormat    = errors.New("unsupported export format")
+	ErrExportFailed      = errors.New("export operation failed")
+	ErrExportJobNotFound = errors.New("export job not found")
+	ErrUnsupportedFormat = errors.New("unsupported export format")
 )
 
 // Wrap wraps an error with additional context

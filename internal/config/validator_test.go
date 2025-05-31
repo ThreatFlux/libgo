@@ -322,9 +322,9 @@ func TestValidateLogging(t *testing.T) {
 		{
 			name: "Negative max size",
 			logging: LoggingConfig{
-				Level:    "info",
-				Format:   "json",
-				MaxSize:  -1,
+				Level:   "info",
+				Format:  "json",
+				MaxSize: -1,
 			},
 			wantErr: true,
 		},

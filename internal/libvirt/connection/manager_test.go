@@ -116,8 +116,8 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 type invalidConn struct{}
 
 func (c *invalidConn) GetLibvirtConnection() *libvirt.Libvirt { return nil }
-func (c *invalidConn) Close() error                          { return nil }
-func (c *invalidConn) IsActive() bool                        { return true }
+func (c *invalidConn) Close() error                           { return nil }
+func (c *invalidConn) IsActive() bool                         { return true }
 
 // Tests
 func TestNewConnectionManager(t *testing.T) {
@@ -175,10 +175,10 @@ func TestConnectionManager_Connect_MockedLibvirt(t *testing.T) {
 	mockNetConn := &mockConn{}
 
 	libvirtConn := &libvirtConnection{
-		libvirt:  &libvirt.Libvirt{},
-		conn:     mockNetConn,
-		active:   true,
-		manager:  manager,
+		libvirt: &libvirt.Libvirt{},
+		conn:    mockNetConn,
+		active:  true,
+		manager: manager,
 	}
 
 	// Add to pool
@@ -235,10 +235,10 @@ func TestConnectionManager_Close(t *testing.T) {
 		mockNetConn.On("Close").Return(nil)
 
 		libvirtConn := &libvirtConnection{
-			libvirt:  mockLibvirtClient,
-			conn:     mockNetConn,
-			active:   true,
-			manager:  manager,
+			libvirt: mockLibvirtClient,
+			conn:    mockNetConn,
+			active:  true,
+			manager: manager,
 		}
 
 		// Add to pool
@@ -281,10 +281,10 @@ func TestLibvirtConnection_Close(t *testing.T) {
 	mockNetConn.On("Close").Return(nil)
 
 	conn := &libvirtConnection{
-		libvirt:  mockLibvirtClient,
-		conn:     mockNetConn,
-		active:   true,
-		manager:  manager,
+		libvirt: mockLibvirtClient,
+		conn:    mockNetConn,
+		active:  true,
+		manager: manager,
 	}
 
 	// Test close

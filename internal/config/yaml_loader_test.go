@@ -316,14 +316,14 @@ func TestBuildEnvVarName(t *testing.T) {
 
 func TestApplyEnvValueToField(t *testing.T) {
 	type testStruct struct {
-		String        string
-		Int           int
-		Bool          bool
-		Float         float64
-		Duration      time.Duration
-		Map           map[string]string
-		StringSlice   []string
-		IntSlice      []int
+		String      string
+		Int         int
+		Bool        bool
+		Float       float64
+		Duration    time.Duration
+		Map         map[string]string
+		StringSlice []string
+		IntSlice    []int
 	}
 
 	tests := []struct {
@@ -423,25 +423,25 @@ func TestApplyEnvValueToField(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create a new instance of testStruct
 			s := testStruct{}
-			
+
 			// Get the field to set
 			v := reflect.ValueOf(&s).Elem()
 			field := v.FieldByName(tt.field)
-			
+
 			// Apply the environment value
 			err := applyEnvValueToField(field, tt.envValue)
-			
+
 			// Check for expected errors
 			if (err != nil) != tt.expectErr {
 				t.Errorf("applyEnvValueToField() error = %v, expectErr %v", err, tt.expectErr)
 				return
 			}
-			
+
 			if err != nil {
 				// If we expected an error, no need to check the value
 				return
 			}
-			
+
 			// Check the field value based on its type
 			switch tt.field {
 			case "String":

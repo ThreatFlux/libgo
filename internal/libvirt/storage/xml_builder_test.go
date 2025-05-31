@@ -3,9 +3,7 @@ package storage
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

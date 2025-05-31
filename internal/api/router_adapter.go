@@ -38,7 +38,7 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 	}); ok {
 		return getter.GetMetrics(ctx, name)
 	}
-	
+
 	// Try to get VM metrics from the VM manager directly
 	// This handles the case where VM manager returns its own metrics type
 	type vmMetrics struct {
@@ -58,7 +58,7 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 			WriteBytes uint64
 		}
 	}
-	
+
 	if getter, ok := a.manager.(interface {
 		GetMetrics(ctx context.Context, name string) (*vmMetrics, error)
 	}); ok {
@@ -66,7 +66,7 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Convert to websocket metrics
 		wsMetrics := &websocket.VMMetrics{}
 		wsMetrics.CPU.Utilization = vmMetricsResult.CPU.Utilization
@@ -76,7 +76,7 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 		wsMetrics.Network.TxBytes = vmMetricsResult.Network.TxBytes
 		wsMetrics.Disk.ReadBytes = vmMetricsResult.Disk.ReadBytes
 		wsMetrics.Disk.WriteBytes = vmMetricsResult.Disk.WriteBytes
-		
+
 		return wsMetrics, nil
 	}
 
@@ -88,20 +88,20 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Create mock metrics - the real metrics conversion would be more complex
 		wsMetrics := &websocket.VMMetrics{}
-		wsMetrics.CPU.Utilization = 25.0 + float64(time.Now().Unix() % 50) // Random-ish value between 25-75%
-		wsMetrics.Memory.Used = 1024*1024*1024 + uint64(time.Now().Unix() % 3 * 1024*1024*1024) // 1-4GB
-		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024 // 8GB
-		wsMetrics.Network.RxBytes = uint64(time.Now().Unix() % 10 * 1024 * 1024) // 0-10MB
-		wsMetrics.Network.TxBytes = uint64(time.Now().Unix() % 5 * 1024 * 1024)  // 0-5MB
-		wsMetrics.Disk.ReadBytes = uint64(time.Now().Unix() % 20 * 1024 * 1024)  // 0-20MB
-		wsMetrics.Disk.WriteBytes = uint64(time.Now().Unix() % 10 * 1024 * 1024) // 0-10MB
-		
+		wsMetrics.CPU.Utilization = 25.0 + float64(time.Now().Unix()%50)                    // Random-ish value between 25-75%
+		wsMetrics.Memory.Used = 1024*1024*1024 + uint64(time.Now().Unix()%3*1024*1024*1024) // 1-4GB
+		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024                                     // 8GB
+		wsMetrics.Network.RxBytes = uint64(time.Now().Unix() % 10 * 1024 * 1024)            // 0-10MB
+		wsMetrics.Network.TxBytes = uint64(time.Now().Unix() % 5 * 1024 * 1024)             // 0-5MB
+		wsMetrics.Disk.ReadBytes = uint64(time.Now().Unix() % 20 * 1024 * 1024)             // 0-20MB
+		wsMetrics.Disk.WriteBytes = uint64(time.Now().Unix() % 10 * 1024 * 1024)            // 0-10MB
+
 		return wsMetrics, nil
 	}
-	
+
 	return nil, fmt.Errorf("VM manager does not support GetMetrics method")
 }
 
@@ -137,7 +137,7 @@ func ConfigureRoutes(
 
 	// Protected routes (authentication based on config)
 	protected := apiGroup.Group("/")
-	
+
 	// Only apply authentication middleware if it's enabled in config
 	if config != nil && config.Auth.Enabled {
 		log.Info("Authentication is enabled, applying JWT middleware")
@@ -156,7 +156,7 @@ func ConfigureRoutes(
 		vms.PUT("/:name/start", vmHandler.StartVM)
 		vms.PUT("/:name/stop", vmHandler.StopVM)
 		vms.POST("/:name/export", exportHandler.ExportVM)
-		
+
 		// Snapshot endpoints
 		vms.POST("/:name/snapshots", vmHandler.CreateSnapshot)
 		vms.GET("/:name/snapshots", vmHandler.ListSnapshots)
@@ -172,7 +172,7 @@ func ConfigureRoutes(
 		exports.GET("/:id", exportHandler.GetExportStatus)
 		exports.DELETE("/:id", exportHandler.CancelExport)
 	}
-	
+
 	// Setup WebSocket routes if VM handler provides a VM manager
 	if manager := vmHandler.GetVMManager(); manager != nil {
 		// We'll use an adapter to adapt the VM manager to the WebSocket interface

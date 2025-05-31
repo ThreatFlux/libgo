@@ -26,28 +26,28 @@ const (
 type Snapshot struct {
 	// Name is the snapshot name
 	Name string `json:"name"`
-	
+
 	// Description is an optional description
 	Description string `json:"description,omitempty"`
-	
+
 	// State is the domain state at time of snapshot
 	State SnapshotState `json:"state"`
-	
+
 	// Parent is the parent snapshot name (if any)
 	Parent string `json:"parent,omitempty"`
-	
+
 	// CreatedAt is when the snapshot was created
 	CreatedAt time.Time `json:"created_at"`
-	
+
 	// IsCurrent indicates if this is the current snapshot
 	IsCurrent bool `json:"is_current"`
-	
+
 	// HasMetadata indicates if the snapshot has metadata
 	HasMetadata bool `json:"has_metadata"`
-	
+
 	// HasMemory indicates if memory state is included
 	HasMemory bool `json:"has_memory"`
-	
+
 	// HasDisk indicates if disk state is included
 	HasDisk bool `json:"has_disk"`
 }
@@ -56,13 +56,13 @@ type Snapshot struct {
 type SnapshotParams struct {
 	// Name is the snapshot name (required)
 	Name string `json:"name" binding:"required"`
-	
+
 	// Description is an optional description
 	Description string `json:"description,omitempty"`
-	
+
 	// IncludeMemory determines if memory state should be saved
 	IncludeMemory bool `json:"include_memory"`
-	
+
 	// Quiesce attempts to quiesce guest filesystems (requires guest agent)
 	Quiesce bool `json:"quiesce"`
 }
@@ -71,7 +71,7 @@ type SnapshotParams struct {
 type SnapshotListOptions struct {
 	// IncludeMetadata includes full metadata for each snapshot
 	IncludeMetadata bool `json:"include_metadata"`
-	
+
 	// Tree returns snapshots in tree structure
 	Tree bool `json:"tree"`
 }
