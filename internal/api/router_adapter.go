@@ -156,6 +156,13 @@ func ConfigureRoutes(
 		vms.PUT("/:name/start", vmHandler.StartVM)
 		vms.PUT("/:name/stop", vmHandler.StopVM)
 		vms.POST("/:name/export", exportHandler.ExportVM)
+		
+		// Snapshot endpoints
+		vms.POST("/:name/snapshots", vmHandler.CreateSnapshot)
+		vms.GET("/:name/snapshots", vmHandler.ListSnapshots)
+		vms.GET("/:name/snapshots/:snapshot", vmHandler.GetSnapshot)
+		vms.DELETE("/:name/snapshots/:snapshot", vmHandler.DeleteSnapshot)
+		vms.PUT("/:name/snapshots/:snapshot/revert", vmHandler.RevertSnapshot)
 	}
 
 	// Export job management

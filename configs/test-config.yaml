@@ -1,54 +1,75 @@
+# KVM VM Management API Configuration with Windows 11 support
+
+# Server settings
 server:
-  host: "localhost"
+  host: "0.0.0.0"
   port: 8080
   readTimeout: 30s
   writeTimeout: 30s
+  maxHeaderBytes: 1048576
+  tls:
+    enabled: false
 
-database:
-  driver: "sqlite"
-  dsn: "file:/tmp/libgo-test.db?mode=rwc"
-  maxOpenConns: 1
-  maxIdleConns: 1
-  connMaxLifetime: 1h
-  autoMigrate: true
-
-logging:
-  level: "debug"
-  format: "json"
-  outputPaths: ["stdout"]
-  errorOutputPaths: ["stderr"]
-
+# Libvirt connection settings
 libvirt:
   uri: "qemu:///system"
-  poolName: "default"
-  poolPath: "/tmp/exports"
-  networkName: "default"
-  connectionTimeout: 30s
+  connectionTimeout: 10s
   maxConnections: 5
+  poolName: "default"
+  networkName: "default"
 
+# Authentication settings
+auth:
+  # Disable authentication for easy testing
+  enabled: false
+  jwtSecretKey: "change-me-in-production"
+  issuer: "libgo-api"
+  audience: "libgo-clients"
+  tokenExpiration: 15m
+  signingMethod: "HS256"
+
+# Logging settings
+logging:
+  level: "debug"
+  format: "console"
+  filePath: ""
+
+# Storage settings
 storage:
   defaultPool: "default"
-  poolPath: "/tmp/exports"
-
-auth:
-  jwtSecretKey: "test-secret-key-for-jwt-token-generation"
-  tokenExpiration: 15m
-  refreshTokenExpiration: 24h
-  defaultUsers:
-    - username: "admin"
-      password: "admin"
-      email: "admin@example.com"
-      roles: ["admin"]
-
-export:
-  outputDir: "./tmp/exports"
-  tempDir: "./tmp/exports"
-  defaultFormat: "qcow2"
-  retention: 24h
-  formats:
-    - "qcow2"
-    - "vmdk"
-    - "vdi"
-    - "ova"
+  poolPath: "/home/vtriple/libgo/storage"
+  templates:
+    windows-11: "/home/vtriple/libgo/Win11_24H2_English_x64.iso"
 
 templatesPath: "configs/templates"
+
+# Database settings
+database:
+  driver: "sqlite"
+  sqlite:
+    path: "./libgo.db"
+
+# Export settings
+export:
+  outputDir: "/home/vtriple/libgo/exports"
+  tempDir: "/tmp"
+  defaultFormat: "qcow2"
+  retention: 168h
+
+# Feature flags
+features:
+  cloudInit: true
+  export: true
+  metrics: true
+  rbacEnabled: false
+  storageCleanup: true
+  websocket: true
+
+# WebSocket settings
+websocket:
+  enabled: true
+  pingInterval: 30
+  maxMessageSize: 8192
+  writeWait: 10s
+  pongWait: 60s
+  metricsInterval: 5s

@@ -28,4 +28,20 @@ type Manager interface {
 
 	// Restart restarts a VM
 	Restart(ctx context.Context, name string) error
+
+	// Snapshot operations
+	// CreateSnapshot creates a new snapshot of a VM
+	CreateSnapshot(ctx context.Context, vmName string, params vm.SnapshotParams) (*vm.Snapshot, error)
+
+	// ListSnapshots lists all snapshots for a VM
+	ListSnapshots(ctx context.Context, vmName string, opts vm.SnapshotListOptions) ([]*vm.Snapshot, error)
+
+	// GetSnapshot retrieves information about a specific snapshot
+	GetSnapshot(ctx context.Context, vmName string, snapshotName string) (*vm.Snapshot, error)
+
+	// DeleteSnapshot deletes a snapshot
+	DeleteSnapshot(ctx context.Context, vmName string, snapshotName string) error
+
+	// RevertSnapshot reverts a VM to a snapshot
+	RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error
 }

@@ -397,3 +397,91 @@ func (m *VMManager) cleanupResources(ctx context.Context, params vm.VMParams) er
 
 	return nil
 }
+
+// CreateSnapshot creates a new snapshot of a VM
+func (m *VMManager) CreateSnapshot(ctx context.Context, vmName string, params vm.SnapshotParams) (*vm.Snapshot, error) {
+	m.logger.Info("Creating VM snapshot",
+		logger.String("vm", vmName),
+		logger.String("snapshot", params.Name))
+
+	// Delegate to domain manager
+	snapshot, err := m.domainManager.CreateSnapshot(ctx, vmName, params)
+	if err != nil {
+		return nil, fmt.Errorf("creating snapshot: %w", err)
+	}
+
+	m.logger.Info("VM snapshot created successfully",
+		logger.String("vm", vmName),
+		logger.String("snapshot", params.Name))
+
+	return snapshot, nil
+}
+
+// ListSnapshots lists all snapshots for a VM
+func (m *VMManager) ListSnapshots(ctx context.Context, vmName string, opts vm.SnapshotListOptions) ([]*vm.Snapshot, error) {
+	m.logger.Debug("Listing VM snapshots",
+		logger.String("vm", vmName))
+
+	// Delegate to domain manager
+	snapshots, err := m.domainManager.ListSnapshots(ctx, vmName, opts)
+	if err != nil {
+		return nil, fmt.Errorf("listing snapshots: %w", err)
+	}
+
+	m.logger.Debug("Listed VM snapshots",
+		logger.String("vm", vmName),
+		logger.Int("count", len(snapshots)))
+
+	return snapshots, nil
+}
+
+// GetSnapshot retrieves information about a specific snapshot
+func (m *VMManager) GetSnapshot(ctx context.Context, vmName string, snapshotName string) (*vm.Snapshot, error) {
+	m.logger.Debug("Getting VM snapshot",
+		logger.String("vm", vmName),
+		logger.String("snapshot", snapshotName))
+
+	// Delegate to domain manager
+	snapshot, err := m.domainManager.GetSnapshot(ctx, vmName, snapshotName)
+	if err != nil {
+		return nil, fmt.Errorf("getting snapshot: %w", err)
+	}
+
+	return snapshot, nil
+}
+
+// DeleteSnapshot deletes a snapshot
+func (m *VMManager) DeleteSnapshot(ctx context.Context, vmName string, snapshotName string) error {
+	m.logger.Info("Deleting VM snapshot",
+		logger.String("vm", vmName),
+		logger.String("snapshot", snapshotName))
+
+	// Delegate to domain manager
+	if err := m.domainManager.DeleteSnapshot(ctx, vmName, snapshotName); err != nil {
+		return fmt.Errorf("deleting snapshot: %w", err)
+	}
+
+	m.logger.Info("VM snapshot deleted successfully",
+		logger.String("vm", vmName),
+		logger.String("snapshot", snapshotName))
+
+	return nil
+}
+
+// RevertSnapshot reverts a VM to a snapshot
+func (m *VMManager) RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error {
+	m.logger.Info("Reverting VM to snapshot",
+		logger.String("vm", vmName),
+		logger.String("snapshot", snapshotName))
+
+	// Delegate to domain manager
+	if err := m.domainManager.RevertSnapshot(ctx, vmName, snapshotName); err != nil {
+		return fmt.Errorf("reverting to snapshot: %w", err)
+	}
+
+	m.logger.Info("VM reverted to snapshot successfully",
+		logger.String("vm", vmName),
+		logger.String("snapshot", snapshotName))
+
+	return nil
+}

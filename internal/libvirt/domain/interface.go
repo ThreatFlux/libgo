@@ -31,6 +31,22 @@ type Manager interface {
 
 	// GetXML gets the XML configuration of a domain
 	GetXML(ctx context.Context, name string) (string, error)
+
+	// Snapshot operations
+	// CreateSnapshot creates a new snapshot of a domain
+	CreateSnapshot(ctx context.Context, vmName string, params vm.SnapshotParams) (*vm.Snapshot, error)
+
+	// ListSnapshots lists all snapshots for a domain
+	ListSnapshots(ctx context.Context, vmName string, opts vm.SnapshotListOptions) ([]*vm.Snapshot, error)
+
+	// GetSnapshot retrieves information about a specific snapshot
+	GetSnapshot(ctx context.Context, vmName string, snapshotName string) (*vm.Snapshot, error)
+
+	// DeleteSnapshot deletes a snapshot
+	DeleteSnapshot(ctx context.Context, vmName string, snapshotName string) error
+
+	// RevertSnapshot reverts a domain to a snapshot
+	RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error
 }
 
 // XMLBuilder defines interface for building domain XML
