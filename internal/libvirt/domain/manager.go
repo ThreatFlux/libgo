@@ -163,8 +163,8 @@ func (m *DomainManager) List(ctx context.Context) ([]*vm.VM, error) {
 
 	libvirtConn := conn.GetLibvirtConnection()
 
-	// Get all domains
-	domains, err := libvirtConn.Domains()
+	// Get all domains using the recommended method
+	domains, _, err := libvirtConn.ConnectListAllDomains(1, 0)
 	if err != nil {
 		return nil, fmt.Errorf("listing domains: %w", err)
 	}

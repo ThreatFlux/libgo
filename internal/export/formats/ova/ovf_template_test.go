@@ -86,6 +86,7 @@ func TestOVFTemplateGenerator_GenerateOVF(t *testing.T) {
 			if cpuCount == 0 {
 				cpuCount = 1 // Default value
 			}
+			_ = cpuCount // Used in assertion below
 			assert.Contains(t, ovfContent, "<rasd:VirtualQuantity>"+strings.TrimSpace(strings.Split(ovfContent, "<rasd:VirtualQuantity>")[1][:1]))
 
 			// Verify memory configuration is present

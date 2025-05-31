@@ -47,8 +47,8 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 
 	// Create directory for output if it doesn't exist
 	outDir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("creating output directory: %w", err)
+	if mkdirErr := os.MkdirAll(outDir, 0755); mkdirErr != nil {
+		return fmt.Errorf("creating output directory: %w", mkdirErr)
 	}
 
 	// Create ISO using genisoimage or mkisofs
@@ -57,7 +57,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 	var args []string
 
 	// Try to find genisoimage or mkisofs
-	if _, err := exec.LookPath("genisoimage"); err == nil {
+	if _, geniesoErr := exec.LookPath("genisoimage"); geniesoErr == nil {
 		cmdName = "genisoimage"
 		args = []string{
 			"-output", outputPath,
@@ -66,7 +66,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 			"-rock",
 			tmpDir,
 		}
-	} else if _, err := exec.LookPath("mkisofs"); err == nil {
+	} else if _, mkisofsErr := exec.LookPath("mkisofs"); mkisofsErr == nil {
 		cmdName = "mkisofs"
 		args = []string{
 			"-output", outputPath,

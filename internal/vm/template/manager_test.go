@@ -51,8 +51,8 @@ func TestTemplateManager_ListTemplates(t *testing.T) {
 
 	// Write test templates to files
 	for name, template := range templates {
-		templateData, err := json.Marshal(template)
-		require.NoError(t, err)
+		templateData, marshalErr := json.Marshal(template)
+		require.NoError(t, marshalErr)
 
 		err = os.WriteFile(filepath.Join(tempDir, name+".json"), templateData, 0644)
 		require.NoError(t, err)

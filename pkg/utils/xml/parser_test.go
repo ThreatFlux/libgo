@@ -8,10 +8,14 @@ import (
 	"testing"
 )
 
-// Sample XML data for testing
+const (
+	testVMName = "test-vm"
+)
+
+// Sample XML data for testing.
 const testXML = `<?xml version="1.0" encoding="UTF-8"?>
 <domain type="kvm">
-  <name>test-vm</name>
+  <name>` + testVMName + `</name>
   <uuid>12345678-1234-1234-1234-123456789012</uuid>
   <memory unit="KiB">2097152</memory>
   <vcpu placement="static">2</vcpu>
@@ -29,7 +33,7 @@ const testXML = `<?xml version="1.0" encoding="UTF-8"?>
   </devices>
 </domain>`
 
-// Test structure for XML unmarshaling
+// Test structure for XML unmarshaling.
 type TestDomain struct {
 	XMLName xml.Name `xml:"domain"`
 	Type    string   `xml:"type,attr"`
@@ -58,8 +62,8 @@ func TestParseXML(t *testing.T) {
 		t.Errorf("Expected Type to be 'kvm', got '%s'", domain.Type)
 	}
 
-	if domain.Name != "test-vm" {
-		t.Errorf("Expected Name to be 'test-vm', got '%s'", domain.Name)
+	if domain.Name != testVMName {
+		t.Errorf("Expected Name to be '%s', got '%s'", testVMName, domain.Name)
 	}
 
 	if domain.UUID != "12345678-1234-1234-1234-123456789012" {
@@ -102,8 +106,8 @@ func TestParseXMLFile(t *testing.T) {
 	}
 
 	// Verify the parsed values
-	if domain.Name != "test-vm" {
-		t.Errorf("Expected Name to be 'test-vm', got '%s'", domain.Name)
+	if domain.Name != testVMName {
+		t.Errorf("Expected Name to be '%s', got '%s'", testVMName, domain.Name)
 	}
 
 	// Test parsing non-existent file
@@ -125,8 +129,8 @@ func TestETreeFunctions(t *testing.T) {
 	if element == nil {
 		t.Fatalf("FindElement failed to find domain/name")
 	}
-	if GetElementText(element) != "test-vm" {
-		t.Errorf("Expected element text to be 'test-vm', got '%s'", GetElementText(element))
+	if GetElementText(element) != testVMName {
+		t.Errorf("Expected element text to be '%s', got '%s'", testVMName, GetElementText(element))
 	}
 
 	// Test FindElement with non-existent path
