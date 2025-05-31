@@ -9,31 +9,38 @@ import (
 	"github.com/threatflux/libgo/internal/models/user"
 )
 
+// Test constants.
+const (
+	testSecret   = "test-secret"
+	testIssuer   = "test-issuer"
+	testAudience = "test-audience"
+)
+
 func TestNewJWTGenerator(t *testing.T) {
 	// Test with HMAC algorithm
 	hmacConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	hmacGen := NewJWTGenerator(hmacConfig)
-	if hmacGen.algorithm.Alg() != "HS256" {
-		t.Errorf("Expected algorithm to be HS256, got %s", hmacGen.algorithm.Alg())
+	if hmacGen.algorithm.Alg() != SigningMethodHS256 {
+		t.Errorf("Expected algorithm to be %s, got %s", SigningMethodHS256, hmacGen.algorithm.Alg())
 	}
 
-	if string(hmacGen.secretKey) != "test-secret" {
-		t.Errorf("Expected secretKey to be %q, got %q", "test-secret", string(hmacGen.secretKey))
+	if string(hmacGen.secretKey) != testSecret {
+		t.Errorf("Expected secretKey to be %q, got %q", testSecret, string(hmacGen.secretKey))
 	}
 
-	if hmacGen.issuer != "test-issuer" {
-		t.Errorf("Expected issuer to be %q, got %q", "test-issuer", hmacGen.issuer)
+	if hmacGen.issuer != testIssuer {
+		t.Errorf("Expected issuer to be %q, got %q", testIssuer, hmacGen.issuer)
 	}
 
-	if len(hmacGen.audience) != 1 || hmacGen.audience[0] != "test-audience" {
-		t.Errorf("Expected audience to be [%q], got %v", "test-audience", hmacGen.audience)
+	if len(hmacGen.audience) != 1 || hmacGen.audience[0] != testAudience {
+		t.Errorf("Expected audience to be [%q], got %v", testAudience, hmacGen.audience)
 	}
 
 	if hmacGen.expiresIn != 15*time.Minute {
@@ -42,11 +49,11 @@ func TestNewJWTGenerator(t *testing.T) {
 
 	// Test with different signing method
 	rsaConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "RS256",
+		SigningMethod:   SigningMethodRS256,
 	}
 
 	rsaGen := NewJWTGenerator(rsaConfig)
@@ -56,25 +63,25 @@ func TestNewJWTGenerator(t *testing.T) {
 
 	// Test with invalid signing method (should default to HS256)
 	invalidConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute,
 		SigningMethod:   "INVALID",
 	}
 
 	invalidGen := NewJWTGenerator(invalidConfig)
-	if invalidGen.algorithm.Alg() != "HS256" {
-		t.Errorf("Expected algorithm to be HS256 (default), got %s", invalidGen.algorithm.Alg())
+	if invalidGen.algorithm.Alg() != SigningMethodHS256 {
+		t.Errorf("Expected algorithm to be %s (default), got %s", SigningMethodHS256, invalidGen.algorithm.Alg())
 	}
 
 	// Test with empty audience
 	emptyAudienceConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
 		Audience:        "",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	emptyAudienceGen := NewJWTGenerator(emptyAudienceConfig)
@@ -86,11 +93,11 @@ func TestNewJWTGenerator(t *testing.T) {
 func TestJWTGenerator_Generate(t *testing.T) {
 	// Create a test generator with HMAC
 	generator := NewJWTGenerator(config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	})
 
 	// Create a test user
@@ -131,13 +138,13 @@ func TestJWTGenerator_Generate(t *testing.T) {
 		t.Errorf("Expected Roles length to be %d, got %d", len(testUser.Roles), len(claims.Roles))
 	}
 
-	if claims.Issuer != "test-issuer" {
-		t.Errorf("Expected Issuer to be %q, got %q", "test-issuer", claims.Issuer)
+	if claims.Issuer != testIssuer {
+		t.Errorf("Expected Issuer to be %q, got %q", testIssuer, claims.Issuer)
 	}
 
 	aud := []string(claims.Audience)
-	if len(aud) != 1 || aud[0] != "test-audience" {
-		t.Errorf("Expected Audience to be [%q], got %v", "test-audience", aud)
+	if len(aud) != 1 || aud[0] != testAudience {
+		t.Errorf("Expected Audience to be [%q], got %v", testAudience, aud)
 	}
 
 	// Check that expiration is in the future (approximately 15 minutes)
@@ -156,11 +163,11 @@ func TestJWTGenerator_Generate(t *testing.T) {
 func TestJWTGenerator_GenerateWithExpiration(t *testing.T) {
 	// Create a test generator
 	generator := NewJWTGenerator(config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		JWTSecretKey:    testSecret,
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute, // Default, should be overridden
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	})
 
 	// Create a test user
@@ -199,13 +206,13 @@ func TestJWTGenerator_GenerateWithExpiration(t *testing.T) {
 
 func TestJWTGenerator_Parse(t *testing.T) {
 	// Create a generator for testing
-	secretKey := "test-secret"
+	secretKey := testSecret
 	generator := NewJWTGenerator(config.AuthConfig{
 		JWTSecretKey:    secretKey,
-		Issuer:          "test-issuer",
-		Audience:        "test-audience",
+		Issuer:          testIssuer,
+		Audience:        testAudience,
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	})
 
 	// Create a test user
@@ -247,9 +254,9 @@ func TestJWTGenerator_Parse(t *testing.T) {
 	// Create a token with a different algorithm
 	wrongAlgClaims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "test-issuer",
+			Issuer:    testIssuer,
 			Subject:   testUser.ID,
-			Audience:  jwt.ClaimStrings{"test-audience"},
+			Audience:  jwt.ClaimStrings{testAudience},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
@@ -274,9 +281,9 @@ func TestJWTGenerator_Parse(t *testing.T) {
 	// Create a token that's already expired
 	expiredClaims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "test-issuer",
+			Issuer:    testIssuer,
 			Subject:   testUser.ID,
-			Audience:  jwt.ClaimStrings{"test-audience"},
+			Audience:  jwt.ClaimStrings{testAudience},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)), // Expired
 			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
 		},

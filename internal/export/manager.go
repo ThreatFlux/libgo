@@ -298,12 +298,12 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 			sourceDiskPath = diskPath
 		} else {
 			// Neither method worked
-			err := fmt.Errorf("could not determine valid disk volume name")
+			determineDiskErr := fmt.Errorf("could not determine valid disk volume name")
 			m.logger.Error("Failed to determine disk volume",
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName),
-				logger.String("error", err.Error()))
-			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+				logger.String("error", determineDiskErr.Error()))
+			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, determineDiskErr)
 			return
 		}
 	} else {

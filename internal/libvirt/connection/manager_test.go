@@ -40,12 +40,18 @@ func (m *mockLogger) Fatal(msg string, fields ...logger.Field) {
 
 func (m *mockLogger) WithFields(fields ...logger.Field) logger.Logger {
 	args := m.Called(fields)
-	return args.Get(0).(logger.Logger)
+	if logger, ok := args.Get(0).(logger.Logger); ok {
+		return logger
+	}
+	return nil
 }
 
 func (m *mockLogger) WithError(err error) logger.Logger {
 	args := m.Called(err)
-	return args.Get(0).(logger.Logger)
+	if logger, ok := args.Get(0).(logger.Logger); ok {
+		return logger
+	}
+	return nil
 }
 
 func (m *mockLogger) Sync() error {
@@ -89,12 +95,18 @@ func (m *mockConn) Write(b []byte) (n int, err error) {
 
 func (m *mockConn) LocalAddr() net.Addr {
 	args := m.Called()
-	return args.Get(0).(net.Addr)
+	if addr, ok := args.Get(0).(net.Addr); ok {
+		return addr
+	}
+	return nil
 }
 
 func (m *mockConn) RemoteAddr() net.Addr {
 	args := m.Called()
-	return args.Get(0).(net.Addr)
+	if addr, ok := args.Get(0).(net.Addr); ok {
+		return addr
+	}
+	return nil
 }
 
 func (m *mockConn) SetDeadline(t time.Time) error {

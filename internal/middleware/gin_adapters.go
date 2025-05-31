@@ -9,7 +9,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// RecoveryToGin adapts a standard HTTP recovery middleware to Gin middleware
+// RecoveryToGin adapts a standard HTTP recovery middleware to Gin middleware.
 func RecoveryToGin(middleware func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		middleware(c.Writer, c.Request, func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +18,7 @@ func RecoveryToGin(middleware func(http.ResponseWriter, *http.Request, func(http
 	}
 }
 
-// LoggingToGin adapts a standard HTTP logging middleware to Gin middleware
+// LoggingToGin adapts a standard HTTP logging middleware to Gin middleware.
 func LoggingToGin(middleware func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		middleware(c.Writer, c.Request, func(w http.ResponseWriter, r *http.Request) {
@@ -27,12 +27,12 @@ func LoggingToGin(middleware func(http.ResponseWriter, *http.Request, func(http.
 	}
 }
 
-// RecoveryGinMiddleware creates a Gin recovery middleware
+// RecoveryGinMiddleware creates a Gin recovery middleware.
 func RecoveryGinMiddleware(log logger.Logger) gin.HandlerFunc {
 	return RecoveryToGin(recovery.RecoveryMiddleware(log))
 }
 
-// LoggingGinMiddleware creates a Gin logging middleware
+// LoggingGinMiddleware creates a Gin logging middleware.
 func LoggingGinMiddleware(log logger.Logger) gin.HandlerFunc {
 	return LoggingToGin(logging.RequestLoggerMiddleware(log))
 }

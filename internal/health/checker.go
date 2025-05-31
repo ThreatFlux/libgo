@@ -6,23 +6,23 @@ import (
 	"time"
 )
 
-// Status represents health status
+// Status represents health status.
 type Status string
 
-// Health status constants
+// Health status constants.
 const (
 	StatusUp   Status = "UP"
 	StatusDown Status = "DOWN"
 )
 
-// Check represents a health check
+// Check represents a health check.
 type Check struct {
 	Name    string            `json:"name"`
 	Status  Status            `json:"status"`
 	Details map[string]string `json:"details,omitempty"`
 }
 
-// Result represents health check result
+// Result represents health check result.
 type Result struct {
 	Status    Status  `json:"status"`
 	Checks    []Check `json:"checks"`
@@ -34,10 +34,10 @@ type Result struct {
 	Uptime    string  `json:"uptime"`
 }
 
-// CheckFunction represents a health check function
+// CheckFunction represents a health check function.
 type CheckFunction func() Check
 
-// Checker performs health checks
+// Checker performs health checks.
 type Checker struct {
 	checks    []CheckFunction
 	version   string
@@ -46,7 +46,7 @@ type Checker struct {
 	mu        sync.RWMutex
 }
 
-// NewChecker creates a new health Checker
+// NewChecker creates a new health Checker.
 func NewChecker(version, buildTime string) *Checker {
 	return &Checker{
 		checks:    make([]CheckFunction, 0),
@@ -56,14 +56,14 @@ func NewChecker(version, buildTime string) *Checker {
 	}
 }
 
-// AddCheck adds a health check
+// AddCheck adds a health check.
 func (c *Checker) AddCheck(check CheckFunction) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.checks = append(c.checks, check)
 }
 
-// RunChecks runs all health checks
+// RunChecks runs all health checks.
 func (c *Checker) RunChecks() Result {
 	c.mu.RLock()
 	checksToRun := make([]CheckFunction, len(c.checks))

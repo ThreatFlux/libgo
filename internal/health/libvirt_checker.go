@@ -11,7 +11,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NewLibvirtConnectionCheck creates a check for libvirt connection
+// NewLibvirtConnectionCheck creates a check for libvirt connection.
 func NewLibvirtConnectionCheck(connManager connection.Manager, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{
@@ -49,7 +49,7 @@ func NewLibvirtConnectionCheck(connManager connection.Manager, logger logger.Log
 	}
 }
 
-// NewStoragePoolCheck creates a check for storage pool
+// NewStoragePoolCheck creates a check for storage pool.
 func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{
@@ -85,7 +85,7 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 		}
 
 		// State is the first returned value, 1 means running/active
-		active := uint8(poolInfo) == 1
+		active := poolInfo == 1
 		if !active {
 			check.Details["error"] = "storage pool is not active"
 			return check
@@ -104,7 +104,7 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 	}
 }
 
-// NewNetworkCheck creates a check for network
+// NewNetworkCheck creates a check for network.
 func NewNetworkCheck(networkManager network.Manager, networkName string, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{

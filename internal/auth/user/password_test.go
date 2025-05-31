@@ -5,8 +5,12 @@ import (
 	"testing"
 )
 
+const (
+	testPasswordValue = "test-password"
+)
+
 func TestHashPassword(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 
 	// Test with default config
 	hash, err := HashPassword(password)
@@ -50,7 +54,7 @@ func TestHashPassword(t *testing.T) {
 }
 
 func TestVerifyPassword(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 	wrongPassword := "wrong-password"
 
 	// Generate a hash
@@ -92,7 +96,7 @@ func TestExtractPasswordConfig(t *testing.T) {
 		KeyLength:   32,
 	}
 
-	password := "test-password"
+	password := testPasswordValue
 	hash, err := HashPasswordWithConfig(password, knownConfig)
 	if err != nil {
 		t.Fatalf("HashPasswordWithConfig failed: %v", err)
@@ -145,7 +149,7 @@ func TestExtractPasswordConfig(t *testing.T) {
 }
 
 func TestNeedsRehash(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 
 	// Create a hash with default config
 	defaultConfig := DefaultPasswordConfig()

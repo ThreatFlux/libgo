@@ -354,8 +354,8 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 
 	// Parse XML
 	var domainXML libvirtDomain
-	if err := xml.Unmarshal([]byte(xmlDesc), &domainXML); err != nil {
-		return nil, fmt.Errorf("parsing domain XML: %w", err)
+	if unmarshalErr := xml.Unmarshal([]byte(xmlDesc), &domainXML); unmarshalErr != nil {
+		return nil, fmt.Errorf("parsing domain XML: %w", unmarshalErr)
 	}
 
 	// Get domain info (state, etc.)
@@ -675,8 +675,8 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 
 	// Parse snapshot XML
 	var snapInfo snapshotXML
-	if err := xml.Unmarshal([]byte(xmlDesc), &snapInfo); err != nil {
-		return nil, fmt.Errorf("failed to parse snapshot XML: %w", err)
+	if unmarshalErr := xml.Unmarshal([]byte(xmlDesc), &snapInfo); unmarshalErr != nil {
+		return nil, fmt.Errorf("failed to parse snapshot XML: %w", unmarshalErr)
 	}
 
 	// Check if snapshot is current

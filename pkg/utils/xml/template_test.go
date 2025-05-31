@@ -110,8 +110,8 @@ func TestRenderTemplate(t *testing.T) {
 	invalidTemplate := "invalid.xml.tmpl"
 	invalidContent := `<test>{{ .MissingField.SubField }}</test>`
 	invalidPath := filepath.Join(tmpDir, invalidTemplate)
-	if err := os.WriteFile(invalidPath, []byte(invalidContent), 0644); err != nil {
-		t.Fatalf("Failed to create invalid template: %v", err)
+	if writeErr := os.WriteFile(invalidPath, []byte(invalidContent), 0644); writeErr != nil {
+		t.Fatalf("Failed to create invalid template: %v", writeErr)
 	}
 
 	_, err = loader.RenderTemplate(invalidTemplate, data)
@@ -146,8 +146,8 @@ func TestCacheAndClearCache(t *testing.T) {
 
 	// Modify the template file to verify caching
 	newContent := `<test>modified-{{ .Value }}</test>`
-	if err := os.WriteFile(templatePath, []byte(newContent), 0644); err != nil {
-		t.Fatalf("Failed to modify template: %v", err)
+	if writeErr := os.WriteFile(templatePath, []byte(newContent), 0644); writeErr != nil {
+		t.Fatalf("Failed to modify template: %v", writeErr)
 	}
 
 	// Render using cached template
