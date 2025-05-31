@@ -15,7 +15,7 @@ linters:
     - bodyclose
     - dogsled
     - dupl
-    - exportloopref
+    - copyloopvar
     - gocognit
     - goconst
     - gocritic
@@ -26,6 +26,7 @@ linters:
     - prealloc
     - unconvert
     - whitespace
+    - predeclared
 
 linters-settings:
   errcheck:
@@ -39,7 +40,6 @@ linters-settings:
     min-complexity: 20
 
   govet:
-    check-shadowing: true
     enable-all: true
 
   revive:
@@ -56,7 +56,7 @@ linters-settings:
     locale: US
 
   staticcheck:
-    go: "1.24"
+    checks: ["all"]
 
   nakedret:
     max-func-lines: 30
@@ -64,12 +64,13 @@ linters-settings:
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - test/mocks
-  skip-files:
-    - ".*\\.generated\\.go$"
+  go: "1.24"
 
 issues:
+  exclude-dirs:
+    - test/mocks
+  exclude-files:
+    - ".*\\.generated\\.go$"
   exclude-rules:
     - path: _test\.go
       linters:
@@ -77,6 +78,5 @@ issues:
         - dupl
         - gosec
         - gocognit
-
   max-issues-per-linter: 0
   max-same-issues: 0

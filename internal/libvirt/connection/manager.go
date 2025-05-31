@@ -70,7 +70,9 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 	// Set context timeout if specified
 	var cancel context.CancelFunc
 	if m.timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, m.timeout)
+		var timeoutCtx context.Context
+		timeoutCtx, cancel = context.WithTimeout(ctx, m.timeout)
+		ctx = timeoutCtx
 		defer cancel()
 	}
 
@@ -230,5 +232,10 @@ func (c *libvirtConnection) Close() error {
 
 // IsActive implements Connection.IsActive
 func (c *libvirtConnection) IsActive() bool {
+	return c.active
+}
+
+// IsConnected implements Connection.IsConnected
+func (c *libvirtConnection) IsConnected() bool {
 	return c.active
 }

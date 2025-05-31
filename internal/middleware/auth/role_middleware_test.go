@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/threatflux/libgo/internal/auth/user"
+	apierrors "github.com/threatflux/libgo/internal/errors"
 	user_models "github.com/threatflux/libgo/internal/models/user"
 	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
 	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
@@ -330,7 +330,7 @@ func TestRoleMiddleware_RequirePermission(t *testing.T) {
 			path:       "/user-not-found",
 			wantStatus: http.StatusUnauthorized,
 			setupMocks: func() {
-				mockUserService.EXPECT().HasPermission(gomock.Any(), adminUser.ID, "create").Return(false, user.ErrUserNotFound)
+				mockUserService.EXPECT().HasPermission(gomock.Any(), adminUser.ID, "create").Return(false, apierrors.ErrNotFound)
 			},
 		},
 	}

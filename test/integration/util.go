@@ -114,7 +114,7 @@ type ExportJobResponse struct {
 // ExportJob represents a VM export job
 type ExportJob struct {
 	ID           string            `json:"id"`
-	VMID         string            `vmId"`
+	VMID         string            `json:"vmId"`
 	VMName       string            `json:"vmName"`
 	Format       string            `json:"format"`
 	Status       string            `json:"status"`

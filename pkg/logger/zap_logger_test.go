@@ -2,7 +2,6 @@ package logger
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,7 @@ import (
 
 func TestZapLogger_Levels(t *testing.T) {
 	// Create a temporary file for logging
-	tmpDir, err := ioutil.TempDir("", "logger_test")
+	tmpDir, err := os.MkdirTemp("", "logger_test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -44,7 +43,7 @@ func TestZapLogger_Levels(t *testing.T) {
 	}
 
 	// Read log file content
-	content, err := ioutil.ReadFile(logFile)
+	content, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("Failed to read log file: %v", err)
 	}
@@ -83,7 +82,7 @@ func TestZapLogger_Levels(t *testing.T) {
 
 func TestZapLogger_WithFields(t *testing.T) {
 	// Create a temporary file for logging
-	tmpDir, err := ioutil.TempDir("", "logger_test")
+	tmpDir, err := os.MkdirTemp("", "logger_test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -121,7 +120,7 @@ func TestZapLogger_WithFields(t *testing.T) {
 	}
 
 	// Read log file content
-	content, err := ioutil.ReadFile(logFile)
+	content, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("Failed to read log file: %v", err)
 	}
@@ -159,7 +158,7 @@ func TestZapLogger_FormatTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir, err := ioutil.TempDir("", "logger_test")
+			tmpDir, err := os.MkdirTemp("", "logger_test")
 			if err != nil {
 				t.Fatalf("Failed to create temp dir: %v", err)
 			}
@@ -225,7 +224,7 @@ func TestZapLogger_FilePaths(t *testing.T) {
 			var outputPath string
 			if tt.outputPath == "" {
 				// Create a temporary file
-				tmpDir, err := ioutil.TempDir("", "logger_test")
+				tmpDir, err := os.MkdirTemp("", "logger_test")
 				if err != nil {
 					t.Fatalf("Failed to create temp dir: %v", err)
 				}

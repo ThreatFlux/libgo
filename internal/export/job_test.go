@@ -95,7 +95,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 		{"Update with error", StatusRunning, 75, errors.New("test error")},
 		{"Update to completed", StatusCompleted, 100, nil},
 		{"Update to failed", StatusFailed, 60, errors.New("failure error")},
-		{"Update to cancelled", StatusCancelled, 30, nil},
+		{"Update to canceled", StatusCanceled, 30, nil},
 	}
 
 	for _, tc := range testCases {
@@ -115,7 +115,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 			}
 
 			// Verify end time is set for terminal states
-			if tc.status == StatusCompleted || tc.status == StatusFailed || tc.status == StatusCancelled {
+			if tc.status == StatusCompleted || tc.status == StatusFailed || tc.status == StatusCanceled {
 				assert.NotZero(t, updatedJob.EndTime)
 				assert.True(t, updatedJob.EndTime.After(updatedJob.StartTime))
 			}

@@ -87,7 +87,7 @@ func TestRecoveryHandler(t *testing.T) {
 			expectStatus:   http.StatusInternalServerError,
 			expectResponse: `{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error","status":500}`,
 			setupMocks: func() {
-				mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any())
+				mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			},
 		},
 		{

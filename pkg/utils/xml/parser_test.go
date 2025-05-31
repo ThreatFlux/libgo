@@ -2,7 +2,7 @@ package xml
 
 import (
 	"encoding/xml"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -89,7 +89,7 @@ func TestParseXMLFile(t *testing.T) {
 	// Create a temporary XML file
 	tmpDir := t.TempDir()
 	xmlFilePath := filepath.Join(tmpDir, "test.xml")
-	err := ioutil.WriteFile(xmlFilePath, []byte(testXML), 0644)
+	err := os.WriteFile(xmlFilePath, []byte(testXML), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test XML file: %v", err)
 	}
@@ -120,69 +120,62 @@ func TestETreeFunctions(t *testing.T) {
 		t.Fatalf("LoadXMLDocumentFromString failed: %v", err)
 	}
 
-	// Test GetElementByXPath
-	element, err := GetElementByXPath(doc, "//domain/name")
-	if err != nil {
-		t.Fatalf("GetElementByXPath failed: %v", err)
+	// Test FindElement
+	element := FindElement(doc, "//domain/name")
+	if element == nil {
+		t.Fatalf("FindElement failed to find domain/name")
 	}
-	if element.Text() != "test-vm" {
-		t.Errorf("Expected element text to be 'test-vm', got '%s'", element.Text())
-	}
-
-	// Test GetElementByXPath with non-existent path
-	_, err = GetElementByXPath(doc, "//domain/nonexistent")
-	if err == nil {
-		t.Errorf("Expected error when getting non-existent path, got nil")
+	if GetElementText(element) != "test-vm" {
+		t.Errorf("Expected element text to be 'test-vm', got '%s'", GetElementText(element))
 	}
 
-	// Test GetElementValue
-	value, err := GetElementValue(doc, "//domain/uuid")
-	if err != nil {
-		t.Fatalf("GetElementValue failed: %v", err)
+	// Test FindElement with non-existent path
+	nonExistent := FindElement(doc, "//domain/nonexistent")
+	if nonExistent != nil {
+		t.Errorf("Expected nil when finding non-existent path, got element")
 	}
-	if value != "12345678-1234-1234-1234-123456789012" {
-		t.Errorf("Expected value to be '12345678-1234-1234-1234-123456789012', got '%s'", value)
+
+	// Test FindElement for UUID
+	uuidElement := FindElement(doc, "//domain/uuid")
+	if uuidElement == nil {
+		t.Fatalf("FindElement failed to find domain/uuid")
+	}
+	if GetElementText(uuidElement) != "12345678-1234-1234-1234-123456789012" {
+		t.Errorf("Expected value to be '12345678-1234-1234-1234-123456789012', got '%s'", GetElementText(uuidElement))
 	}
 
 	// Test GetElementAttribute
-	attrValue, err := GetElementAttribute(doc, "//domain", "type")
-	if err != nil {
-		t.Fatalf("GetElementAttribute failed: %v", err)
+	domainElement := FindElement(doc, "//domain")
+	if domainElement == nil {
+		t.Fatalf("FindElement failed to find domain")
 	}
+	attrValue := GetElementAttribute(domainElement, "type")
 	if attrValue != "kvm" {
 		t.Errorf("Expected attribute value to be 'kvm', got '%s'", attrValue)
 	}
 
 	// Test GetElementAttribute with non-existent attribute
-	_, err = GetElementAttribute(doc, "//domain", "nonexistent")
-	if err == nil {
-		t.Errorf("Expected error when getting non-existent attribute, got nil")
+	nonExistentAttr := GetElementAttribute(domainElement, "nonexistent")
+	if nonExistentAttr != "" {
+		t.Errorf("Expected empty string when getting non-existent attribute, got '%s'", nonExistentAttr)
 	}
 
-	// Test SetElementValue
-	err = SetElementValue(doc, "//domain/name", "modified-vm")
-	if err != nil {
-		t.Fatalf("SetElementValue failed: %v", err)
-	}
-	modifiedValue, err := GetElementValue(doc, "//domain/name")
-	if err != nil {
-		t.Fatalf("GetElementValue failed after modification: %v", err)
-	}
-	if modifiedValue != "modified-vm" {
-		t.Errorf("Expected modified value to be 'modified-vm', got '%s'", modifiedValue)
+	// Test modifying element text
+	nameElement := FindElement(doc, "//domain/name")
+	if nameElement != nil {
+		nameElement.SetText("modified-vm")
+		if GetElementText(nameElement) != "modified-vm" {
+			t.Errorf("Expected modified value to be 'modified-vm', got '%s'", GetElementText(nameElement))
+		}
 	}
 
 	// Test SetElementAttribute
-	err = SetElementAttribute(doc, "//domain", "modified", "true")
-	if err != nil {
-		t.Fatalf("SetElementAttribute failed: %v", err)
-	}
-	modifiedAttr, err := GetElementAttribute(doc, "//domain", "modified")
-	if err != nil {
-		t.Fatalf("GetElementAttribute failed after modification: %v", err)
-	}
-	if modifiedAttr != "true" {
-		t.Errorf("Expected modified attribute to be 'true', got '%s'", modifiedAttr)
+	if domainElement != nil {
+		SetElementAttribute(domainElement, "modified", "true")
+		modifiedAttr := GetElementAttribute(domainElement, "modified")
+		if modifiedAttr != "true" {
+			t.Errorf("Expected modified attribute to be 'true', got '%s'", modifiedAttr)
+		}
 	}
 }
 
@@ -190,7 +183,7 @@ func TestLoadSaveXMLDocument(t *testing.T) {
 	// Create a temporary XML file
 	tmpDir := t.TempDir()
 	inputXMLPath := filepath.Join(tmpDir, "input.xml")
-	err := ioutil.WriteFile(inputXMLPath, []byte(testXML), 0644)
+	err := os.WriteFile(inputXMLPath, []byte(testXML), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test XML file: %v", err)
 	}
@@ -202,9 +195,9 @@ func TestLoadSaveXMLDocument(t *testing.T) {
 	}
 
 	// Modify the document
-	err = SetElementValue(doc, "//domain/name", "saved-vm")
-	if err != nil {
-		t.Fatalf("SetElementValue failed: %v", err)
+	nameElement := FindElement(doc, "//domain/name")
+	if nameElement != nil {
+		nameElement.SetText("saved-vm")
 	}
 
 	// Save modified document
@@ -221,10 +214,11 @@ func TestLoadSaveXMLDocument(t *testing.T) {
 	}
 
 	// Verify the modification
-	savedValue, err := GetElementValue(savedDoc, "//domain/name")
-	if err != nil {
-		t.Fatalf("GetElementValue failed for saved document: %v", err)
+	savedNameElement := FindElement(savedDoc, "//domain/name")
+	if savedNameElement == nil {
+		t.Fatalf("Could not find name element in saved document")
 	}
+	savedValue := GetElementText(savedNameElement)
 	if savedValue != "saved-vm" {
 		t.Errorf("Expected saved value to be 'saved-vm', got '%s'", savedValue)
 	}

@@ -43,6 +43,7 @@ users:
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)
@@ -87,6 +88,7 @@ local-hostname: {{.Hostname}}
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)
@@ -137,6 +139,7 @@ ethernets:
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 
 	generator, err := NewCloudInitGenerator(tempDir, mockLogger)
 	require.NoError(t, err)

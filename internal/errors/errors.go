@@ -123,7 +123,7 @@ func GetErrorCodeString(err error) string {
 	if err == nil {
 		return "UNKNOWN_ERROR"
 	}
-	
+
 	code := GetErrorCode(err)
 	if code == nil {
 		return "INTERNAL_SERVER_ERROR"

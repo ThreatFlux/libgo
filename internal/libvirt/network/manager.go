@@ -37,7 +37,7 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 	libvirtConn := conn.GetLibvirtConnection()
 
 	// Check if network already exists
-	network, err := libvirtConn.NetworkLookupByName(name)
+	_, err = libvirtConn.NetworkLookupByName(name)
 	if err == nil {
 		// Network exists
 		m.logger.Debug("Network already exists", logger.String("name", name))
@@ -56,7 +56,7 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 		logger.String("cidr", cidr),
 		logger.Bool("dhcp", dhcp))
 
-	network, err = libvirtConn.NetworkDefineXML(xml)
+	network, err := libvirtConn.NetworkDefineXML(xml)
 	if err != nil {
 		return fmt.Errorf("defining network: %w", err)
 	}

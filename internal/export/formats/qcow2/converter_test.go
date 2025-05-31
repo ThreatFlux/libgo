@@ -13,6 +13,9 @@ import (
 )
 
 func TestQCOW2Converter_Convert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping converter test that requires filesystem operations in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

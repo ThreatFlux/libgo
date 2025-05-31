@@ -79,12 +79,14 @@ func (h *Handler) handleConnection(c *gin.Context, isConsole bool) {
 		return
 	}
 
+	userIDStr, _ := userID.(string)
+
 	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		h.logger.Error("Failed to upgrade connection to WebSocket",
 			logger.String("vmName", vmName),
-			logger.String("userID", userID.(string)),
+			logger.String("userID", userIDStr),
 			logger.Error(err))
 		return
 	}
@@ -93,7 +95,7 @@ func (h *Handler) handleConnection(c *gin.Context, isConsole bool) {
 	client := &Client{
 		Conn:       conn,
 		Send:       make(chan *Message, 256),
-		UserID:     userID.(string),
+		UserID:     userIDStr,
 		VMName:     vmName,
 		IsConsole:  isConsole,
 		CreatedAt:  time.Now(),
@@ -110,7 +112,7 @@ func (h *Handler) handleConnection(c *gin.Context, isConsole bool) {
 	// Log connection
 	h.logger.Info("WebSocket connection established",
 		logger.String("vmName", vmName),
-		logger.String("userID", userID.(string)),
+		logger.String("userID", userIDStr),
 		logger.Bool("isConsole", isConsole))
 
 	// Send welcome message

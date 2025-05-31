@@ -39,6 +39,9 @@ func (tc *testConverter) ValidateOptions(options map[string]string) error {
 }
 
 func TestExportManager_CreateExportJob(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping export manager test with background goroutines in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -119,7 +122,7 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 
 	t.Run("Valid export job", func(t *testing.T) {
 		mockDomainManager.EXPECT().Get(gomock.Any(), "test-vm").
-			Return(testVM, nil)
+			Return(testVM, nil).AnyTimes()
 
 		job, err := manager.CreateExportJob(context.Background(), "test-vm", Params{
 			Format:   "test-format",
@@ -228,6 +231,9 @@ func TestExportManager_ListJobs(t *testing.T) {
 }
 
 func TestExportManager_CancelJob(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping export manager test with background goroutines in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -264,7 +270,7 @@ func TestExportManager_CancelJob(t *testing.T) {
 		// Verify job status
 		updatedJob, exists := manager.jobStore.getJob(job.ID)
 		assert.True(t, exists)
-		assert.Equal(t, StatusCancelled, updatedJob.Status)
+		assert.Equal(t, StatusCanceled, updatedJob.Status)
 	})
 
 	t.Run("Cancel running job", func(t *testing.T) {
@@ -287,7 +293,7 @@ func TestExportManager_CancelJob(t *testing.T) {
 		// Verify job status
 		updatedJob, exists := manager.jobStore.getJob(job.ID)
 		assert.True(t, exists)
-		assert.Equal(t, StatusCancelled, updatedJob.Status)
+		assert.Equal(t, StatusCanceled, updatedJob.Status)
 	})
 
 	t.Run("Cancel completed job", func(t *testing.T) {

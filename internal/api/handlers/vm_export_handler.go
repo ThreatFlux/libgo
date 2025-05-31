@@ -250,7 +250,7 @@ func (h *ExportHandler) CancelExport(c *gin.Context) {
 
 	// Return success
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Export job cancelled successfully",
+		"message": "Export job canceled successfully",
 	})
 }
 

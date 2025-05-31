@@ -3,7 +3,7 @@ package xml
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/beevik/etree"
 )
@@ -16,7 +16,7 @@ func ParseXML(data []byte, v interface{}) error {
 // ParseXMLFile parses an XML file into a structured object
 func ParseXMLFile(filePath string, v interface{}) error {
 	// Read the file
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read XML file %s: %w", filePath, err)
 	}
@@ -25,77 +25,82 @@ func ParseXMLFile(filePath string, v interface{}) error {
 	return ParseXML(data, v)
 }
 
-// GetElementByXPath retrieves an XML element using XPath
-func GetElementByXPath(doc *etree.Document, xpath string) (*etree.Element, error) {
-	elements := doc.FindElements(xpath)
-	if len(elements) == 0 {
-		return nil, fmt.Errorf("no elements found for XPath: %s", xpath)
-	}
-	return elements[0], nil
+// CreateXMLDocument creates a new XML document with root element
+func CreateXMLDocument(rootElement string) *etree.Document {
+	doc := etree.NewDocument()
+	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
+	doc.CreateElement(rootElement)
+	return doc
 }
 
-// LoadXMLDocument loads an XML document from a file
+// AddElement adds an element to a parent with text content
+func AddElement(parent *etree.Element, name, text string) *etree.Element {
+	elem := parent.CreateElement(name)
+	if text != "" {
+		elem.SetText(text)
+	}
+	return elem
+}
+
+// AddElementWithAttributes adds an element with attributes
+func AddElementWithAttributes(parent *etree.Element, name string, attrs map[string]string) *etree.Element {
+	elem := parent.CreateElement(name)
+	for key, value := range attrs {
+		elem.CreateAttr(key, value)
+	}
+	return elem
+}
+
+// SetElementAttribute sets an attribute on an element
+func SetElementAttribute(elem *etree.Element, name, value string) {
+	elem.CreateAttr(name, value)
+}
+
+// GetElementText gets the text content of an element
+func GetElementText(elem *etree.Element) string {
+	return elem.Text()
+}
+
+// GetElementAttribute gets an attribute value from an element
+func GetElementAttribute(elem *etree.Element, name string) string {
+	attr := elem.SelectAttr(name)
+	if attr != nil {
+		return attr.Value
+	}
+	return ""
+}
+
+// FindElement finds the first element matching the path
+func FindElement(doc *etree.Document, path string) *etree.Element {
+	return doc.FindElement(path)
+}
+
+// FindElements finds all elements matching the path
+func FindElements(doc *etree.Document, path string) []*etree.Element {
+	return doc.FindElements(path)
+}
+
+// ParseXMLFromString parses XML from a string
+func ParseXMLFromString(xmlString string, v interface{}) error {
+	return xml.Unmarshal([]byte(xmlString), v)
+}
+
+// LoadXMLDocument loads an XML document from file
 func LoadXMLDocument(filePath string) (*etree.Document, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(filePath); err != nil {
-		return nil, fmt.Errorf("failed to read XML document %s: %w", filePath, err)
+		return nil, fmt.Errorf("failed to load XML document from %s: %w", filePath, err)
 	}
 	return doc, nil
 }
 
-// LoadXMLDocumentFromString loads an XML document from a string
-func LoadXMLDocumentFromString(xml string) (*etree.Document, error) {
+// LoadXMLDocumentFromString loads an XML document from string
+func LoadXMLDocumentFromString(xmlString string) (*etree.Document, error) {
 	doc := etree.NewDocument()
-	if err := doc.ReadFromString(xml); err != nil {
-		return nil, fmt.Errorf("failed to parse XML string: %w", err)
+	if err := doc.ReadFromString(xmlString); err != nil {
+		return nil, fmt.Errorf("failed to load XML document from string: %w", err)
 	}
 	return doc, nil
-}
-
-// GetElementValue gets the text value of an XML element
-func GetElementValue(doc *etree.Document, xpath string) (string, error) {
-	element, err := GetElementByXPath(doc, xpath)
-	if err != nil {
-		return "", err
-	}
-	return element.Text(), nil
-}
-
-// GetElementAttribute gets the value of an attribute from an XML element
-func GetElementAttribute(doc *etree.Document, xpath string, attribute string) (string, error) {
-	element, err := GetElementByXPath(doc, xpath)
-	if err != nil {
-		return "", err
-	}
-
-	attr := element.SelectAttr(attribute)
-	if attr == nil {
-		return "", fmt.Errorf("attribute %s not found on element %s", attribute, xpath)
-	}
-
-	return attr.Value, nil
-}
-
-// SetElementValue sets the text value of an XML element
-func SetElementValue(doc *etree.Document, xpath string, value string) error {
-	element, err := GetElementByXPath(doc, xpath)
-	if err != nil {
-		return err
-	}
-
-	element.SetText(value)
-	return nil
-}
-
-// SetElementAttribute sets an attribute value on an XML element
-func SetElementAttribute(doc *etree.Document, xpath string, attribute string, value string) error {
-	element, err := GetElementByXPath(doc, xpath)
-	if err != nil {
-		return err
-	}
-
-	element.CreateAttr(attribute, value)
-	return nil
 }
 
 // SaveXMLDocument saves an XML document to a file
@@ -106,7 +111,10 @@ func SaveXMLDocument(doc *etree.Document, filePath string) error {
 // XMLToString converts an XML document to a string
 func XMLToString(doc *etree.Document) string {
 	doc.Indent(2)
-	xmlString, _ := doc.WriteToString()
+	xmlString, err := doc.WriteToString()
+	if err != nil {
+		return ""
+	}
 	return xmlString
 }
 

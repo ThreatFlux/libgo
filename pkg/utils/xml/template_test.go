@@ -2,7 +2,7 @@ package xml
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -34,7 +34,7 @@ func TestLoadTemplate(t *testing.T) {
 	templateName := "test.xml.tmpl"
 	templateContent := `<test>{{ .Value }}</test>`
 	templatePath := filepath.Join(tmpDir, templateName)
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
 
@@ -68,7 +68,7 @@ func TestRenderTemplate(t *testing.T) {
 	templateName := "test.xml.tmpl"
 	templateContent := `<test>{{ .Value }}</test>`
 	templatePath := filepath.Join(tmpDir, templateName)
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
 
@@ -105,7 +105,7 @@ func TestRenderTemplate(t *testing.T) {
 	invalidTemplate := "invalid.xml.tmpl"
 	invalidContent := `<test>{{ .MissingField.SubField }}</test>`
 	invalidPath := filepath.Join(tmpDir, invalidTemplate)
-	if err := ioutil.WriteFile(invalidPath, []byte(invalidContent), 0644); err != nil {
+	if err := os.WriteFile(invalidPath, []byte(invalidContent), 0644); err != nil {
 		t.Fatalf("Failed to create invalid template: %v", err)
 	}
 
@@ -123,7 +123,7 @@ func TestCacheAndClearCache(t *testing.T) {
 	templateName := "test.xml.tmpl"
 	templateContent := `<test>{{ .Value }}</test>`
 	templatePath := filepath.Join(tmpDir, templateName)
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
 
@@ -141,7 +141,7 @@ func TestCacheAndClearCache(t *testing.T) {
 
 	// Modify the template file to verify caching
 	newContent := `<test>modified-{{ .Value }}</test>`
-	if err := ioutil.WriteFile(templatePath, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(newContent), 0644); err != nil {
 		t.Fatalf("Failed to modify template: %v", err)
 	}
 
@@ -187,7 +187,7 @@ func TestTemplateConcurrency(t *testing.T) {
 		templateName := fmt.Sprintf("test%d.xml.tmpl", i)
 		templateContent := fmt.Sprintf(`<test id="%d">{{ .Value }}</test>`, i)
 		templatePath := filepath.Join(tmpDir, templateName)
-		if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+		if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 			t.Fatalf("Failed to create test template: %v", err)
 		}
 	}

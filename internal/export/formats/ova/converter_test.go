@@ -105,6 +105,9 @@ func TestOVAConverter_ValidateOptions(t *testing.T) {
 }
 
 func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping OVA converter test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -196,6 +199,9 @@ func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
 
 // This test mocks the execution functions to avoid running actual commands
 func TestOVAConverter_Convert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping OVA converter test in short mode")
+	}
 	// Save original functions for restoration
 	originalExecCommand := execCommand
 	originalStatFunc := osStatFunc

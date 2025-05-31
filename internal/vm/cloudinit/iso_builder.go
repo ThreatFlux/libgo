@@ -3,7 +3,6 @@ package cloudinit
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +24,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 		logger.String("outputPath", outputPath))
 
 	// Create a temporary directory to store the files
-	tmpDir, err := ioutil.TempDir("", "cloud-init-")
+	tmpDir, err := os.MkdirTemp("", "cloud-init-")
 	if err != nil {
 		return fmt.Errorf("creating temp directory: %w", err)
 	}
@@ -40,7 +39,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 
 	for filename, content := range files {
 		filePath := filepath.Join(tmpDir, filename)
-		err := ioutil.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
 			return fmt.Errorf("writing %s: %w", filename, err)
 		}

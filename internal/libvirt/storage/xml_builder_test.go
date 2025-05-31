@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -71,7 +71,7 @@ func TestTemplateXMLBuilder_BuildStoragePoolXML(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "storage_pool.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(poolTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(poolTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
 
@@ -124,7 +124,7 @@ func TestTemplateXMLBuilder_BuildStorageVolumeXML(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "storage_volume.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(volumeTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(volumeTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
 

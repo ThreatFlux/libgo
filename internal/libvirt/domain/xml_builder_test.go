@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -83,7 +83,7 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "domain.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
 
@@ -110,7 +110,8 @@ func TestTemplateXMLBuilder_BuildDomainXML(t *testing.T) {
 			SizeBytes: 2 * 1024 * 1024 * 1024, // 2GB
 		},
 		Disk: vm.DiskParams{
-			Format: "qcow2",
+			Format:      "qcow2",
+			SourceImage: "/var/lib/libvirt/images/test-vm.qcow2",
 		},
 		Network: vm.NetParams{
 			Type:   "bridge",
@@ -188,7 +189,7 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "domain.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(domainTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
 
@@ -219,7 +220,8 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 			SizeBytes: 4 * 1024 * 1024 * 1024, // 4GB
 		},
 		Disk: vm.DiskParams{
-			Format: "qcow2",
+			Format:      "qcow2",
+			SourceImage: "/var/lib/libvirt/images/test-vm.qcow2",
 		},
 		Network: vm.NetParams{
 			Type:       "network",
@@ -246,7 +248,7 @@ func TestTemplateXMLBuilder_BuildDomainXML_AdvancedOptions(t *testing.T) {
 	assert.Contains(t, xml, `<mac address='52:54:00:12:34:56'/>`)
 	assert.Contains(t, xml, `<model type='e1000'/>`)
 	assert.Contains(t, xml, `<source network='default'/>`)
-	assert.Contains(t, xml, `<source file='/var/lib/libvirt/images/advanced-vm-cloudinit.iso'/>`)
+	assert.Contains(t, xml, `<source file='/tmp/libgo-cloudinit/advanced-vm-cloudinit.iso'/>`)
 }
 
 func TestTemplateXMLBuilder_GenerateCloudInitISOPath(t *testing.T) {
@@ -260,7 +262,7 @@ func TestTemplateXMLBuilder_GenerateCloudInitISOPath(t *testing.T) {
 
 	// Test with default location
 	path := builder.GenerateCloudInitISOPath("test-vm", "")
-	expectedPath := "/var/lib/libvirt/images/test-vm-cloudinit.iso"
+	expectedPath := "/tmp/libgo-cloudinit/test-vm-cloudinit.iso"
 	assert.Equal(t, expectedPath, path)
 
 	// Test with custom directory

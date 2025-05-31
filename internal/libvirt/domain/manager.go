@@ -187,113 +187,74 @@ func (m *DomainManager) List(ctx context.Context) ([]*vm.VM, error) {
 
 // Start implements Manager.Start
 func (m *DomainManager) Start(ctx context.Context, name string) error {
-	// Get libvirt connection
-	conn, err := m.connManager.Connect(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to connect to libvirt: %w", err)
-	}
-	defer m.connManager.Release(conn)
+	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
+		// Check if domain is already running
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		if err != nil {
+			return fmt.Errorf("getting domain info: %w", err)
+		}
 
-	libvirtConn := conn.GetLibvirtConnection()
+		if libvirt.DomainState(state) == libvirt.DomainRunning {
+			m.logger.Info("Domain already running", logger.String("name", name))
+			return nil
+		}
 
-	// Look up domain
-	domain, err := libvirtConn.DomainLookupByName(name)
-	if err != nil {
-		return fmt.Errorf("looking up domain %s: %w", name, ErrDomainNotFound)
-	}
+		// Start domain
+		if err := libvirtConn.DomainCreate(domain); err != nil {
+			return fmt.Errorf("starting domain: %w", err)
+		}
 
-	// Check if domain is already running
-	state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
-	if err != nil {
-		return fmt.Errorf("getting domain info: %w", err)
-	}
-
-	if libvirt.DomainState(state) == libvirt.DomainRunning {
-		m.logger.Info("Domain already running", logger.String("name", name))
+		m.logger.Info("Started domain", logger.String("name", name))
 		return nil
-	}
-
-	// Start domain
-	if err := libvirtConn.DomainCreate(domain); err != nil {
-		return fmt.Errorf("starting domain: %w", err)
-	}
-
-	m.logger.Info("Started domain", logger.String("name", name))
-	return nil
+	})
 }
 
 // Stop implements Manager.Stop
 func (m *DomainManager) Stop(ctx context.Context, name string) error {
-	// Get libvirt connection
-	conn, err := m.connManager.Connect(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to connect to libvirt: %w", err)
-	}
-	defer m.connManager.Release(conn)
+	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
+		// Check if domain is already stopped
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		if err != nil {
+			return fmt.Errorf("getting domain info: %w", err)
+		}
 
-	libvirtConn := conn.GetLibvirtConnection()
+		if libvirt.DomainState(state) == libvirt.DomainShutoff {
+			m.logger.Info("Domain already stopped", logger.String("name", name))
+			return nil
+		}
 
-	// Look up domain
-	domain, err := libvirtConn.DomainLookupByName(name)
-	if err != nil {
-		return fmt.Errorf("looking up domain %s: %w", name, ErrDomainNotFound)
-	}
+		// Try graceful shutdown
+		if err := libvirtConn.DomainShutdown(domain); err != nil {
+			return fmt.Errorf("shutting down domain: %w", err)
+		}
 
-	// Check if domain is already stopped
-	state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
-	if err != nil {
-		return fmt.Errorf("getting domain info: %w", err)
-	}
-
-	if libvirt.DomainState(state) == libvirt.DomainShutoff {
-		m.logger.Info("Domain already stopped", logger.String("name", name))
+		m.logger.Info("Stopped domain", logger.String("name", name))
 		return nil
-	}
-
-	// Try graceful shutdown
-	if err := libvirtConn.DomainShutdown(domain); err != nil {
-		return fmt.Errorf("shutting down domain: %w", err)
-	}
-
-	m.logger.Info("Stopped domain", logger.String("name", name))
-	return nil
+	})
 }
 
 // ForceStop implements Manager.ForceStop
 func (m *DomainManager) ForceStop(ctx context.Context, name string) error {
-	// Get libvirt connection
-	conn, err := m.connManager.Connect(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to connect to libvirt: %w", err)
-	}
-	defer m.connManager.Release(conn)
+	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
+		// Check if domain is already stopped
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		if err != nil {
+			return fmt.Errorf("getting domain info: %w", err)
+		}
 
-	libvirtConn := conn.GetLibvirtConnection()
+		if libvirt.DomainState(state) == libvirt.DomainShutoff {
+			m.logger.Info("Domain already stopped", logger.String("name", name))
+			return nil
+		}
 
-	// Look up domain
-	domain, err := libvirtConn.DomainLookupByName(name)
-	if err != nil {
-		return fmt.Errorf("looking up domain %s: %w", name, ErrDomainNotFound)
-	}
+		// Force stop
+		if err := libvirtConn.DomainDestroy(domain); err != nil {
+			return fmt.Errorf("force stopping domain: %w", err)
+		}
 
-	// Check if domain is already stopped
-	state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
-	if err != nil {
-		return fmt.Errorf("getting domain info: %w", err)
-	}
-
-	if libvirt.DomainState(state) == libvirt.DomainShutoff {
-		m.logger.Info("Domain already stopped", logger.String("name", name))
+		m.logger.Info("Force stopped domain", logger.String("name", name))
 		return nil
-	}
-
-	// Force stop
-	if err := libvirtConn.DomainDestroy(domain); err != nil {
-		return fmt.Errorf("force stopping domain: %w", err)
-	}
-
-	m.logger.Info("Force stopped domain", logger.String("name", name))
-	return nil
+	})
 }
 
 // Delete implements Manager.Delete
@@ -360,6 +321,26 @@ func (m *DomainManager) GetXML(ctx context.Context, name string) (string, error)
 	}
 
 	return xml, nil
+}
+
+// performDomainOperation handles common domain operation pattern
+func (m *DomainManager) performDomainOperation(ctx context.Context, name string, operation func(*libvirt.Libvirt, libvirt.Domain) error) error {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	libvirtConn := conn.GetLibvirtConnection()
+
+	// Look up domain
+	domain, err := libvirtConn.DomainLookupByName(name)
+	if err != nil {
+		return fmt.Errorf("looking up domain %s: %w", name, ErrDomainNotFound)
+	}
+
+	return operation(libvirtConn, domain)
 }
 
 // domainToVM converts libvirt domain to VM model

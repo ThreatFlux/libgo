@@ -354,9 +354,11 @@ func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourc
 	}
 
 	// Set the name in the XML
-	if err := xml.SetElementValue(doc, "/volume/name", destVolName); err != nil {
-		return fmt.Errorf("updating volume name in XML: %w", err)
+	nameElement := xml.FindElement(doc, "/volume/name")
+	if nameElement == nil {
+		return fmt.Errorf("volume name element not found in XML")
 	}
+	nameElement.SetText(destVolName)
 
 	// Generate the new XML
 	newXML := xml.XMLToString(doc)

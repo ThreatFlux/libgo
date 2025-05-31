@@ -18,7 +18,10 @@ func TestSetupAdminUser(t *testing.T) {
 
 	// Load test configuration to get database settings
 	// Use relative path from test directory to project root
-	wd, _ := os.Getwd()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
 	fmt.Println("Current working directory:", wd)
 
 	configPath := "../../configs/test-config.yaml"

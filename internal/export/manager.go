@@ -120,13 +120,13 @@ func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 		return fmt.Errorf("%w: %s", errors.ErrExportJobNotFound, jobID)
 	}
 
-	// Only pending or running jobs can be cancelled
+	// Only pending or running jobs can be canceled
 	if job.Status != StatusPending && job.Status != StatusRunning {
 		return fmt.Errorf("cannot cancel job in %s state", job.Status)
 	}
 
 	// Update job status
-	if !m.jobStore.updateJobStatus(jobID, StatusCancelled, job.Progress, nil) {
+	if !m.jobStore.updateJobStatus(jobID, StatusCanceled, job.Progress, nil) {
 		return fmt.Errorf("failed to update job status")
 	}
 
@@ -140,7 +140,7 @@ func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 		}
 	}
 
-	m.logger.Info("Export job cancelled",
+	m.logger.Info("Export job canceled",
 		logger.String("job_id", jobID),
 		logger.String("vm_name", job.VMName))
 

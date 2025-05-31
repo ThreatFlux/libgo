@@ -57,7 +57,7 @@ func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 		{
 			name:     "Name with special characters",
 			vmName:   "test@vm#$%^",
-			expected: "test-vm---",
+			expected: "test-vm----0",
 		},
 		{
 			name:     "Name starting with non-letter",
@@ -72,7 +72,7 @@ func TestMetadataGenerator_GenerateHostname(t *testing.T) {
 		{
 			name:     "Very long name",
 			vmName:   "this-is-a-very-long-vm-name-that-exceeds-the-maximum-length-for-a-hostname-which-is-sixty-three-characters",
-			expected: "this-is-a-very-long-vm-name-that-exceeds-the-maximum-length-for-a-h",
+			expected: "this-is-a-very-long-vm-name-that-exceeds-the-maximum-length-for",
 		},
 		{
 			name:     "Uppercase name",

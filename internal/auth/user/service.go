@@ -49,7 +49,7 @@ func (s *UserService) getUserByUsernameInternal(username string) (*user.User, er
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (*user.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	// Get user by username (internal method that includes password)
 	u, err := s.getUserByUsernameInternal(username)
 	if err != nil {

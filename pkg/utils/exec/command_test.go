@@ -201,7 +201,10 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	output, _ := ExecuteCommand(ctx, cmd, args, opts)
+	output, err := ExecuteCommand(ctx, cmd, args, opts)
+	if err != nil {
+		t.Errorf("ExecuteCommand failed: %v", err)
+	}
 
 	// Output should contain stdout but not stderr
 	outputStr := strings.TrimSpace(string(output))
@@ -218,7 +221,10 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 		CombinedOutput: true,
 	}
 
-	output, _ = ExecuteCommand(ctx, cmd, args, opts)
+	output, err = ExecuteCommand(ctx, cmd, args, opts)
+	if err != nil {
+		t.Errorf("ExecuteCommand failed: %v", err)
+	}
 
 	// Output should contain both stdout and stderr
 	outputStr = strings.TrimSpace(string(output))

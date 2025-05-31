@@ -36,6 +36,9 @@ type MockLibvirtWithVolumes struct {
 }
 
 func TestLibvirtVolumeManager_Create(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -152,6 +155,9 @@ func TestLibvirtVolumeManager_Create(t *testing.T) {
 }
 
 func TestLibvirtVolumeManager_Delete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -237,6 +243,9 @@ func TestLibvirtVolumeManager_Delete(t *testing.T) {
 }
 
 func TestLibvirtVolumeManager_GetPath(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

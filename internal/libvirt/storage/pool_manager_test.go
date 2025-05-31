@@ -31,6 +31,9 @@ type MockLibvirtWithPools struct {
 }
 
 func TestLibvirtPoolManager_EnsureExists(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -109,6 +112,9 @@ func TestLibvirtPoolManager_EnsureExists(t *testing.T) {
 }
 
 func TestLibvirtPoolManager_Delete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -180,6 +186,9 @@ func TestLibvirtPoolManager_Delete(t *testing.T) {
 }
 
 func TestLibvirtPoolManager_Get(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt storage test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
