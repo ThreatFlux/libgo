@@ -1,6 +1,6 @@
 module github.com/threatflux/libgo
 
-go 1.24.2
+go 1.24.3
 
 require (
 	github.com/gin-gonic/gin v1.10.0
