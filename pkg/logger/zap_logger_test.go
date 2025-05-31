@@ -65,7 +65,7 @@ func TestZapLogger_Levels(t *testing.T) {
 		`"key":"value"`,
 		`"count":42`,
 		`"enabled":true`,
-		`"error":{}`,
+		`"error":"test error"`,
 	}
 
 	for _, msg := range expectedMessages {
@@ -132,7 +132,7 @@ func TestZapLogger_WithFields(t *testing.T) {
 	expectedFields := []string{
 		`"service":"test-service"`,
 		`"instance":1`,
-		`"error":{}`,
+		`"error":"context error"`,
 	}
 
 	for _, field := range expectedFields {

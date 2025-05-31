@@ -15,19 +15,37 @@ import (
 	"github.com/threatflux/libgo/internal/export/formats"
 	"github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/pkg/logger"
-	"github.com/threatflux/libgo/test/mocks/export"
-	"github.com/threatflux/libgo/test/mocks/libvirt"
-	"github.com/threatflux/libgo/test/mocks/logger"
+	mockslibvirt "github.com/threatflux/libgo/test/mocks/libvirt"
+	mockslogger "github.com/threatflux/libgo/test/mocks/logger"
 )
+
+// testConverter is a test implementation of formats.Converter
+type testConverter struct {
+	formatName string
+	convertErr error
+	validateErr error
+}
+
+func (tc *testConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
+	return tc.convertErr
+}
+
+func (tc *testConverter) GetFormatName() string {
+	return tc.formatName
+}
+
+func (tc *testConverter) ValidateOptions(options map[string]string) error {
+	return tc.validateErr
+}
 
 func TestExportManager_CreateExportJob(t *testing.T) {
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
+	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
+	mockLogger := mockslogger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
@@ -37,16 +55,18 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
-	// Mock converter for testing
-	mockConverter := export.NewMockConverter(ctrl)
-	mockConverter.EXPECT().GetFormatName().Return("test-format").AnyTimes()
-	mockConverter.EXPECT().ValidateOptions(gomock.Any()).Return(nil).AnyTimes()
+	// Create test converter
+	testConverter := &testConverter{
+		formatName: "test-format",
+		convertErr: nil,
+		validateErr: nil,
+	}
 
-	// Create manager with mock converter
+	// Create manager with test converter
 	manager := &ExportManager{
 		jobStore: newJobStore(),
 		formatManagers: map[string]formats.Converter{
-			"test-format": mockConverter,
+			"test-format": testConverter,
 		},
 		storageManager: mockStorageManager,
 		domainManager:  mockDomainManager,
@@ -125,9 +145,9 @@ func TestExportManager_GetJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
+	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
+	mockLogger := mockslogger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -170,9 +190,9 @@ func TestExportManager_ListJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
+	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
+	mockLogger := mockslogger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -212,9 +232,9 @@ func TestExportManager_CancelJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mockslibvirt.NewMockVolumeManager(ctrl)
+	mockDomainManager := mockslibvirt.NewMockManager(ctrl)
+	mockLogger := mockslogger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 

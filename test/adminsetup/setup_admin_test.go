@@ -9,6 +9,7 @@ import (
 	"github.com/threatflux/libgo/internal/auth/user"
 	"github.com/threatflux/libgo/internal/config"
 	"github.com/threatflux/libgo/internal/database"
+	userModel "github.com/threatflux/libgo/internal/models/user"
 )
 
 // TestSetupAdminUser creates an admin user for testing
@@ -34,6 +35,11 @@ func TestSetupAdminUser(t *testing.T) {
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Auto-migrate the user model
+	if err := db.AutoMigrate(&userModel.User{}); err != nil {
+		t.Fatalf("Failed to migrate database: %v", err)
 	}
 
 	// Use the same admin details as in test-config.yaml

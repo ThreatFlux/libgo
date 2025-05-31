@@ -268,8 +268,8 @@ func TestPrettyPrintXML(t *testing.T) {
 		t.Errorf("PrettyPrintXML result doesn't appear to be properly indented: %s", formattedStr)
 	}
 
-	// Test with invalid XML
-	_, err = PrettyPrintXML([]byte("invalid XML"))
+	// Test with invalid XML - use clearly malformed XML
+	_, err = PrettyPrintXML([]byte("<root><unclosed>"))
 	if err == nil {
 		t.Errorf("Expected error when pretty printing invalid XML, got nil")
 	}
