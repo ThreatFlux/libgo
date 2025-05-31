@@ -36,7 +36,7 @@ const testXML = `<?xml version="1.0" encoding="UTF-8"?>
 type TestDomain struct {
 	XMLName xml.Name `xml:"domain"`
 	Type    string   `xml:"type,attr"`
-	Name    string   `xml:"n"`
+	Name    string   `xml:"name"`
 	UUID    string   `xml:"uuid"`
 	Memory  struct {
 		Value int    `xml:",chardata"`
@@ -124,7 +124,7 @@ func TestETreeFunctions(t *testing.T) {
 	}
 
 	// Test GetElementByXPath
-	element, err := GetElementByXPath(doc, "//domain/n")
+	element, err := GetElementByXPath(doc, "//domain/name")
 	if err != nil {
 		t.Fatalf("GetElementByXPath failed: %v", err)
 	}
@@ -163,11 +163,11 @@ func TestETreeFunctions(t *testing.T) {
 	}
 
 	// Test SetElementValue
-	err = SetElementValue(doc, "//domain/n", "modified-vm")
+	err = SetElementValue(doc, "//domain/name", "modified-vm")
 	if err != nil {
 		t.Fatalf("SetElementValue failed: %v", err)
 	}
-	modifiedValue, err := GetElementValue(doc, "//domain/n")
+	modifiedValue, err := GetElementValue(doc, "//domain/name")
 	if err != nil {
 		t.Fatalf("GetElementValue failed after modification: %v", err)
 	}
@@ -205,7 +205,7 @@ func TestLoadSaveXMLDocument(t *testing.T) {
 	}
 
 	// Modify the document
-	err = SetElementValue(doc, "//domain/n", "saved-vm")
+	err = SetElementValue(doc, "//domain/name", "saved-vm")
 	if err != nil {
 		t.Fatalf("SetElementValue failed: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestLoadSaveXMLDocument(t *testing.T) {
 	}
 
 	// Verify the modification
-	savedValue, err := GetElementValue(savedDoc, "//domain/n")
+	savedValue, err := GetElementValue(savedDoc, "//domain/name")
 	if err != nil {
 		t.Fatalf("GetElementValue failed for saved document: %v", err)
 	}

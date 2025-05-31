@@ -145,7 +145,7 @@ func TestUserService_Authenticate(t *testing.T) {
 	}
 
 	// Make the user inactive and try to authenticate
-	err = service.Update(ctx, u.ID, func(u *user.User) error {
+	_, err = service.Update(ctx, u.ID, func(u *user.User) error {
 		u.SetActive(false)
 		return nil
 	})
@@ -418,7 +418,7 @@ func TestUserService_SetPassword(t *testing.T) {
 
 	// Change password
 	newPassword := "new-password"
-	err := service.SetPassword(ctx, u.ID, newPassword)
+	_, err := service.SetPassword(ctx, u.ID, newPassword)
 	if err != nil {
 		t.Errorf("SetPassword failed: %v", err)
 	}

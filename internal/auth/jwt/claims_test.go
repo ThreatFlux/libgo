@@ -43,15 +43,22 @@ func TestNewClaims(t *testing.T) {
 		t.Errorf("Expected Subject to be %q, got %q", subject, claims.Subject)
 	}
 
-	if !claims.Audience.Contains(audience[0]) {
+	found := false
+	for _, aud := range claims.Audience {
+		if aud == audience[0] {
+			found = true
+			break
+		}
+	}
+	if !found {
 		t.Errorf("Expected Audience to contain %q", audience[0])
 	}
 
-	if !claims.ExpiresAt.Equal(*expiration) {
+	if claims.ExpiresAt == nil || !claims.ExpiresAt.Equal(expiration.Time) {
 		t.Errorf("Expected ExpiresAt to be %v, got %v", expiration, claims.ExpiresAt)
 	}
 
-	if !claims.IssuedAt.Equal(*issuedAt) {
+	if claims.IssuedAt == nil || !claims.IssuedAt.Equal(issuedAt.Time) {
 		t.Errorf("Expected IssuedAt to be %v, got %v", issuedAt, claims.IssuedAt)
 	}
 

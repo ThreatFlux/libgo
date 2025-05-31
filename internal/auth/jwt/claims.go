@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"time"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/threatflux/libgo/internal/models/user"
 )
@@ -26,6 +27,23 @@ func NewClaims(userModel *user.User, registeredClaims jwt.RegisteredClaims) *Cla
 
 // Valid implements jwt.Claims interface for the Claims type
 func (c *Claims) Valid() error {
+	now := time.Now()
+
+	// Check expiration
+	if c.ExpiresAt != nil && c.ExpiresAt.Before(now) {
+		return fmt.Errorf("token has expired")
+	}
+
+	// Check not before
+	if c.NotBefore != nil && c.NotBefore.After(now) {
+		return fmt.Errorf("token used before valid")
+	}
+
+	// Check issued at
+	if c.IssuedAt != nil && c.IssuedAt.After(now.Add(time.Minute)) {
+		return fmt.Errorf("token used before issued")
+	}
+
 	// Validate that required fields are present
 	if c.UserID == "" {
 		return fmt.Errorf("userId is required")

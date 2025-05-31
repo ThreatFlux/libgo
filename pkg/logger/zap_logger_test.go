@@ -22,9 +22,9 @@ func TestZapLogger_Levels(t *testing.T) {
 	logFile := filepath.Join(tmpDir, "test.log")
 
 	cfg := config.LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: logFile,
+		Level:    "debug",
+		Format:   "json",
+		FilePath: logFile,
 	}
 
 	logger, err := NewZapLogger(cfg)
@@ -92,9 +92,9 @@ func TestZapLogger_WithFields(t *testing.T) {
 	logFile := filepath.Join(tmpDir, "test.log")
 
 	cfg := config.LoggingConfig{
-		Level:      "info",
-		Format:     "json",
-		OutputPath: logFile,
+		Level:    "info",
+		Format:   "json",
+		FilePath: logFile,
 	}
 
 	baseLogger, err := NewZapLogger(cfg)
@@ -168,9 +168,9 @@ func TestZapLogger_FormatTypes(t *testing.T) {
 			logFile := filepath.Join(tmpDir, "test.log")
 
 			cfg := config.LoggingConfig{
-				Level:      "info",
-				Format:     tt.format,
-				OutputPath: logFile,
+				Level:    "info",
+				Format:   tt.format,
+				FilePath: logFile,
 			}
 
 			logger, err := NewZapLogger(cfg)
@@ -192,7 +192,7 @@ func TestZapLogger_FormatTypes(t *testing.T) {
 	}
 }
 
-func TestZapLogger_OutputPaths(t *testing.T) {
+func TestZapLogger_FilePaths(t *testing.T) {
 	tests := []struct {
 		name       string
 		outputPath string
@@ -236,9 +236,9 @@ func TestZapLogger_OutputPaths(t *testing.T) {
 			}
 
 			cfg := config.LoggingConfig{
-				Level:      "info",
-				Format:     "json",
-				OutputPath: outputPath,
+				Level:    "info",
+				Format:   "json",
+				FilePath: outputPath,
 			}
 
 			logger, err := NewZapLogger(cfg)

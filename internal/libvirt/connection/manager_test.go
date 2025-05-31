@@ -112,6 +112,13 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 	return args.Error(0)
 }
 
+// invalidConn is a test type that doesn't implement Connection correctly
+type invalidConn struct{}
+
+func (c *invalidConn) GetLibvirtConnection() *libvirt.Libvirt { return nil }
+func (c *invalidConn) Close() error                          { return nil }
+func (c *invalidConn) IsActive() bool                        { return true }
+
 // Tests
 func TestNewConnectionManager(t *testing.T) {
 	mockLog := new(mockLogger)
@@ -308,13 +315,7 @@ func TestConnectionManager_ReleaseInvalidConnection(t *testing.T) {
 		logger:         mockLog,
 	}
 
-	// Create a struct that doesn't implement Connection correctly
-	type invalidConn struct{}
-	func (c *invalidConn) GetLibvirtConnection() *libvirt.Libvirt { return nil }
-	func (c *invalidConn) Close() error { return nil }
-	func (c *invalidConn) IsActive() bool { return true }
-
-	// Try to release it
+	// Try to release an invalid connection type
 	err := manager.Release(&invalidConn{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid connection type")

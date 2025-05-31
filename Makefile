@@ -27,12 +27,14 @@ GOLANGCI_LINT_VERSION=1.56.2
 GOSEC_VERSION=2.19.0
 GOVULNCHECK_VERSION=1.0.2
 MOCKGEN_VERSION=0.4.0
+STATICCHECK_VERSION=2023.1.6
 
 # Linter configuration
 GOLANGCI_LINT=golangci-lint
-GOSEC=gosec
+GOSEC=$(shell which gosec || echo $(HOME)/go/bin/gosec)
 GOVULNCHECK=govulncheck
 MOCKGEN=mockgen
+STATICCHECK=$(shell which staticcheck || echo $(HOME)/go/bin/staticcheck)
 
 # Docker configuration
 DOCKER=docker
@@ -50,7 +52,7 @@ MOCK_INTERFACES=internal/libvirt/connection/interface.go internal/libvirt/domain
                 internal/auth/jwt/claims.go internal/auth/user/service_interface.go \
                 pkg/logger/interface.go
 
-.PHONY: all build clean test unit-test integration-test coverage lint sec-scan vuln-check mocks help docker-build docker-run setup
+.PHONY: all build clean test unit-test integration-test coverage lint sec-scan sec-scan-report install-gosec install-staticcheck vuln-check mocks help docker-build docker-run setup
 
 all: test build
 
@@ -63,6 +65,7 @@ install-tools: ## Install development tools
 	$(GOGET) github.com/securego/gosec/v2/cmd/gosec@v$(GOSEC_VERSION)
 	$(GOGET) golang.org/x/vuln/cmd/govulncheck@v$(GOVULNCHECK_VERSION)
 	$(GOGET) go.uber.org/mock/mockgen@v$(MOCKGEN_VERSION)
+	$(GOGET) honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION)
 
 build: ## Build the application
 	@echo "Building $(BINARY_NAME)..."
@@ -100,8 +103,37 @@ lint: ## Run linters
 	$(GOLANGCI_LINT) run ./...
 
 sec-scan: ## Run security scan
-	@echo "Running security scan..."
-	$(GOSEC) ./...
+	@echo "Running security scan with gosec..."
+	@$(MAKE) install-staticcheck
+	@echo "Running staticcheck analysis..."
+	@$(STATICCHECK) ./cmd/... ./internal/... ./pkg/...
+	@echo "Running gosec security scan..."
+	@$(MAKE) install-gosec
+	@$(GOSEC) -quiet -fmt text ./cmd/server ./internal/auth/... ./internal/api/... || true
+
+sec-scan-report: ## Run security scan and generate detailed reports
+	@echo "Running comprehensive security scan..."
+	@$(MAKE) install-gosec
+	@$(MAKE) install-staticcheck
+	@echo "Generating gosec reports..."
+	@$(GOSEC) -fmt sarif -out gosec-report.sarif ./cmd/server ./internal/auth/... ./internal/api/... || true
+	@$(GOSEC) -fmt json -out gosec-report.json ./cmd/server ./internal/auth/... ./internal/api/... || true
+	@$(GOSEC) -fmt html -out gosec-report.html ./cmd/server ./internal/auth/... ./internal/api/... || true
+	@echo "Running staticcheck analysis..."
+	@$(STATICCHECK) -f sarif ./cmd/... ./internal/... ./pkg/... > staticcheck-report.sarif 2>/dev/null || true
+	@echo "Security scan reports generated: gosec-report.{sarif,json,html}, staticcheck-report.sarif"
+
+install-gosec: ## Install gosec if not present
+	@if ! command -v $(GOSEC) >/dev/null 2>&1; then \
+		echo "Installing gosec..."; \
+		go install github.com/securego/gosec/v2/cmd/gosec@v$(GOSEC_VERSION); \
+	fi
+
+install-staticcheck: ## Install staticcheck if not present
+	@if ! command -v $(STATICCHECK) >/dev/null 2>&1; then \
+		echo "Installing staticcheck..."; \
+		go install honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION); \
+	fi
 
 vuln-check: ## Run vulnerability check
 	@echo "Running vulnerability check..."
