@@ -10,7 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// mockLogger implements logger.Logger interface for testing
+const (
+	testUsername = "testuser"
+	testPassword = "password123"
+	testEmail    = "test@example.com"
+)
+
+// mockLogger implements logger.Logger interface for testing.
 type mockLogger struct{}
 
 func (m *mockLogger) Debug(msg string, fields ...logger.Field) {}
@@ -34,9 +40,9 @@ func setupUserService() *UserService {
 
 func createTestUser(t *testing.T, service *UserService) *user.User {
 	// Create a test user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	u, err := service.Create(context.Background(), username, password, email, roles)
@@ -51,9 +57,9 @@ func TestUserService_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	u, err := service.Create(ctx, username, password, email, roles)
@@ -107,9 +113,9 @@ func TestUserService_Authenticate(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a test user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	_, err := service.Create(ctx, username, password, email, roles)
@@ -433,7 +439,7 @@ func TestUserService_SetPassword(t *testing.T) {
 	}
 
 	// Old password should no longer work
-	_, err = service.Authenticate(ctx, u.Username, "password123")
+	_, err = service.Authenticate(ctx, u.Username, testPassword)
 	if err == nil {
 		t.Error("Authenticate should fail with old password after change")
 	}

@@ -93,8 +93,8 @@ func main() {
 	}
 
 	// Ensure storage pool exists
-	if err := ensureStoragePool(ctx, components.PoolManager, cfg, log); err != nil {
-		log.Fatal("Failed to ensure storage pool", logger.Error(err))
+	if poolErr := ensureStoragePool(ctx, components.PoolManager, cfg, log); poolErr != nil {
+		log.Fatal("Failed to ensure storage pool", logger.Error(poolErr))
 	}
 
 	// Initialize default users if configured

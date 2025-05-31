@@ -2,7 +2,7 @@ package user
 
 import "errors"
 
-// Error definitions
+// Error definitions.
 var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrDuplicateUsername  = errors.New("username already exists")

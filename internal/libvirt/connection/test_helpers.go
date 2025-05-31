@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"net"
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
@@ -38,9 +37,7 @@ func (m *TestConnectionManager) AddToTestPool(conn Connection) {
 // TestLibvirtConnection is a test implementation of the Connection interface
 type TestLibvirtConnection struct {
 	libvirt *libvirt.Libvirt
-	conn    net.Conn
 	active  bool
-	manager *ConnectionManager
 }
 
 // GetLibvirtConnection implements Connection.GetLibvirtConnection

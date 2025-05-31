@@ -9,22 +9,22 @@ import (
 	"github.com/threatflux/libgo/internal/config"
 )
 
-// Error definitions
+// Error definitions.
 var (
 	ErrTokenExpired = errors.New("token has expired")
 	ErrInvalidToken = errors.New("invalid token")
 )
 
-// Validator defines interface for JWT token validation
+// Validator defines interface for JWT token validation.
 type Validator interface {
-	// Validate validates a JWT token
+	// Validate validates a JWT token.
 	Validate(tokenString string) (*Claims, error)
 
-	// ValidateWithClaims validates a token and populates the claims
+	// ValidateWithClaims validates a token and populates the claims.
 	ValidateWithClaims(tokenString string, claims jwt.Claims) error
 }
 
-// JWTValidator implements Validator
+// JWTValidator implements Validator.
 type JWTValidator struct {
 	secretKey     []byte
 	publicKey     *rsa.PublicKey
@@ -34,30 +34,30 @@ type JWTValidator struct {
 	signingMethod string
 }
 
-// NewJWTValidator creates a new JWTValidator
+// NewJWTValidator creates a new JWTValidator.
 func NewJWTValidator(config config.AuthConfig) *JWTValidator {
 	var algorithm jwt.SigningMethod
 	var publicKey *rsa.PublicKey
 
 	// Choose signing method based on configuration
 	switch config.SigningMethod {
-	case "HS256":
+	case SigningMethodHS256:
 		algorithm = jwt.SigningMethodHS256
-	case "HS384":
+	case SigningMethodHS384:
 		algorithm = jwt.SigningMethodHS384
-	case "HS512":
+	case SigningMethodHS512:
 		algorithm = jwt.SigningMethodHS512
-	case "RS256":
+	case SigningMethodRS256:
 		algorithm = jwt.SigningMethodRS256
-	case "RS384":
+	case SigningMethodRS384:
 		algorithm = jwt.SigningMethodRS384
-	case "RS512":
+	case SigningMethodRS512:
 		algorithm = jwt.SigningMethodRS512
-	case "ES256":
+	case SigningMethodES256:
 		algorithm = jwt.SigningMethodES256
-	case "ES384":
+	case SigningMethodES384:
 		algorithm = jwt.SigningMethodES384
-	case "ES512":
+	case SigningMethodES512:
 		algorithm = jwt.SigningMethodES512
 	default:
 		// Default to HS256 for safety
@@ -80,7 +80,7 @@ func NewJWTValidator(config config.AuthConfig) *JWTValidator {
 	}
 }
 
-// Validate implements Validator.Validate
+// Validate implements Validator.Validate.
 func (v *JWTValidator) Validate(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	err := v.ValidateWithClaims(tokenString, claims)
@@ -90,7 +90,7 @@ func (v *JWTValidator) Validate(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-// ValidateWithClaims implements Validator.ValidateWithClaims
+// ValidateWithClaims implements Validator.ValidateWithClaims.
 func (v *JWTValidator) ValidateWithClaims(tokenString string, claims jwt.Claims) error {
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -100,7 +100,7 @@ func (v *JWTValidator) ValidateWithClaims(tokenString string, claims jwt.Claims)
 		}
 
 		// Use the appropriate key based on signing method
-		if v.signingMethod == "RS256" || v.signingMethod == "RS384" || v.signingMethod == "RS512" {
+		if v.signingMethod == SigningMethodRS256 || v.signingMethod == SigningMethodRS384 || v.signingMethod == SigningMethodRS512 {
 			if v.publicKey == nil {
 				return nil, fmt.Errorf("RSA public key not set")
 			}

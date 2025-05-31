@@ -5,12 +5,13 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"math"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
 
-// PasswordConfig defines the parameters for Argon2 password hashing
+// PasswordConfig defines the parameters for Argon2 password hashing.
 type PasswordConfig struct {
 	Memory      uint32
 	Iterations  uint32
@@ -19,7 +20,7 @@ type PasswordConfig struct {
 	KeyLength   uint32
 }
 
-// DefaultPasswordConfig returns the default password hashing configuration
+// DefaultPasswordConfig returns the default password hashing configuration.
 func DefaultPasswordConfig() *PasswordConfig {
 	return &PasswordConfig{
 		Memory:      64 * 1024, // 64MB
@@ -30,12 +31,12 @@ func DefaultPasswordConfig() *PasswordConfig {
 	}
 }
 
-// HashPassword creates a password hash using Argon2id
+// HashPassword creates a password hash using Argon2id.
 func HashPassword(password string) (string, error) {
 	return HashPasswordWithConfig(password, DefaultPasswordConfig())
 }
 
-// HashPasswordWithConfig creates a password hash using the specified configuration
+// HashPasswordWithConfig creates a password hash using the specified configuration.
 func HashPasswordWithConfig(password string, config *PasswordConfig) (string, error) {
 	// Generate a random salt
 	salt := make([]byte, config.SaltLength)
@@ -71,7 +72,7 @@ func HashPasswordWithConfig(password string, config *PasswordConfig) (string, er
 	return encodedHash, nil
 }
 
-// VerifyPassword verifies a password against a hash
+// VerifyPassword verifies a password against a hash.
 func VerifyPassword(password, hash string) bool {
 	// Extract the parameters, salt and key from the encoded hash
 	parts := strings.Split(hash, "$")
@@ -114,6 +115,10 @@ func VerifyPassword(password, hash string) bool {
 	}
 
 	// Compute the hash of the password with the same parameters
+	// Check for integer overflow before converting to uint32
+	if len(decodedHash) > math.MaxUint32 {
+		return false
+	}
 	keyLength := uint32(len(decodedHash))
 	computedHash := argon2.IDKey(
 		[]byte(password),
@@ -128,7 +133,7 @@ func VerifyPassword(password, hash string) bool {
 	return subtle.ConstantTimeCompare(decodedHash, computedHash) == 1
 }
 
-// ExtractPasswordConfig extracts the configuration from a password hash
+// ExtractPasswordConfig extracts the configuration from a password hash.
 func ExtractPasswordConfig(hash string) (*PasswordConfig, error) {
 	// Extract the parameters from the encoded hash
 	parts := strings.Split(hash, "$")
@@ -161,6 +166,14 @@ func ExtractPasswordConfig(hash string) (*PasswordConfig, error) {
 		return nil, fmt.Errorf("decoding hash: %w", err)
 	}
 
+	// Check for integer overflow before converting to uint32
+	if len(salt) > math.MaxUint32 {
+		return nil, fmt.Errorf("salt length exceeds maximum value")
+	}
+	if len(decodedHash) > math.MaxUint32 {
+		return nil, fmt.Errorf("hash length exceeds maximum value")
+	}
+
 	return &PasswordConfig{
 		Memory:      memory,
 		Iterations:  iterations,
@@ -170,7 +183,7 @@ func ExtractPasswordConfig(hash string) (*PasswordConfig, error) {
 	}, nil
 }
 
-// NeedsRehash checks if a password hash should be rehashed with new parameters
+// NeedsRehash checks if a password hash should be rehashed with new parameters.
 func NeedsRehash(hash string, config *PasswordConfig) (bool, error) {
 	currentConfig, err := ExtractPasswordConfig(hash)
 	if err != nil {

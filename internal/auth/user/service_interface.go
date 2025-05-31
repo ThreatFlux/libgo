@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/user"
 )
 
-// DefaultUserConfig represents configuration for a default user
+// DefaultUserConfig represents configuration for a default user.
 type DefaultUserConfig struct {
 	Username string
 	Password string
@@ -14,7 +14,7 @@ type DefaultUserConfig struct {
 	Roles    []string
 }
 
-// Service defines interface for user management
+// Service defines interface for user management.
 type Service interface {
 	// Authenticate authenticates a user
 	Authenticate(ctx context.Context, username, password string) (*user.User, error)

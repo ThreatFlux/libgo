@@ -11,8 +11,8 @@ import (
 	"github.com/threatflux/libgo/internal/database"
 )
 
-// TestSetupAdminUser creates an admin user for testing
-// Run with: go test -v ./test/adminsetup -run TestSetupAdminUser
+// TestSetupAdminUser creates an admin user for testing.
+// Run with: go test -v ./test/adminsetup -run TestSetupAdminUser.
 func TestSetupAdminUser(t *testing.T) {
 	// No need for complex logger in this test, we'll use t.Log
 
@@ -29,8 +29,8 @@ func TestSetupAdminUser(t *testing.T) {
 
 	loader := config.NewYAMLLoader(configPath)
 	cfg := &config.Config{}
-	if err := loader.Load(cfg); err != nil {
-		t.Fatalf("Failed to load test configuration: %v", err)
+	if loadErr := loader.Load(cfg); loadErr != nil {
+		t.Fatalf("Failed to load test configuration: %v", loadErr)
 	}
 
 	// Set the DSN directly for SQLite - the config is missing DSN processing
@@ -45,8 +45,8 @@ func TestSetupAdminUser(t *testing.T) {
 	}
 
 	// Create a simple test table first to verify database connection works
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS test_table (id INTEGER)").Error; err != nil {
-		t.Fatalf("Failed to create test table: %v", err)
+	if execErr := db.Exec("CREATE TABLE IF NOT EXISTS test_table (id INTEGER)").Error; execErr != nil {
+		t.Fatalf("Failed to create test table: %v", execErr)
 	}
 	t.Log("Test table created successfully")
 
@@ -62,22 +62,22 @@ func TestSetupAdminUser(t *testing.T) {
 		updated_at DATETIME
 	)`
 
-	if err := db.Exec(createTableSQL).Error; err != nil {
-		t.Fatalf("Failed to create users table: %v", err)
+	if execErr := db.Exec(createTableSQL).Error; execErr != nil {
+		t.Fatalf("Failed to create users table: %v", execErr)
 	}
 	t.Log("Users table created successfully")
 
 	// List all tables for debugging
 	var allTables []string
-	if err := db.Raw("SELECT name FROM sqlite_master WHERE type='table'").Pluck("name", &allTables).Error; err != nil {
-		t.Fatalf("Failed to list tables: %v", err)
+	if queryErr := db.Raw("SELECT name FROM sqlite_master WHERE type='table'").Pluck("name", &allTables).Error; queryErr != nil {
+		t.Fatalf("Failed to list tables: %v", queryErr)
 	}
 	t.Logf("All tables in database: %v", allTables)
 
 	// Verify table was created
 	var tableCount int64
-	if err := db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&tableCount).Error; err != nil {
-		t.Fatalf("Failed to verify table creation: %v", err)
+	if scanErr := db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&tableCount).Error; scanErr != nil {
+		t.Fatalf("Failed to verify table creation: %v", scanErr)
 	}
 	t.Logf("Table count for 'users': %d", tableCount)
 	if tableCount == 0 {
@@ -93,8 +93,8 @@ func TestSetupAdminUser(t *testing.T) {
 	// Use the database directly for more control
 	// First, let's check if we already have a user with the admin ID we want
 	var count int64
-	if err := db.Raw("SELECT COUNT(*) FROM users WHERE id = ?", "11111111-2222-3333-4444-555555555555").Scan(&count).Error; err != nil {
-		t.Fatalf("Failed to check for existing user: %v", err)
+	if checkErr := db.Raw("SELECT COUNT(*) FROM users WHERE id = ?", "11111111-2222-3333-4444-555555555555").Scan(&count).Error; checkErr != nil {
+		t.Fatalf("Failed to check for existing user: %v", checkErr)
 	}
 
 	if count > 0 {

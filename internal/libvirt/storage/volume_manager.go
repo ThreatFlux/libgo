@@ -75,8 +75,8 @@ func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volN
 			logger.String("pool", poolName),
 			logger.String("volume", volName))
 
-		if err := libvirtConn.StorageVolDelete(existingVol, 0); err != nil {
-			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, err)
+		if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
+			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
 		}
 	}
 
@@ -136,13 +136,13 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 			logger.String("pool", poolName),
 			logger.String("volume", volName))
 
-		if err := libvirtConn.StorageVolDelete(existingVol, 0); err != nil {
-			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, err)
+		if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
+			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
 		}
 	}
 
 	// Check if source image exists
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(imagePath); os.IsNotExist(statErr) {
 		return fmt.Errorf("source image %s does not exist", imagePath)
 	}
 

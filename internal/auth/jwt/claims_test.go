@@ -8,6 +8,8 @@ import (
 	"github.com/threatflux/libgo/internal/models/user"
 )
 
+const claimsTestIssuer = "test-issuer"
+
 func TestNewClaims(t *testing.T) {
 	// Create a user for testing
 	testUser := &user.User{
@@ -18,7 +20,7 @@ func TestNewClaims(t *testing.T) {
 	}
 
 	// Create registered claims
-	issuer := "test-issuer"
+	issuer := claimsTestIssuer
 	audience := jwt.ClaimStrings{"test-audience"}
 	subject := "test-subject"
 	issuedAt := jwt.NewNumericDate(time.Now())
@@ -87,7 +89,7 @@ func TestClaims_Valid(t *testing.T) {
 	expiry := now.Add(15 * time.Minute)
 
 	validRegisteredClaims := jwt.RegisteredClaims{
-		Issuer:    "test-issuer",
+		Issuer:    claimsTestIssuer,
 		Subject:   "test-subject",
 		Audience:  jwt.ClaimStrings{"test-audience"},
 		ExpiresAt: jwt.NewNumericDate(expiry),
