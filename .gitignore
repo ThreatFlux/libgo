@@ -52,7 +52,7 @@ ehthumbs.db
 Thumbs.db
 
 # Generated files
-test/mocks/
+# test/mocks/ - Temporarily allowing mocks for CI
 
 # Node.js dependencies
 node_modules/
