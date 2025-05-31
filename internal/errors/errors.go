@@ -69,7 +69,7 @@ func WrapWithCode(err error, code error, format string, args ...interface{}) err
 	}
 
 	wrappedErr := fmt.Errorf(format+": %w", append(args, err)...)
-	return fmt.Errorf("%w: %v", code, wrappedErr)
+	return fmt.Errorf("%w: %w", code, wrappedErr)
 }
 
 // GetErrorCode extracts the error code from an error
@@ -120,9 +120,13 @@ func GetErrorCode(err error) error {
 
 // GetErrorCodeString returns the string representation of the error code
 func GetErrorCodeString(err error) string {
+	if err == nil {
+		return "UNKNOWN_ERROR"
+	}
+	
 	code := GetErrorCode(err)
 	if code == nil {
-		return "UNKNOWN_ERROR"
+		return "INTERNAL_SERVER_ERROR"
 	}
 
 	switch code {

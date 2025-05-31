@@ -167,7 +167,10 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 
 	case reflect.Map:
 		// Maps in environment variables can be specified as key1:value1,key2:value2
-		mapValue := reflect.MakeMap(fieldValue.Type())
+		// Merge with existing map instead of replacing it
+		if fieldValue.IsNil() {
+			fieldValue.Set(reflect.MakeMap(fieldValue.Type()))
+		}
 		if envValue != "" {
 			pairs := strings.Split(envValue, ",")
 			for _, pair := range pairs {
@@ -175,9 +178,8 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 				if len(kv) != 2 {
 					return fmt.Errorf("invalid map format, expected key:value")
 				}
-				mapValue.SetMapIndex(reflect.ValueOf(kv[0]), reflect.ValueOf(kv[1]))
+				fieldValue.SetMapIndex(reflect.ValueOf(kv[0]), reflect.ValueOf(kv[1]))
 			}
-			fieldValue.Set(mapValue)
 		}
 
 	case reflect.Slice:

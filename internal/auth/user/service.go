@@ -28,10 +28,30 @@ func NewUserService(logger logger.Logger) *UserService {
 	}
 }
 
+// getUserByUsernameInternal gets a user by username with password (for internal use)
+func (s *UserService) getUserByUsernameInternal(username string) (*user.User, error) {
+	id, ok := s.byName[username]
+	if !ok {
+		return nil, errors.WrapWithCode(errors.New("user not found"), errors.ErrNotFound, "getting user by username")
+	}
+
+	u, ok := s.users[id]
+	if !ok {
+		// This should never happen, but just in case
+		return nil, errors.WrapWithCode(errors.New("user mapping inconsistent"), errors.ErrNotFound, "getting user by username")
+	}
+
+	// Return the actual user (with password) for internal operations
+	return u, nil
+}
+
 // Authenticate implements Service.Authenticate
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (*user.User, error) {
-	// Get user by username
-	u, err := s.GetByUsername(ctx, username)
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
+	// Get user by username (internal method that includes password)
+	u, err := s.getUserByUsernameInternal(username)
 	if err != nil {
 		// Don't expose whether a user exists or not
 		return nil, errors.WrapWithCode(err, errors.ErrInvalidCredentials, "invalid username or password")
@@ -39,12 +59,12 @@ func (s *UserService) Authenticate(ctx context.Context, username, password strin
 
 	// Check if user is active
 	if !u.Active {
-		return nil, errors.WrapWithCode(err, errors.ErrInvalidCredentials, "user account is inactive")
+		return nil, errors.WrapWithCode(errors.New("user account is inactive"), errors.ErrInvalidCredentials, "user account is inactive")
 	}
 
 	// Verify the password
 	if !VerifyPassword(password, u.Password) {
-		return nil, errors.New("invalid username or password")
+		return nil, errors.WrapWithCode(errors.New("invalid username or password"), errors.ErrInvalidCredentials, "invalid username or password")
 	}
 
 	// Create a copy of the user without the password
@@ -130,7 +150,7 @@ func (s *UserService) Create(ctx context.Context, username, password, email stri
 		newUser = user.NewUser(username, hashedPassword, email, roles)
 	}
 
-	// Store the user
+	// Store the user (with password)
 	s.users[newUser.ID] = newUser
 	s.byName[newUser.Username] = newUser.ID
 

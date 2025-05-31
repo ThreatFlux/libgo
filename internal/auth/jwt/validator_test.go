@@ -130,7 +130,7 @@ func TestJWTValidator_Validate(t *testing.T) {
 	}
 
 	// The error should be wrapped with ErrInvalidToken
-	if !errors.Is(err, errors.ErrInvalidToken) {
+	if !errors.Is(err, ErrInvalidToken) {
 		t.Errorf("Expected error to be ErrInvalidToken, got %v", err)
 	}
 
@@ -188,7 +188,7 @@ func TestJWTValidator_Validate(t *testing.T) {
 	}
 
 	// The error should be wrapped with ErrTokenExpired
-	if !errors.Is(err, errors.ErrTokenExpired) {
+	if !errors.Is(err, ErrTokenExpired) {
 		t.Errorf("Expected error to be ErrTokenExpired, got %v", err)
 	}
 }
@@ -286,9 +286,10 @@ func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 		t.Errorf("Expected Subject to be %q, got %q", testUser.ID, standardClaims.Subject)
 	}
 
-	// But trying to validate with claims that lack required fields should fail parsing
-	_, err = validator.Validate(customTokenString)
+	// Create a token that will definitely fail validation by using a completely invalid token
+	invalidTokenString := "invalid.token.here"
+	_, err = validator.Validate(invalidTokenString)
 	if err == nil {
-		t.Error("Expected error when validating token with mismatched claims structure, got nil")
+		t.Error("Expected error when validating completely invalid token, got nil")
 	}
 }

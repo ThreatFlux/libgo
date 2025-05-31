@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/threatflux/libgo/internal/config"
-	apierrors "github.com/threatflux/libgo/internal/errors"
 )
 
 // Error definitions
@@ -113,16 +112,16 @@ func (v *JWTValidator) ValidateWithClaims(tokenString string, claims jwt.Claims)
 	// Check for parsing errors
 	if err != nil {
 		// Check if token is expired
-		if err.Error() == "token is expired" || err.Error() == "token has expired" {
-			return apierrors.WrapWithCode(err, ErrTokenExpired, "token has expired")
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return fmt.Errorf("%w: %v", ErrTokenExpired, err)
 		}
 		// Handle other validation errors
-		return apierrors.WrapWithCode(err, ErrInvalidToken, "validating token")
+		return fmt.Errorf("%w: %v", ErrInvalidToken, err)
 	}
 
 	// Check if the token is valid
 	if !token.Valid {
-		return apierrors.WrapWithCode(err, ErrInvalidToken, "token is invalid")
+		return fmt.Errorf("%w: token is invalid", ErrInvalidToken)
 	}
 
 	return nil
