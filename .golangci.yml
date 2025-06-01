@@ -15,7 +15,6 @@ linters:
     - bodyclose
     - dogsled
     - dupl
-    - copyloopvar
     - gocognit
     - goconst
     - gocritic
@@ -27,6 +26,8 @@ linters:
     - unconvert
     - whitespace
     - predeclared
+  disable:
+    - copyloopvar  # This linter doesn't exist in current golangci-lint version
 
 linters-settings:
   errcheck:

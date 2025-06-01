@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
 )
@@ -135,7 +136,8 @@ func TestRecoveryHandler(t *testing.T) {
 			tt.setupMocks()
 
 			// Create request
-			req, _ := http.NewRequest("GET", tt.path, nil)
+			req, err := http.NewRequest("GET", tt.path, nil)
+			require.NoError(t, err)
 			rec := httptest.NewRecorder()
 
 			// Wrap test in a recovery function if we expect a panic

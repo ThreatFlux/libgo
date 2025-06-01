@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVM, startVM, stopVM, deleteVM } from '@/api/vm';
-import { useNavigate, useParams, Route, createFileRoute } from '@tanstack/react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { VMStatusBadge } from '@/components/vm/vm-status-badge';
-import { formatBytes, formatDate } from '@/lib/utils';
+import { formatBytes, formatDate, cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/lib/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/lib/components';
 import { useVMMonitor } from '@/hooks/useVMWebSocket';
 import { VMMetricsChart } from '@/components/vm/vm-metrics';
 import { VMConsole } from '@/components/vm/vm-console';
@@ -313,10 +312,25 @@ export const VMDetailPage: React.FC = () => {
       )}
       
       {/* Tabs */}
-      <Tabs defaultValue="overview" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="monitoring" disabled={!wsConnected}>
+      <div className="space-y-4">
+        <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={cn(
+              "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              activeTab === 'overview' && "bg-background text-foreground shadow-sm"
+            )}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('monitoring')}
+            disabled={!wsConnected}
+            className={cn(
+              "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+              activeTab === 'monitoring' && "bg-background text-foreground shadow-sm"
+            )}
+          >
             <div className="flex items-center">
               <LuActivity className="mr-2 h-4 w-4" />
               Monitoring
@@ -324,8 +338,15 @@ export const VMDetailPage: React.FC = () => {
                 <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
               )}
             </div>
-          </TabsTrigger>
-          <TabsTrigger value="console" disabled={!wsConnected}>
+          </button>
+          <button
+            onClick={() => setActiveTab('console')}
+            disabled={!wsConnected}
+            className={cn(
+              "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+              activeTab === 'console' && "bg-background text-foreground shadow-sm"
+            )}
+          >
             <div className="flex items-center">
               <LuTerminal className="mr-2 h-4 w-4" />
               Console
@@ -333,11 +354,11 @@ export const VMDetailPage: React.FC = () => {
                 <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
               )}
             </div>
-          </TabsTrigger>
-        </TabsList>
+          </button>
+        </div>
         
-        {/* Overview Tab */}
-        <TabsContent value="overview">
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* CPU and Memory */}
             <Card>
@@ -490,34 +511,38 @@ export const VMDetailPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        )}
         
         {/* Monitoring Tab */}
-        <TabsContent value="monitoring">
-          {wsConnected && wsMetrics ? (
-            <VMMetricsChart vmName={vm.name} metrics={wsMetrics} />
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {wsConnected ? 'Waiting for metrics data...' : 'WebSocket connection required for real-time monitoring'}
-              </p>
-            </div>
-          )}
-        </TabsContent>
+        {activeTab === 'monitoring' && (
+          <div>
+            {wsConnected && wsMetrics ? (
+              <VMMetricsChart vmName={vm.name} metrics={wsMetrics} />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  {wsConnected ? 'Waiting for metrics data...' : 'WebSocket connection required for real-time monitoring'}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Console Tab */}
-        <TabsContent value="console">
-          {wsConnected ? (
-            <VMConsole vmName={vm.name} className="mt-4" />
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                WebSocket connection required for console access
-              </p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+        {activeTab === 'console' && (
+          <div>
+            {wsConnected ? (
+              <VMConsole vmName={vm.name} className="mt-4" />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  WebSocket connection required for console access
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
