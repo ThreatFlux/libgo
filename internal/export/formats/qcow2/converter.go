@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
 const (
@@ -52,7 +52,7 @@ func (c *QCOW2Converter) Convert(ctx context.Context, sourcePath string, destPat
 		"convert",
 		"-f", "qcow2", // Source format, assume qcow2 as libvirt generally uses this
 		"-O", "qcow2", // Output format
-		"-c",          // Enable compression
+		"-c", // Enable compression
 		sourcePath,
 		destPath,
 	}

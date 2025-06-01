@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ErrInvalidToken indicates authentication failed due to invalid token

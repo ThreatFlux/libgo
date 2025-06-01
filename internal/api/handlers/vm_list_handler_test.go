@@ -9,12 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
 	"go.uber.org/mock/gomock"
 
-	mock_vm "github.com/wroersma/libgo/test/mocks/vm"
-	mock_logger "github.com/wroersma/libgo/test/mocks/logger"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	mock_vm "github.com/threatflux/libgo/test/mocks/vm"
 )
 
 func TestVMHandler_ListVMs(t *testing.T) {
@@ -25,7 +24,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 	testCases := []struct {
 		name           string
 		url            string
-		setupMocks     func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger)
+		setupMocks     func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger)
 		expectedStatus int
 		expectedCount  int
 		expectError    bool
@@ -33,7 +32,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "List VMs successfully",
 			url:  "/vms",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				vms := []*vm.VM{
 					{
 						Name:   "test-vm-1",
@@ -46,11 +45,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 						Status: vm.VMStatusStopped,
 					},
 				}
-				
+
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -62,7 +61,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "List VMs with pagination",
 			url:  "/vms?page=2&pageSize=1",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				vms := []*vm.VM{
 					{
 						Name:   "test-vm-1",
@@ -75,11 +74,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 						Status: vm.VMStatusStopped,
 					},
 				}
-				
+
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -91,9 +90,9 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "List VMs with invalid page parameter",
 			url:  "/vms?page=invalid",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				// No VM list call should be made due to validation error
-				
+
 				mockLogger.EXPECT().
 					Error(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -104,9 +103,9 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "List VMs with invalid pageSize parameter",
 			url:  "/vms?pageSize=invalid",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				// No VM list call should be made due to validation error
-				
+
 				mockLogger.EXPECT().
 					Error(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -117,11 +116,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "VM manager returns error",
 			url:  "/vms",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(nil, errors.New("database error"))
-				
+
 				mockLogger.EXPECT().
 					Error(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -132,7 +131,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "Filter by VM name",
 			url:  "/vms?name=test-vm",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				// Use gomock.Any() for filter parameter to avoid complex matcher
 				vms := []*vm.VM{
 					{
@@ -141,11 +140,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 						Status: vm.VMStatusRunning,
 					},
 				}
-				
+
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -157,7 +156,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "Filter by VM status",
 			url:  "/vms?status=running",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				vms := []*vm.VM{
 					{
 						Name:   "test-vm-1",
@@ -165,11 +164,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 						Status: vm.VMStatusRunning,
 					},
 				}
-				
+
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -181,7 +180,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 		{
 			name: "Page beyond available data",
 			url:  "/vms?page=10&pageSize=10",
-			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mock_logger.MockLogger) {
+			setupMocks: func(mockVMManager *mock_vm.MockManager, mockLogger *mocks_logger.MockLogger) {
 				vms := []*vm.VM{
 					{
 						Name:   "test-vm-1",
@@ -194,11 +193,11 @@ func TestVMHandler_ListVMs(t *testing.T) {
 						Status: vm.VMStatusStopped,
 					},
 				}
-				
+
 				mockVMManager.EXPECT().
-					List(gomock.Any(), gomock.Any()).
+					List(gomock.Any()).
 					Return(vms, nil)
-				
+
 				mockLogger.EXPECT().
 					Info(gomock.Any(), gomock.Any()).
 					AnyTimes()
@@ -215,16 +214,16 @@ func TestVMHandler_ListVMs(t *testing.T) {
 			// Setup controller and mocks
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			
+
 			mockVMManager := mock_vm.NewMockManager(ctrl)
-			mockLogger := mock_logger.NewMockLogger(ctrl)
-			
+			mockLogger := mocks_logger.NewMockLogger(ctrl)
+
 			// Setup handler
 			handler := NewVMHandler(mockVMManager, mockLogger)
-			
+
 			// Set up mock expectations
 			tc.setupMocks(mockVMManager, mockLogger)
-			
+
 			// Setup router
 			router := gin.New()
 			router.Use(func(c *gin.Context) {
@@ -232,26 +231,26 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				c.Next()
 			})
 			router.GET("/vms", handler.ListVMs)
-			
+
 			// Create request and recorder
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, tc.url, nil)
-			
+
 			// Perform request
 			router.ServeHTTP(w, req)
-			
+
 			// Check status code
 			if w.Code != tc.expectedStatus {
 				t.Errorf("Expected status code %d, got %d", tc.expectedStatus, w.Code)
 			}
-			
+
 			// Check response
 			if !tc.expectError {
 				var response ListVMsResponse
 				if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
-				
+
 				// Check total count
 				if response.Count != tc.expectedCount {
 					t.Errorf("Expected total count %d, got %d", tc.expectedCount, response.Count)
@@ -261,7 +260,7 @@ func TestVMHandler_ListVMs(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &errorResponse); err != nil {
 					t.Fatalf("Failed to unmarshal error response: %v", err)
 				}
-				
+
 				// Check status in error response
 				if errorResponse.Status != tc.expectedStatus {
 					t.Errorf("Expected error status %d, got %d", tc.expectedStatus, errorResponse.Status)

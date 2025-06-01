@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RequestLoggerMiddleware returns a standard HTTP middleware function for logging HTTP requests

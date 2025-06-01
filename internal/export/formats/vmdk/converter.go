@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
 // VMDKConverter implements Converter for VMDK format

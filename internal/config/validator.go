@@ -105,9 +105,9 @@ func ValidateLibvirt(libvirt LibvirtConfig) error {
 
 	// Check URI format
 	if !strings.HasPrefix(libvirt.URI, "qemu") &&
-	   !strings.HasPrefix(libvirt.URI, "xen") &&
-	   !strings.HasPrefix(libvirt.URI, "lxc") &&
-	   !strings.HasPrefix(libvirt.URI, "test") {
+		!strings.HasPrefix(libvirt.URI, "xen") &&
+		!strings.HasPrefix(libvirt.URI, "lxc") &&
+		!strings.HasPrefix(libvirt.URI, "test") {
 		return fmt.Errorf("URI %s: unsupported hypervisor", libvirt.URI)
 	}
 
@@ -175,13 +175,13 @@ func ValidateAuth(auth AuthConfig) error {
 func ValidateLogging(logging LoggingConfig) error {
 	// Validate log level
 	validLevels := map[string]bool{
-		"debug":   true,
-		"info":    true,
-		"warn":    true,
-		"error":   true,
-		"dpanic":  true,
-		"panic":   true,
-		"fatal":   true,
+		"debug":  true,
+		"info":   true,
+		"warn":   true,
+		"error":  true,
+		"dpanic": true,
+		"panic":  true,
+		"fatal":  true,
 	}
 
 	if !validLevels[strings.ToLower(logging.Level)] {

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/middleware/auth"
-	"github.com/wroersma/libgo/internal/middleware/logging"
-	"github.com/wroersma/libgo/internal/middleware/recovery"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/middleware/auth"
+	"github.com/threatflux/libgo/internal/middleware/logging"
+	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RouterConfig holds the configuration for the router
@@ -29,11 +29,11 @@ type RouterConfig struct {
 // DefaultRouterConfig returns the default router configuration
 func DefaultRouterConfig() RouterConfig {
 	return RouterConfig{
-		BasePath:    "/api/v1",
-		EnableCORS:  true,
+		BasePath:   "/api/v1",
+		EnableCORS: true,
 		LoggingConfig: logging.Config{
-			SkipPaths:        []string{"/health", "/metrics"},
-			MaxBodyLogSize:   4096,
+			SkipPaths:          []string{"/health", "/metrics"},
+			MaxBodyLogSize:     4096,
 			IncludeRequestBody: true,
 		},
 		RecoveryConfig: recovery.Config{
@@ -42,6 +42,8 @@ func DefaultRouterConfig() RouterConfig {
 	}
 }
 
+// vmManagerWebSocketAdapter is defined in router_adapter.go
+
 // SetupRouter configures the API router with standard middleware and routes
 func SetupRouter(
 	engine *gin.Engine,
@@ -49,6 +51,7 @@ func SetupRouter(
 	config RouterConfig,
 	authMiddleware *auth.JWTMiddleware,
 	roleMiddleware *auth.RoleMiddleware,
+	vmManager interface{}, // VM manager interface for WebSocket monitoring
 ) *gin.Engine {
 	// Apply middleware to all routes
 	engine.Use(recovery.Handler(log, config.RecoveryConfig))
@@ -77,6 +80,8 @@ func SetupRouter(
 	admin := protected.Group("/admin")
 	admin.Use(roleMiddleware.RequireRole("admin"))
 	setupAdminRoutes(admin)
+
+	// Setup WebSocket routes in api.ConfigureRoutes
 
 	// No route handler
 	engine.NoRoute(noRouteHandler)

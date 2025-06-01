@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/wroersma/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
 )
 
 // TestVMLifecycle tests the complete VM lifecycle through the API
@@ -35,7 +35,7 @@ func TestVMLifecycle(t *testing.T) {
 
 	// Test VM lifecycle
 	var vmUUID string
-	
+
 	// Define VM creation parameters
 	vmParams := map[string]interface{}{
 		"name": vmName,
@@ -211,7 +211,7 @@ func TestVMLifecycle(t *testing.T) {
 		// Verify VMs in response
 		vms, ok := listResp["vms"].([]interface{})
 		assert.True(t, ok)
-		
+
 		// Find our VM in the list
 		found := false
 		for _, v := range vms {

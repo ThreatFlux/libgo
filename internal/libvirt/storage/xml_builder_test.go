@@ -2,16 +2,14 @@ package storage
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/wroersma/libgo/pkg/logger"
-	xmlutils "github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/pkg/logger"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Mock logger for testing
@@ -57,7 +55,7 @@ func (m *mockLogger) Sync() error {
 func TestTemplateXMLBuilder_BuildStoragePoolXML(t *testing.T) {
 	// Create a temporary directory for templates
 	tmpDir := t.TempDir()
-	
+
 	// Create test storage pool template
 	poolTemplate := `<pool type='dir'>
   <n>{{.Name}}</n>
@@ -73,32 +71,32 @@ func TestTemplateXMLBuilder_BuildStoragePoolXML(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "storage_pool.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(poolTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(poolTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
-	
+
 	// Create template loader
 	templateLoader, err := xmlutils.NewTemplateLoader(tmpDir)
 	if err != nil {
 		t.Fatalf("Failed to create template loader: %v", err)
 	}
-	
+
 	// Create mock logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create XML builder
 	builder := NewTemplateXMLBuilder(templateLoader, mockLog)
-	
+
 	// Test pool XML generation
 	poolName := "test-pool"
 	poolPath := "/var/lib/libvirt/storage/test-pool"
-	
+
 	xml, err := builder.BuildStoragePoolXML(poolName, poolPath)
 	if err != nil {
 		t.Fatalf("BuildStoragePoolXML failed: %v", err)
 	}
-	
+
 	// Verify the XML contains expected elements
 	assert.Contains(t, xml, "<n>test-pool</n>")
 	assert.Contains(t, xml, "<path>/var/lib/libvirt/storage/test-pool</path>")
@@ -108,7 +106,7 @@ func TestTemplateXMLBuilder_BuildStoragePoolXML(t *testing.T) {
 func TestTemplateXMLBuilder_BuildStorageVolumeXML(t *testing.T) {
 	// Create a temporary directory for templates
 	tmpDir := t.TempDir()
-	
+
 	// Create test storage volume template
 	volumeTemplate := `<volume>
   <n>{{.Name}}</n>
@@ -126,23 +124,23 @@ func TestTemplateXMLBuilder_BuildStorageVolumeXML(t *testing.T) {
 
 	// Write the template to the temporary directory
 	templatePath := filepath.Join(tmpDir, "storage_volume.xml.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte(volumeTemplate), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(volumeTemplate), 0644); err != nil {
 		t.Fatalf("Failed to write test template: %v", err)
 	}
-	
+
 	// Create template loader
 	templateLoader, err := xmlutils.NewTemplateLoader(tmpDir)
 	if err != nil {
 		t.Fatalf("Failed to create template loader: %v", err)
 	}
-	
+
 	// Create mock logger
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()
-	
+
 	// Create XML builder
 	builder := NewTemplateXMLBuilder(templateLoader, mockLog)
-	
+
 	// Test cases
 	testCases := []struct {
 		name          string
@@ -173,14 +171,14 @@ func TestTemplateXMLBuilder_BuildStorageVolumeXML(t *testing.T) {
 			expectFormat:  "qcow2", // Default format
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			xml, err := builder.BuildStorageVolumeXML(tc.volName, tc.capacityBytes, tc.format)
 			if err != nil {
 				t.Fatalf("BuildStorageVolumeXML failed: %v", err)
 			}
-			
+
 			// Verify the XML contains expected elements
 			assert.Contains(t, xml, "<n>"+tc.volName+"</n>")
 			assert.Contains(t, xml, fmt.Sprintf("<capacity unit=\"bytes\">%d</capacity>", tc.capacityBytes))

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Error types
@@ -47,15 +47,15 @@ func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path
 	pool, err := libvirtConn.StoragePoolLookupByName(name)
 	if err == nil {
 		// Pool exists, ensure it's active
-		poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool)
-		if err != nil {
-			return fmt.Errorf("failed to get pool info: %w", err)
+		poolInfo, _, _, _, infoErr := libvirtConn.StoragePoolGetInfo(pool)
+		if infoErr != nil {
+			return fmt.Errorf("failed to get pool info: %w", infoErr)
 		}
 
 		if libvirt.StoragePoolState(poolInfo) != libvirt.StoragePoolRunning {
 			// Pool exists but is not active, start it
-			if err := libvirtConn.StoragePoolCreate(pool, 0); err != nil {
-				return fmt.Errorf("failed to start storage pool %s: %w", name, err)
+			if createErr := libvirtConn.StoragePoolCreate(pool, 0); createErr != nil {
+				return fmt.Errorf("failed to start storage pool %s: %w", name, createErr)
 			}
 		}
 
@@ -68,8 +68,8 @@ func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path
 
 	// Pool doesn't exist, create it
 	// First, ensure the path exists
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return fmt.Errorf("failed to create storage path %s: %w", path, err)
+	if mkdirErr := os.MkdirAll(path, 0755); mkdirErr != nil {
+		return fmt.Errorf("failed to create storage path %s: %w", path, mkdirErr)
 	}
 
 	// Generate pool XML

@@ -2,21 +2,42 @@
   <name>{{.Name}}</name>
   <uuid>{{.UUID}}</uuid>
   <memory unit='KiB'>{{.Memory.KiB}}</memory>
-  <vcpu>{{.CPU.Count}}</vcpu>
+  <currentMemory unit='KiB'>{{.Memory.KiB}}</currentMemory>
+  <vcpu placement='static'>{{.CPU.Count}}</vcpu>
   <os>
-    <type arch='x86_64'>hvm</type>
-    <boot dev='hd'/>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <bootmenu enable='yes'/>
   </os>
   <features>
     <acpi/>
     <apic/>
   </features>
+  <cpu mode='custom' match='exact'>
+    <model>qemu64</model>
+    {{if and .CPU.Cores .CPU.Threads .CPU.Sockets}}
+    <topology sockets='{{.CPU.Sockets}}' cores='{{.CPU.Cores}}' threads='{{.CPU.Threads}}'/>
+    {{end}}
+  </cpu>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
   <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
     {{range .Disks}}
     <disk type='{{.Type}}' device='disk'>
       <driver name='qemu' type='{{.Format}}'/>
       <source {{.SourceAttr}}='{{.Source}}'/>
       <target dev='{{.Device}}' bus='{{.Bus}}'/>
+      {{/* Remove per-device boot elements to fix conflict */}}
       {{if .ReadOnly}}<readonly/>{{end}}
       {{if .Shareable}}<shareable/>{{end}}
     </disk>
@@ -25,7 +46,7 @@
     <disk type='file' device='cdrom'>
       <driver name='qemu' type='raw'/>
       <source file='{{.CloudInitISO}}'/>
-      <target dev='sda' bus='sata'/>
+      <target dev='sdb' bus='sata'/>
       <readonly/>
     </disk>
     {{end}}
@@ -36,12 +57,36 @@
       <model type='{{.Model}}'/>
     </interface>
     {{end}}
+    <serial type='pty'>
+      <target type='isa-serial' port='0'>
+        <model name='isa-serial'/>
+      </target>
+    </serial>
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
-    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'/>
+    <channel type='unix'>
+      <target type='virtio' name='org.qemu.guest_agent.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+    <input type='tablet' bus='usb'>
+      <address type='usb' bus='0' port='1'/>
+    </input>
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes' listen='0.0.0.0'>
+      <listen type='address' address='0.0.0.0'/>
+    </graphics>
     <video>
-      <model type='cirrus'/>
+      <model type='virtio' heads='1' primary='yes'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>
     </video>
+    <memballoon model='virtio'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    </memballoon>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+    </rng>
   </devices>
 </domain>

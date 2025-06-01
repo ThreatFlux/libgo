@@ -5,12 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// mockLogger implements logger.Logger interface for testing
+const (
+	testUsername = "testuser"
+	testPassword = "password123"
+	testEmail    = "test@example.com"
+)
+
+// mockLogger implements logger.Logger interface for testing.
 type mockLogger struct{}
 
 func (m *mockLogger) Debug(msg string, fields ...logger.Field) {}
@@ -34,9 +40,9 @@ func setupUserService() *UserService {
 
 func createTestUser(t *testing.T, service *UserService) *user.User {
 	// Create a test user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	u, err := service.Create(context.Background(), username, password, email, roles)
@@ -51,9 +57,9 @@ func TestUserService_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	u, err := service.Create(ctx, username, password, email, roles)
@@ -107,9 +113,9 @@ func TestUserService_Authenticate(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a test user
-	username := "testuser"
-	password := "password123"
-	email := "test@example.com"
+	username := testUsername
+	password := testPassword
+	email := testEmail
 	roles := []string{user.RoleAdmin}
 
 	_, err := service.Create(ctx, username, password, email, roles)
@@ -145,7 +151,7 @@ func TestUserService_Authenticate(t *testing.T) {
 	}
 
 	// Make the user inactive and try to authenticate
-	err = service.Update(ctx, u.ID, func(u *user.User) error {
+	_, err = service.Update(ctx, u.ID, func(u *user.User) error {
 		u.SetActive(false)
 		return nil
 	})
@@ -173,7 +179,7 @@ func TestUserService_GetByID(t *testing.T) {
 		t.Errorf("GetByID failed with existing user: %v", err)
 	}
 	if retrieved == nil || retrieved.ID != u.ID {
-		t.Errorf("GetByID returned wrong user: got ID %s, want %s", 
+		t.Errorf("GetByID returned wrong user: got ID %s, want %s",
 			retrieved.ID, u.ID)
 	}
 
@@ -198,7 +204,7 @@ func TestUserService_GetByUsername(t *testing.T) {
 		t.Errorf("GetByUsername failed with existing user: %v", err)
 	}
 	if retrieved == nil || retrieved.Username != u.Username {
-		t.Errorf("GetByUsername returned wrong user: got username %s, want %s", 
+		t.Errorf("GetByUsername returned wrong user: got username %s, want %s",
 			retrieved.Username, u.Username)
 	}
 
@@ -418,7 +424,7 @@ func TestUserService_SetPassword(t *testing.T) {
 
 	// Change password
 	newPassword := "new-password"
-	err := service.SetPassword(ctx, u.ID, newPassword)
+	_, err := service.SetPassword(ctx, u.ID, newPassword)
 	if err != nil {
 		t.Errorf("SetPassword failed: %v", err)
 	}
@@ -433,7 +439,7 @@ func TestUserService_SetPassword(t *testing.T) {
 	}
 
 	// Old password should no longer work
-	_, err = service.Authenticate(ctx, u.Username, "password123")
+	_, err = service.Authenticate(ctx, u.Username, testPassword)
 	if err == nil {
 		t.Error("Authenticate should fail with old password after change")
 	}
@@ -468,7 +474,7 @@ func TestUserService_LoadUser(t *testing.T) {
 		t.Errorf("Failed to retrieve loaded user: %v", err)
 	}
 	if retrieved.Username != loadedUser.Username {
-		t.Errorf("Loaded user has wrong username: got %s, want %s", 
+		t.Errorf("Loaded user has wrong username: got %s, want %s",
 			retrieved.Username, loadedUser.Username)
 	}
 

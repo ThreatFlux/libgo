@@ -7,18 +7,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// TemplateManager implements Manager for VM templates
+// TemplateManager implements Manager for VM templates.
 type TemplateManager struct {
-	templates  map[string]vm.VMParams
-	logger     logger.Logger
+	templates   map[string]vm.VMParams
+	logger      logger.Logger
 	templateDir string
 }
 
-// NewTemplateManager creates a new TemplateManager
+// NewTemplateManager creates a new TemplateManager.
 func NewTemplateManager(templateDir string, logger logger.Logger) (*TemplateManager, error) {
 	manager := &TemplateManager{
 		templates:   make(map[string]vm.VMParams),
@@ -35,7 +35,7 @@ func NewTemplateManager(templateDir string, logger logger.Logger) (*TemplateMana
 	return manager, nil
 }
 
-// GetTemplate implements Manager.GetTemplate
+// GetTemplate implements Manager.GetTemplate.
 func (m *TemplateManager) GetTemplate(name string) (*vm.VMParams, error) {
 	template, exists := m.templates[name]
 	if !exists {
@@ -47,7 +47,7 @@ func (m *TemplateManager) GetTemplate(name string) (*vm.VMParams, error) {
 	return &templateCopy, nil
 }
 
-// ListTemplates implements Manager.ListTemplates
+// ListTemplates implements Manager.ListTemplates.
 func (m *TemplateManager) ListTemplates() ([]string, error) {
 	templateNames := make([]string, 0, len(m.templates))
 	for name := range m.templates {
@@ -56,7 +56,7 @@ func (m *TemplateManager) ListTemplates() ([]string, error) {
 	return templateNames, nil
 }
 
-// ApplyTemplate implements Manager.ApplyTemplate
+// ApplyTemplate implements Manager.ApplyTemplate.
 func (m *TemplateManager) ApplyTemplate(templateName string, params *vm.VMParams) error {
 	template, err := m.GetTemplate(templateName)
 	if err != nil {
@@ -67,22 +67,22 @@ func (m *TemplateManager) ApplyTemplate(templateName string, params *vm.VMParams
 	if params.CPU.Count == 0 {
 		params.CPU = template.CPU
 	}
-	
+
 	if params.Memory.SizeBytes == 0 {
 		params.Memory = template.Memory
 	}
-	
+
 	if params.Disk.SizeBytes == 0 {
 		params.Disk = template.Disk
 	} else if params.Disk.Format == "" {
 		params.Disk.Format = template.Disk.Format
 	}
-	
+
 	// Only apply network settings if not already set
 	if params.Network.Type == "" {
 		params.Network = template.Network
 	}
-	
+
 	// Apply cloud-init settings if not already provided
 	if params.CloudInit.UserData == "" {
 		params.CloudInit = template.CloudInit
@@ -91,7 +91,7 @@ func (m *TemplateManager) ApplyTemplate(templateName string, params *vm.VMParams
 	return nil
 }
 
-// loadTemplates loads VM templates from JSON files in the template directory
+// loadTemplates loads VM templates from JSON files in the template directory.
 func (m *TemplateManager) loadTemplates() error {
 	if _, err := os.Stat(m.templateDir); os.IsNotExist(err) {
 		m.logger.Warn("Template directory does not exist", logger.String("dir", m.templateDir))

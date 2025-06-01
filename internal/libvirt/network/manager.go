@@ -3,10 +3,11 @@ package network
 import (
 	"context"
 	"fmt"
-	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/pkg/logger"
 	"strings"
+
+	"github.com/digitalocean/go-libvirt"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // LibvirtNetworkManager implements Manager for libvirt networks
@@ -36,7 +37,7 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 	libvirtConn := conn.GetLibvirtConnection()
 
 	// Check if network already exists
-	network, err := libvirtConn.NetworkLookupByName(name)
+	_, err = libvirtConn.NetworkLookupByName(name)
 	if err == nil {
 		// Network exists
 		m.logger.Debug("Network already exists", logger.String("name", name))
@@ -55,7 +56,7 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 		logger.String("cidr", cidr),
 		logger.Bool("dhcp", dhcp))
 
-	network, err = libvirtConn.NetworkDefineXML(xml)
+	network, err := libvirtConn.NetworkDefineXML(xml)
 	if err != nil {
 		return fmt.Errorf("defining network: %w", err)
 	}

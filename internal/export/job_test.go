@@ -14,7 +14,7 @@ func TestJobStore_CreateJob(t *testing.T) {
 
 	// Test job creation
 	job := store.createJob("test-vm", "qcow2", map[string]string{"key": "value"})
-	
+
 	// Verify job properties
 	assert.NotEmpty(t, job.ID)
 	assert.Equal(t, "test-vm", job.VMName)
@@ -84,7 +84,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 	// Create test job
 	job := store.createJob("test-vm", "qcow2", nil)
 
-	testCases := []struct{
+	testCases := []struct {
 		name     string
 		status   Status
 		progress int
@@ -95,7 +95,7 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 		{"Update with error", StatusRunning, 75, errors.New("test error")},
 		{"Update to completed", StatusCompleted, 100, nil},
 		{"Update to failed", StatusFailed, 60, errors.New("failure error")},
-		{"Update to cancelled", StatusCancelled, 30, nil},
+		{"Update to canceled", StatusCanceled, 30, nil},
 	}
 
 	for _, tc := range testCases {
@@ -109,13 +109,13 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 			require.True(t, exists)
 			assert.Equal(t, tc.status, updatedJob.Status)
 			assert.Equal(t, tc.progress, updatedJob.Progress)
-			
+
 			if tc.err != nil {
 				assert.Equal(t, tc.err.Error(), updatedJob.Error)
 			}
 
 			// Verify end time is set for terminal states
-			if tc.status == StatusCompleted || tc.status == StatusFailed || tc.status == StatusCancelled {
+			if tc.status == StatusCompleted || tc.status == StatusFailed || tc.status == StatusCanceled {
 				assert.NotZero(t, updatedJob.EndTime)
 				assert.True(t, updatedJob.EndTime.After(updatedJob.StartTime))
 			}

@@ -10,10 +10,10 @@ import (
 type Manager interface {
 	// Connect establishes a connection to libvirt
 	Connect(ctx context.Context) (Connection, error)
-	
+
 	// Release returns a connection to the pool
 	Release(conn Connection) error
-	
+
 	// Close closes all connections in the pool
 	Close() error
 }
@@ -22,10 +22,10 @@ type Manager interface {
 type Connection interface {
 	// GetLibvirtConnection returns the underlying libvirt connection
 	GetLibvirtConnection() *libvirt.Libvirt
-	
+
 	// Close closes the connection
 	Close() error
-	
+
 	// IsActive checks if connection is active
 	IsActive() bool
 }

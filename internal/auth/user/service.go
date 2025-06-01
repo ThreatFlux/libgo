@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// UserService implements Service interface for user management
+// UserService implements Service interface for user management.
 type UserService struct {
 	users  map[string]*user.User // Map of user ID to user
 	byName map[string]string     // Map of username to user ID
@@ -19,7 +19,7 @@ type UserService struct {
 	logger logger.Logger
 }
 
-// NewUserService creates a new UserService
+// NewUserService creates a new UserService.
 func NewUserService(logger logger.Logger) *UserService {
 	return &UserService{
 		users:  make(map[string]*user.User),
@@ -28,10 +28,30 @@ func NewUserService(logger logger.Logger) *UserService {
 	}
 }
 
-// Authenticate implements Service.Authenticate
+// getUserByUsernameInternal gets a user by username with password (for internal use).
+func (s *UserService) getUserByUsernameInternal(username string) (*user.User, error) {
+	id, ok := s.byName[username]
+	if !ok {
+		return nil, errors.WrapWithCode(errors.New("user not found"), errors.ErrNotFound, "getting user by username")
+	}
+
+	u, ok := s.users[id]
+	if !ok {
+		// This should never happen, but just in case
+		return nil, errors.WrapWithCode(errors.New("user mapping inconsistent"), errors.ErrNotFound, "getting user by username")
+	}
+
+	// Return the actual user (with password) for internal operations
+	return u, nil
+}
+
+// Authenticate implements Service.Authenticate.
 func (s *UserService) Authenticate(ctx context.Context, username, password string) (*user.User, error) {
-	// Get user by username
-	u, err := s.GetByUsername(ctx, username)
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Get user by username (internal method that includes password)
+	u, err := s.getUserByUsernameInternal(username)
 	if err != nil {
 		// Don't expose whether a user exists or not
 		return nil, errors.WrapWithCode(err, errors.ErrInvalidCredentials, "invalid username or password")
@@ -39,19 +59,19 @@ func (s *UserService) Authenticate(ctx context.Context, username, password strin
 
 	// Check if user is active
 	if !u.Active {
-		return nil, errors.WrapWithCode(err, errors.ErrInvalidCredentials, "user account is inactive")
+		return nil, errors.WrapWithCode(errors.New("user account is inactive"), errors.ErrInvalidCredentials, "user account is inactive")
 	}
 
 	// Verify the password
 	if !VerifyPassword(password, u.Password) {
-		return nil, errors.New("invalid username or password")
+		return nil, errors.WrapWithCode(errors.New("invalid username or password"), errors.ErrInvalidCredentials, "invalid username or password")
 	}
 
 	// Create a copy of the user without the password
 	return u.Clone(), nil
 }
 
-// GetByID implements Service.GetByID
+// GetByID implements Service.GetByID.
 func (s *UserService) GetByID(ctx context.Context, id string) (*user.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -65,7 +85,7 @@ func (s *UserService) GetByID(ctx context.Context, id string) (*user.User, error
 	return u.Clone(), nil
 }
 
-// GetByUsername implements Service.GetByUsername
+// GetByUsername implements Service.GetByUsername.
 func (s *UserService) GetByUsername(ctx context.Context, username string) (*user.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -85,7 +105,7 @@ func (s *UserService) GetByUsername(ctx context.Context, username string) (*user
 	return u.Clone(), nil
 }
 
-// HasPermission implements Service.HasPermission
+// HasPermission implements Service.HasPermission.
 func (s *UserService) HasPermission(ctx context.Context, userID string, permission string) (bool, error) {
 	u, err := s.GetByID(ctx, userID)
 	if err != nil {
@@ -96,7 +116,7 @@ func (s *UserService) HasPermission(ctx context.Context, userID string, permissi
 	return user.UserHasPermission(u.Roles, permission), nil
 }
 
-// Create implements Service.Create
+// Create implements Service.Create.
 func (s *UserService) Create(ctx context.Context, username, password, email string, roles []string) (*user.User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -130,7 +150,7 @@ func (s *UserService) Create(ctx context.Context, username, password, email stri
 		newUser = user.NewUser(username, hashedPassword, email, roles)
 	}
 
-	// Store the user
+	// Store the user (with password)
 	s.users[newUser.ID] = newUser
 	s.byName[newUser.Username] = newUser.ID
 
@@ -138,7 +158,7 @@ func (s *UserService) Create(ctx context.Context, username, password, email stri
 	return newUser.Clone(), nil
 }
 
-// Update implements Service.Update
+// Update implements Service.Update.
 func (s *UserService) Update(ctx context.Context, userID string, updateFunc func(*user.User) error) (*user.User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -150,37 +170,37 @@ func (s *UserService) Update(ctx context.Context, userID string, updateFunc func
 	}
 
 	// Create a copy for updating
-	copy := u.Clone()
-	copy.Password = u.Password // Restore password as it's not included in Clone
+	userCopy := u.Clone()
+	userCopy.Password = u.Password // Restore password as it's not included in Clone
 
 	// Apply the update function
-	if err := updateFunc(copy); err != nil {
+	if err := updateFunc(userCopy); err != nil {
 		return nil, errors.Wrap(err, "updating user")
 	}
 
 	// Update username mapping if it changed
-	if copy.Username != u.Username {
+	if userCopy.Username != u.Username {
 		// Check if the new username is already taken by another user
-		if existingID, ok := s.byName[copy.Username]; ok && existingID != userID {
+		if existingID, ok := s.byName[userCopy.Username]; ok && existingID != userID {
 			return nil, errors.WrapWithCode(errors.New("username already exists"), errors.ErrAlreadyExists, "updating user")
 		}
 
 		// Remove old mapping and add new one
 		delete(s.byName, u.Username)
-		s.byName[copy.Username] = userID
+		s.byName[userCopy.Username] = userID
 	}
 
 	// Update timestamp
-	copy.UpdatedAt = time.Now().UTC()
+	userCopy.UpdatedAt = time.Now().UTC()
 
 	// Save the updated user
-	s.users[userID] = copy
+	s.users[userID] = userCopy
 
 	// Return a copy without the password
-	return copy.Clone(), nil
+	return userCopy.Clone(), nil
 }
 
-// Delete implements Service.Delete
+// Delete implements Service.Delete.
 func (s *UserService) Delete(ctx context.Context, userID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -198,7 +218,7 @@ func (s *UserService) Delete(ctx context.Context, userID string) error {
 	return nil
 }
 
-// List implements Service.List
+// List implements Service.List.
 func (s *UserService) List(ctx context.Context) ([]*user.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -213,7 +233,7 @@ func (s *UserService) List(ctx context.Context) ([]*user.User, error) {
 	return users, nil
 }
 
-// SetPassword updates a user's password
+// SetPassword updates a user's password.
 func (s *UserService) SetPassword(ctx context.Context, userID string, password string) (*user.User, error) {
 	return s.Update(ctx, userID, func(u *user.User) error {
 		// Hash the new password
@@ -228,8 +248,8 @@ func (s *UserService) SetPassword(ctx context.Context, userID string, password s
 	})
 }
 
-// LoadUser loads an existing user into the service
-// This is primarily for testing or initial data loading
+// LoadUser loads an existing user into the service.
+// This is primarily for testing or initial data loading.
 func (s *UserService) LoadUser(u *user.User) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -251,7 +271,7 @@ func (s *UserService) LoadUser(u *user.User) error {
 	return nil
 }
 
-// InitializeDefaultUsers creates default users from configuration
+// InitializeDefaultUsers creates default users from configuration.
 func (s *UserService) InitializeDefaultUsers(ctx context.Context, defaultUsers []struct {
 	Username string
 	Password string

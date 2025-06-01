@@ -29,7 +29,7 @@ func TestExecuteCommand(t *testing.T) {
 		},
 		{
 			name:        "Command with env variables",
-			cmd:         getEchoCmdName(),
+			cmd:         "sh",
 			args:        getEchoEnvArgs("TEST_VAR"),
 			options:     CommandOptions{Environment: []string{"TEST_VAR=test_value"}},
 			expectedOut: "test_value",
@@ -82,18 +82,21 @@ func TestExecuteCommandWithTimeout(t *testing.T) {
 
 	// Use a very small timeout to ensure the command doesn't complete
 	opts := CommandOptions{
-		Timeout: 100 * time.Millisecond,
+		Timeout: 50 * time.Millisecond,
 	}
 
 	ctx := context.Background()
-	_, err := ExecuteCommand(ctx, "sleep", []string{"2"}, opts)
+	// Use a command that will definitely take longer than timeout
+	_, err := ExecuteCommand(ctx, "sh", []string{"-c", "sleep 5"}, opts)
 
 	if err == nil {
-		t.Fatalf("Expected timeout error but got none")
+		t.Errorf("Expected timeout error but got none")
 	}
 
-	if !strings.Contains(err.Error(), "timed out") {
-		t.Errorf("Expected timeout error message but got: %v", err)
+	// Check for context deadline exceeded or killed signal
+	if err != nil && !strings.Contains(err.Error(), "signal: killed") &&
+		!strings.Contains(err.Error(), "context deadline exceeded") {
+		t.Errorf("Expected timeout-related error but got: %v", err)
 	}
 }
 
@@ -163,7 +166,7 @@ func TestExecuteCommandWithDirectory(t *testing.T) {
 
 	// Output should contain the temp directory path
 	outputDir := strings.TrimSpace(string(output))
-	
+
 	// On Windows, paths might be in different formats, so just check if it contains the dir name
 	if !strings.Contains(outputDir, tempDir) && outputDir != tempDir {
 		t.Errorf("Expected command to run in directory '%s', but it ran in '%s'", tempDir, outputDir)
@@ -198,14 +201,17 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	output, _ := ExecuteCommand(ctx, cmd, args, opts)
+	output, err := ExecuteCommand(ctx, cmd, args, opts)
+	if err != nil {
+		t.Errorf("ExecuteCommand failed: %v", err)
+	}
 
 	// Output should contain stdout but not stderr
 	outputStr := strings.TrimSpace(string(output))
 	if !strings.Contains(outputStr, "stdout") {
 		t.Errorf("Expected output to contain 'stdout', got: '%s'", outputStr)
 	}
-	
+
 	if strings.Contains(outputStr, "stderr") {
 		t.Errorf("Expected output to not contain 'stderr', got: '%s'", outputStr)
 	}
@@ -215,14 +221,17 @@ func TestExecuteCommandWithCombinedOutput(t *testing.T) {
 		CombinedOutput: true,
 	}
 
-	output, _ = ExecuteCommand(ctx, cmd, args, opts)
+	output, err = ExecuteCommand(ctx, cmd, args, opts)
+	if err != nil {
+		t.Errorf("ExecuteCommand failed: %v", err)
+	}
 
 	// Output should contain both stdout and stderr
 	outputStr = strings.TrimSpace(string(output))
 	if !strings.Contains(outputStr, "stdout") {
 		t.Errorf("Expected combined output to contain 'stdout', got: '%s'", outputStr)
 	}
-	
+
 	if !strings.Contains(outputStr, "stderr") {
 		t.Errorf("Expected combined output to contain 'stderr', got: '%s'", outputStr)
 	}
@@ -247,5 +256,5 @@ func getEchoEnvArgs(envVar string) []string {
 	if runtime.GOOS == "windows" {
 		return []string{"/c", fmt.Sprintf("echo %%%s%%", envVar)}
 	}
-	return []string{"$" + envVar}
+	return []string{"-c", fmt.Sprintf("echo $%s", envVar)}
 }

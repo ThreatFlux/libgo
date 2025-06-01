@@ -9,14 +9,14 @@ import (
 	"text/template"
 )
 
-// TemplateLoader handles loading and rendering XML templates
+// TemplateLoader handles loading and rendering XML templates.
 type TemplateLoader struct {
 	TemplateDir string
 	templates   map[string]*template.Template
 	mu          sync.RWMutex
 }
 
-// NewTemplateLoader creates a template loader
+// NewTemplateLoader creates a template loader.
 func NewTemplateLoader(templateDir string) (*TemplateLoader, error) {
 	// Ensure the template directory exists
 	info, err := os.Stat(templateDir)
@@ -42,7 +42,7 @@ func NewTemplateLoader(templateDir string) (*TemplateLoader, error) {
 	return loader, nil
 }
 
-// loadTemplates loads all template files from the template directory
+// loadTemplates loads all template files from the template directory.
 func (l *TemplateLoader) loadTemplates() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -78,7 +78,7 @@ func (l *TemplateLoader) loadTemplates() error {
 	return nil
 }
 
-// LoadTemplate loads a template from the template directory
+// LoadTemplate loads a template from the template directory.
 func (l *TemplateLoader) LoadTemplate(templateName string) (*template.Template, error) {
 	l.mu.RLock()
 	tmpl, exists := l.templates[templateName]
@@ -108,7 +108,7 @@ func (l *TemplateLoader) LoadTemplate(templateName string) (*template.Template, 
 	return tmpl, nil
 }
 
-// RenderTemplate renders a template with the given data
+// RenderTemplate renders a template with the given data.
 func (l *TemplateLoader) RenderTemplate(templateName string, data interface{}) (string, error) {
 	tmpl, err := l.LoadTemplate(templateName)
 	if err != nil {
@@ -123,14 +123,14 @@ func (l *TemplateLoader) RenderTemplate(templateName string, data interface{}) (
 	return buf.String(), nil
 }
 
-// ClearCache clears the template cache
+// ClearCache clears the template cache.
 func (l *TemplateLoader) ClearCache() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.templates = make(map[string]*template.Template)
 }
 
-// GetTemplatePath returns the path to the template directory
+// GetTemplatePath returns the path to the template directory.
 func (l *TemplateLoader) GetTemplatePath() string {
 	return l.TemplateDir
 }

@@ -1,0 +1,98 @@
+[
+  {
+    "name": "win11-office",
+    "template": "windows-11-basic",
+    "description": "Windows 11 for Office work",
+    "cpu": {
+      "count": 4,
+      "cores": 2,
+      "threads": 1,
+      "socket": 2
+    },
+    "memory": {
+      "sizeBytes": 8589934592
+    },
+    "disk": {
+      "sizeBytes": 107374182400,
+      "format": "qcow2",
+      "bus": "sata"
+    }
+  },
+  {
+    "name": "win11-gaming",
+    "template": "windows-11",
+    "description": "Windows 11 Gaming VM with GPU passthrough ready",
+    "cpu": {
+      "count": 8,
+      "cores": 4,
+      "threads": 2,
+      "socket": 1,
+      "model": "host-passthrough"
+    },
+    "memory": {
+      "sizeBytes": 17179869184
+    },
+    "disk": {
+      "sizeBytes": 536870912000,
+      "format": "qcow2",
+      "bus": "virtio"
+    }
+  },
+  {
+    "name": "winserver-dc",
+    "template": "windows-server-2022",
+    "description": "Windows Server 2022 - Domain Controller",
+    "cpu": {
+      "count": 4,
+      "cores": 2,
+      "threads": 1,
+      "socket": 2
+    },
+    "memory": {
+      "sizeBytes": 8589934592
+    },
+    "disk": {
+      "sizeBytes": 85899345920,
+      "format": "qcow2",
+      "bus": "virtio"
+    }
+  },
+  {
+    "name": "winserver-exchange",
+    "template": "windows-server-2022",
+    "description": "Windows Server 2022 - Exchange Server",
+    "cpu": {
+      "count": 8,
+      "cores": 4,
+      "threads": 1,
+      "socket": 2
+    },
+    "memory": {
+      "sizeBytes": 34359738368
+    },
+    "disk": {
+      "sizeBytes": 322122547200,
+      "format": "qcow2",
+      "bus": "virtio"
+    }
+  },
+  {
+    "name": "win11-testing",
+    "template": "windows-11-basic",
+    "description": "Windows 11 Testing Environment",
+    "cpu": {
+      "count": 2,
+      "cores": 2,
+      "threads": 1,
+      "socket": 1
+    },
+    "memory": {
+      "sizeBytes": 4294967296
+    },
+    "disk": {
+      "sizeBytes": 64424509440,
+      "format": "qcow2",
+      "bus": "sata"
+    }
+  }
+]

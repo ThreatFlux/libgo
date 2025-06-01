@@ -9,18 +9,31 @@ import (
 	"time"
 )
 
+// ExecuteCommandFunc is a function type for command execution (allows mocking in tests)
+type ExecuteCommandFunc func(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error)
+
+// ExecuteCommand is a variable holding the command execution function (can be mocked in tests)
+var ExecuteCommand ExecuteCommandFunc = executeCommandImpl
+
 // CommandOptions holds options for command execution
 type CommandOptions struct {
-	Timeout       time.Duration
-	Directory     string
-	Environment   []string
-	StdinData     []byte
+	Timeout        time.Duration
+	Directory      string
+	Environment    []string
+	StdinData      []byte
 	CombinedOutput bool
 }
 
-// ExecuteCommand executes a system command with the given options
-func ExecuteCommand(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error) {
-	// Create the command with provided context for cancellation
+// executeCommandImpl is the actual implementation of command execution
+func executeCommandImpl(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error) {
+	// If a timeout is specified, create a timeout context
+	var cancel context.CancelFunc
+	if opts.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+		defer cancel()
+	}
+
+	// Create the command with the context (which may have timeout)
 	cmd := exec.CommandContext(ctx, name, args...)
 
 	// Configure command with options
@@ -45,13 +58,6 @@ func ExecuteCommand(ctx context.Context, name string, args []string, opts Comman
 	} else {
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
-	}
-
-	// If a timeout is specified, create a timeout context
-	var cancel context.CancelFunc
-	if opts.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
-		defer cancel()
 	}
 
 	// Run the command

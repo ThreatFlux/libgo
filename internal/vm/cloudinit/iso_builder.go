@@ -3,12 +3,11 @@ package cloudinit
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // CloudInitConfig holds cloud-init configuration data
@@ -25,7 +24,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 		logger.String("outputPath", outputPath))
 
 	// Create a temporary directory to store the files
-	tmpDir, err := ioutil.TempDir("", "cloud-init-")
+	tmpDir, err := os.MkdirTemp("", "cloud-init-")
 	if err != nil {
 		return fmt.Errorf("creating temp directory: %w", err)
 	}
@@ -40,7 +39,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 
 	for filename, content := range files {
 		filePath := filepath.Join(tmpDir, filename)
-		err := ioutil.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
 			return fmt.Errorf("writing %s: %w", filename, err)
 		}
@@ -48,8 +47,8 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 
 	// Create directory for output if it doesn't exist
 	outDir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("creating output directory: %w", err)
+	if mkdirErr := os.MkdirAll(outDir, 0755); mkdirErr != nil {
+		return fmt.Errorf("creating output directory: %w", mkdirErr)
 	}
 
 	// Create ISO using genisoimage or mkisofs
@@ -58,7 +57,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 	var args []string
 
 	// Try to find genisoimage or mkisofs
-	if _, err := exec.LookPath("genisoimage"); err == nil {
+	if _, geniesoErr := exec.LookPath("genisoimage"); geniesoErr == nil {
 		cmdName = "genisoimage"
 		args = []string{
 			"-output", outputPath,
@@ -67,7 +66,7 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 			"-rock",
 			tmpDir,
 		}
-	} else if _, err := exec.LookPath("mkisofs"); err == nil {
+	} else if _, mkisofsErr := exec.LookPath("mkisofs"); mkisofsErr == nil {
 		cmdName = "mkisofs"
 		args = []string{
 			"-output", outputPath,

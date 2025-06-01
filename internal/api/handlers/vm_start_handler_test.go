@@ -8,13 +8,12 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	vmservice "github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
-	mockvm "github.com/wroersma/libgo/test/mocks/vm"
+	vmservice "github.com/threatflux/libgo/internal/vm"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	mockvm "github.com/threatflux/libgo/test/mocks/vm"
+	"go.uber.org/mock/gomock"
 )
 
 func TestVMHandler_StartVM(t *testing.T) {
@@ -24,7 +23,7 @@ func TestVMHandler_StartVM(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVMManager := mockvm.NewMockManager(ctrl)
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Expect logger methods to be called
 	mockLogger.EXPECT().WithFields(gomock.Any()).Return(mockLogger).AnyTimes()
@@ -40,10 +39,10 @@ func TestVMHandler_StartVM(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		vmName         string
-		mockSetup      func()
-		expectedStatus int
+		name             string
+		vmName           string
+		mockSetup        func()
+		expectedStatus   int
 		validateResponse func(t *testing.T, body []byte)
 	}{
 		{

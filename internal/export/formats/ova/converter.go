@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
 // OVAConverter implements Converter for OVA format

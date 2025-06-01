@@ -79,7 +79,7 @@ func (s *jobStore) updateJobStatus(id string, status Status, progress int, err e
 		job.Error = err.Error()
 	}
 
-	if status == StatusCompleted || status == StatusFailed || status == StatusCancelled {
+	if status == StatusCompleted || status == StatusFailed || status == StatusCanceled {
 		job.EndTime = time.Now()
 	}
 

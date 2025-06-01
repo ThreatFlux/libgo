@@ -6,9 +6,10 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	jwtauth "github.com/wroersma/libgo/internal/auth/jwt"
-	apierrors "github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/pkg/logger"
+	jwtauth "github.com/threatflux/libgo/internal/auth/jwt"
+	userauth "github.com/threatflux/libgo/internal/auth/user"
+	apierrors "github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Error types
@@ -77,24 +78,37 @@ func HandleError(c *gin.Context, err error) {
 // mapErrorToStatusAndCode maps domain errors to HTTP status codes and error codes
 func mapErrorToStatusAndCode(err error) (int, string) {
 	switch {
-	case errors.Is(err, ErrNotFound):
+	case errors.Is(err, ErrNotFound) ||
+		errors.Is(err, apierrors.ErrVMNotFound):
 		return http.StatusNotFound, "NOT_FOUND"
 
-	case errors.Is(err, ErrInvalidInput):
+	case errors.Is(err, ErrInvalidInput) ||
+		errors.Is(err, apierrors.ErrInvalidCPUCount) ||
+		errors.Is(err, apierrors.ErrInvalidMemorySize) ||
+		errors.Is(err, apierrors.ErrInvalidDiskSize) ||
+		errors.Is(err, apierrors.ErrInvalidDiskFormat) ||
+		errors.Is(err, apierrors.ErrInvalidNetworkType) ||
+		errors.Is(err, apierrors.ErrInvalidNetworkSource) ||
+		errors.Is(err, apierrors.ErrVMInvalidState):
 		return http.StatusBadRequest, "INVALID_INPUT"
 
 	case errors.Is(err, ErrUnauthorized) ||
-	     errors.Is(err, apierrors.ErrInvalidCredentials) ||
-	     errors.Is(err, jwtauth.ErrTokenExpired) ||
-	     errors.Is(err, jwtauth.ErrInvalidToken):
+		errors.Is(err, apierrors.ErrInvalidCredentials) ||
+		errors.Is(err, userauth.ErrInvalidCredentials) ||
+		errors.Is(err, jwtauth.ErrTokenExpired) ||
+		errors.Is(err, jwtauth.ErrInvalidToken):
 		return http.StatusUnauthorized, "UNAUTHORIZED"
 
 	case errors.Is(err, ErrForbidden) ||
-	     errors.Is(err, apierrors.ErrUserInactive):
+		errors.Is(err, apierrors.ErrForbidden) ||
+		errors.Is(err, apierrors.ErrUserInactive) ||
+		errors.Is(err, userauth.ErrUserInactive):
 		return http.StatusForbidden, "FORBIDDEN"
 
 	case errors.Is(err, ErrAlreadyExists) ||
-	     errors.Is(err, apierrors.ErrDuplicateUsername):
+		errors.Is(err, apierrors.ErrVMAlreadyExists) ||
+		errors.Is(err, apierrors.ErrDuplicateUsername) ||
+		errors.Is(err, userauth.ErrDuplicateUsername):
 		return http.StatusConflict, "RESOURCE_CONFLICT"
 
 	case errors.Is(err, ErrInternalError):
@@ -157,11 +171,11 @@ func sanitizeSensitiveInfo(message string) string {
 // noopLogger provides a no-op implementation of logger.Logger
 type noopLogger struct{}
 
-func (l *noopLogger) Debug(msg string, fields ...logger.Field) {}
-func (l *noopLogger) Info(msg string, fields ...logger.Field)  {}
-func (l *noopLogger) Warn(msg string, fields ...logger.Field)  {}
-func (l *noopLogger) Error(msg string, fields ...logger.Field) {}
-func (l *noopLogger) Fatal(msg string, fields ...logger.Field) {}
+func (l *noopLogger) Debug(msg string, fields ...logger.Field)        {}
+func (l *noopLogger) Info(msg string, fields ...logger.Field)         {}
+func (l *noopLogger) Warn(msg string, fields ...logger.Field)         {}
+func (l *noopLogger) Error(msg string, fields ...logger.Field)        {}
+func (l *noopLogger) Fatal(msg string, fields ...logger.Field)        {}
 func (l *noopLogger) WithFields(fields ...logger.Field) logger.Logger { return l }
 func (l *noopLogger) WithError(err error) logger.Logger               { return l }
 func (l *noopLogger) Sync() error                                     { return nil }

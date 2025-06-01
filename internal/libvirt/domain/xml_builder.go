@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	xmlutils "github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // TemplateXMLBuilder implements XMLBuilder using templates
@@ -47,6 +47,8 @@ type DiskTemplate struct {
 	Format     string
 	Source     string
 	SourceAttr string
+	Pool       string
+	Volume     string
 	Device     string
 	Bus        string
 	Bootable   bool
@@ -107,15 +109,15 @@ func (b *TemplateXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) 
 	if params.Disk.SourceImage != "" {
 		primaryDisk.Source = params.Disk.SourceImage
 	} else {
-		// Otherwise create a new disk path
+		// Otherwise create a new disk using storage pool and volume
 		storagePool := params.Disk.StoragePool
 		if storagePool == "" {
 			storagePool = vm.GetDefaultStoragePool()
 		}
-		primaryDisk.Source = fmt.Sprintf("/var/lib/libvirt/images/%s/%s.%s",
-			storagePool,
-			params.Name,
-			params.Disk.Format)
+		volumeName := vm.GenerateVolumeName(params.Name, 0)
+		primaryDisk.Type = "volume"
+		primaryDisk.Pool = storagePool
+		primaryDisk.Volume = volumeName
 	}
 
 	disks = append(disks, primaryDisk)
@@ -154,7 +156,12 @@ func (b *TemplateXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) 
 	// Cloud-init ISO path, if cloud-init config is provided
 	var cloudInitISOPath string
 	if params.CloudInit.UserData != "" || params.CloudInit.MetaData != "" {
-		cloudInitISOPath = fmt.Sprintf("/home/vtriple/libgo-temp/cloudinit/%s-cloudinit.iso", params.Name)
+		// This path needs to match the config's CloudInitDir
+		cloudInitISODir := params.CloudInit.ISODir
+		if cloudInitISODir == "" {
+			cloudInitISODir = "/tmp/libgo-cloudinit"
+		}
+		cloudInitISOPath = fmt.Sprintf("%s/%s-cloudinit.iso", cloudInitISODir, params.Name)
 	}
 
 	// Prepare template data
@@ -192,6 +199,6 @@ func (b *TemplateXMLBuilder) GenerateCloudInitISOPath(vmName string, isoDir stri
 		return filepath.Join(isoDir, filename)
 	}
 
-	// Default location in libvirt images directory
-	return fmt.Sprintf("/var/lib/libvirt/images/cloudinit/%s", filename)
+	// Use a reasonable default path
+	return fmt.Sprintf("/tmp/libgo-cloudinit/%s", filename)
 }

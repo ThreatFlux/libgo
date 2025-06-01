@@ -3,14 +3,15 @@ package integration
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/test/integration/config"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/test/integration/config"
 )
 
 // RunVMTest runs a VM test based on a YAML configuration file
@@ -127,119 +128,119 @@ func verifyService(t *testing.T, ipAddress string, port int, protocol string, ex
 		url = fmt.Sprintf("http://%s:%d", ipAddress, port)
 	case "https":
 		url = fmt.Sprintf("http://%s:%d", ipAddress, port)
-		default:
-			t.Logf("Unsupported protocol: %s", protocol)
-			return false
-		}
+	default:
+		t.Logf("Unsupported protocol: %s", protocol)
+		return false
+	}
 
-		t.Logf("Testing service at URL: %s", url)
+	t.Logf("Testing service at URL: %s", url)
 
-		// Make HTTP request
-		resp, err := client.Get(url)
+	// Make HTTP request
+	resp, err := client.Get(url)
+	if err != nil {
+		t.Logf("Failed to connect to service: %v", err)
+		return false
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
 		if err != nil {
-			t.Logf("Failed to connect to service: %v", err)
-			return false
+			t.Logf("Failed to close response body")
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				t.Logf("Failed to close response body")
-			}
-		}(resp.Body)
+	}(resp.Body)
 
-		// Read response body
-		body, err := readResponseBody(resp)
+	// Read response body
+	body, err := readResponseBody(resp)
+	if err != nil {
+		t.Logf("Failed to read response body: %v", err)
+		return false
+	}
+
+	// Check if response contains expected content
+	respText := string(body)
+	t.Logf("Service response: %s", respText)
+
+	// Check for a successful status code
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		t.Logf("Service returned non-2xx status code: %d", resp.StatusCode)
+		return false
+	}
+
+	// Check for expected content if specified
+	if expectedContent != "" && !strings.Contains(respText, expectedContent) {
+		t.Logf("Expected content '%s' not found in response", expectedContent)
+		return false
+	}
+
+	return true
+}
+
+// exportVMWithOptions creates an export job for a VM with custom options
+func exportVMWithOptions(ctx context.Context, t *testing.T, apiURL, vmName, format string, options map[string]string) *ExportJob {
+	url := fmt.Sprintf("%s/api/v1/vms/%s/export", apiURL, vmName)
+
+	// Create request body with options
+	exportFileName := fmt.Sprintf("%s-export.%s", vmName, format)
+
+	// Set default options if not provided
+	reqOptions := map[string]string{
+		"compress":      "true",
+		"source_volume": fmt.Sprintf("%s-disk-0", vmName),
+		"keep_export":   "true",
+		"use_sudo":      "true",
+	}
+
+	// Override with user-provided options
+	for k, v := range options {
+		reqOptions[k] = v
+	}
+
+	// Build final request body
+	reqBody := map[string]interface{}{
+		"format":   format,
+		"options":  reqOptions,
+		"fileName": fmt.Sprintf("/tmp/%s", exportFileName),
+	}
+
+	// Use the existing exportVM logic but with our custom options
+	return sendExportRequest(ctx, t, url, reqBody)
+}
+
+// sendExportRequest sends the export request with the given body
+// This is extracted from the exportVM function in ubuntu_docker_test.go
+func sendExportRequest(ctx context.Context, t *testing.T, url string, reqBody map[string]interface{}) *ExportJob {
+	// Marshal request body
+	body, err := marshalJSON(reqBody)
+	require.NoError(t, err, "Failed to marshal export parameters")
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	require.NoError(t, err, "Failed to create HTTP request")
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to send HTTP request")
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
 		if err != nil {
-			t.Logf("Failed to read response body: %v", err)
-			return false
+			t.Logf("Failed to close response body")
 		}
+	}(resp.Body)
 
-		// Check if response contains expected content
-		respText := string(body)
-		t.Logf("Service response: %s", respText)
+	// Read response
+	respBody, err := readResponseBody(resp)
+	require.NoError(t, err, "Failed to read response body")
 
-		// Check for a successful status code
-		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			t.Logf("Service returned non-2xx status code: %d", resp.StatusCode)
-			return false
-		}
+	// Check response status
+	require.Equal(t, http.StatusAccepted, resp.StatusCode, "Expected status code 202, got %d. Response: %s", resp.StatusCode, string(respBody))
 
-		// Check for expected content if specified
-		if expectedContent != "" && !strings.Contains(respText, expectedContent) {
-			t.Logf("Expected content '%s' not found in response", expectedContent)
-			return false
-		}
+	// Parse response
+	var exportResp ExportJobResponse
+	err = unmarshalJSON(respBody, &exportResp)
+	require.NoError(t, err, "Failed to unmarshal response")
 
-		return true
-	}
-
-	// exportVMWithOptions creates an export job for a VM with custom options
-	func exportVMWithOptions(ctx context.Context, t *testing.T, apiURL, vmName, format string, options map[string]string) *ExportJob {
-		url := fmt.Sprintf("%s/api/v1/vms/%s/export", apiURL, vmName)
-
-		// Create request body with options
-		exportFileName := fmt.Sprintf("%s-export.%s", vmName, format)
-
-		// Set default options if not provided
-		reqOptions := map[string]string{
-			"compress":      "true",
-			"source_volume": fmt.Sprintf("%s-disk-0", vmName),
-			"keep_export":   "true",
-			"use_sudo":      "true",
-		}
-
-		// Override with user-provided options
-		for k, v := range options {
-			reqOptions[k] = v
-		}
-
-		// Build final request body
-		reqBody := map[string]interface{}{
-			"format":  format,
-			"options": reqOptions,
-			"fileName": fmt.Sprintf("/tmp/%s", exportFileName),
-		}
-
-		// Use the existing exportVM logic but with our custom options
-		return sendExportRequest(ctx, t, url, reqBody)
-	}
-
-	// sendExportRequest sends the export request with the given body
-	// This is extracted from the exportVM function in ubuntu_docker_test.go
-	func sendExportRequest(ctx context.Context, t *testing.T, url string, reqBody map[string]interface{}) *ExportJob {
-		// Marshal request body
-		body, err := marshalJSON(reqBody)
-		require.NoError(t, err, "Failed to marshal export parameters")
-
-		// Create request
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
-		require.NoError(t, err, "Failed to create HTTP request")
-
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+authToken)
-
-		// Send request
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		require.NoError(t, err, "Failed to send HTTP request")
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				t.Logf("Failed to close response body")
-			}
-		}(resp.Body)
-
-		// Read response
-		respBody, err := readResponseBody(resp)
-		require.NoError(t, err, "Failed to read response body")
-
-		// Check response status
-		require.Equal(t, http.StatusAccepted, resp.StatusCode, "Expected status code 202, got %d. Response: %s", resp.StatusCode, string(respBody))
-
-		// Parse response
-		var exportResp ExportJobResponse
-		err = unmarshalJSON(respBody, &exportResp)
-		require.NoError(t, err, "Failed to unmarshal response")
-
-		return &exportResp.Job
-	}
+	return &exportResp.Job
+}

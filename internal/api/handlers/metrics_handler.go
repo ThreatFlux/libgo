@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/wroersma/libgo/internal/metrics"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/metrics"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // MetricsHandler handles metrics endpoints

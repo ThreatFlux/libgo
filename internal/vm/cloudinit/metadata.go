@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // MetadataGenerator handles generation of cloud-init metadata

@@ -36,7 +36,7 @@ type DiskType string
 
 // Disk type constants
 const (
-	DiskTypeFile DiskType = "file"
+	DiskTypeFile  DiskType = "file"
 	DiskTypeBlock DiskType = "block"
 )
 
@@ -61,28 +61,31 @@ const (
 
 // DiskParams contains disk parameters for VM creation
 type DiskParams struct {
-	SizeBytes    uint64    `json:"sizeBytes" validate:"required,min=1073741824"` // Minimum 1GB
-	Format       DiskFormat `json:"format" validate:"required,oneof=qcow2 raw"`
-	SourceImage  string    `json:"sourceImage,omitempty"`
-	StoragePool  string    `json:"storagePool,omitempty"`
-	Bus          DiskBus   `json:"bus,omitempty" validate:"omitempty,oneof=virtio ide sata scsi"`
-	CacheMode    string    `json:"cacheMode,omitempty" validate:"omitempty,oneof=none writeback writethrough directsync unsafe"`
-	Shareable    bool      `json:"shareable,omitempty"`
-	ReadOnly     bool      `json:"readOnly,omitempty"`
+	SizeBytes   uint64     `json:"sizeBytes" validate:"required,min=1073741824"` // Minimum 1GB
+	SizeMB      uint64     `json:"sizeMB,omitempty"`                             // Size in MB (optional, calculated from SizeBytes if not provided)
+	Format      DiskFormat `json:"format" validate:"required,oneof=qcow2 raw"`
+	SourceImage string     `json:"sourceImage,omitempty"`
+	StoragePool string     `json:"storagePool,omitempty"`
+	Bus         DiskBus    `json:"bus,omitempty" validate:"omitempty,oneof=virtio ide sata scsi"`
+	CacheMode   string     `json:"cacheMode,omitempty" validate:"omitempty,oneof=none writeback writethrough directsync unsafe"`
+	Shareable   bool       `json:"shareable,omitempty"`
+	ReadOnly    bool       `json:"readOnly,omitempty"`
 }
 
 // DiskInfo contains information about a VM's disk
 type DiskInfo struct {
-	Path         string    `json:"path"`
-	Format       DiskFormat `json:"format"`
-	SizeBytes    uint64    `json:"sizeBytes"`
-	Bus          DiskBus   `json:"bus"`
-	ReadOnly     bool      `json:"readOnly,omitempty"`
-	Bootable     bool      `json:"bootable,omitempty"`
-	Shareable    bool      `json:"shareable,omitempty"`
-	Serial       string    `json:"serial,omitempty"`
-	StoragePool  string    `json:"storagePool,omitempty"`
-	Device       string    `json:"device,omitempty"`
+	Path        string     `json:"path"`
+	Format      DiskFormat `json:"format"`
+	SizeBytes   uint64     `json:"sizeBytes"`
+	Bus         DiskBus    `json:"bus"`
+	ReadOnly    bool       `json:"readOnly,omitempty"`
+	Bootable    bool       `json:"bootable,omitempty"`
+	Shareable   bool       `json:"shareable,omitempty"`
+	Serial      string     `json:"serial,omitempty"`
+	StoragePool string     `json:"storagePool,omitempty"`
+	Device      string     `json:"device,omitempty"`
+	PoolName    string     `json:"poolName,omitempty"`
+	VolumeName  string     `json:"volumeName,omitempty"`
 }
 
 // Validate validates the disk parameters

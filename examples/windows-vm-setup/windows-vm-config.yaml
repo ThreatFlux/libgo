@@ -1,0 +1,242 @@
+# LibGo Configuration for Windows VM Support
+# This configuration file is optimized for creating and managing Windows VMs
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  readTimeout: 60s      # Increased for large Windows operations
+  writeTimeout: 60s     # Increased for large Windows operations
+  maxHeaderBytes: 1048576
+  mode: "release"       # Use "debug" for development
+  tls:
+    enabled: false      # Enable in production
+    certFile: "/etc/libgo/cert.pem"
+    keyFile: "/etc/libgo/key.pem"
+
+# Libvirt connection
+libvirt:
+  uri: "qemu:///system"
+  connectionTimeout: 30s
+  maxConnections: 10
+  poolName: "default"
+  networkName: "default"
+
+# Database configuration
+database:
+  type: "sqlite"        # Use "postgres" for production
+  sqlite:
+    path: "./libgo.db"
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: "libgo"
+    username: "libgo"
+    password: "changeme"
+    sslMode: "disable"
+
+# Authentication
+auth:
+  enabled: true
+  jwtSecretKey: "your-secret-key-change-in-production"
+  issuer: "libgo-api"
+  audience: "libgo-clients"
+  tokenExpiration: 24h  # Longer for Windows setup
+  signingMethod: "HS256"
+  
+  # Default admin user for initial setup
+  defaultUsers:
+    - username: "admin"
+      password: "admin123"
+      email: "admin@libgo.local"
+      roles: ["admin"]
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  filePath: "./logs/libgo.log"
+  maxSize: 100
+  maxBackups: 5
+  maxAge: 30
+  compress: true
+
+# Storage configuration
+storage:
+  defaultPool: "default"
+  poolPath: "/var/lib/libvirt/images"
+  
+  # Windows VM templates
+  templates:
+    # Windows 11 templates
+    windows-11: "/var/lib/libvirt/images/Win11_24H2_English_x64.iso"
+    windows-11-pro: "/var/lib/libvirt/images/Win11_24H2_Pro_English_x64.iso"
+    
+    # Windows Server templates
+    windows-server-2022: "/var/lib/libvirt/images/windows-server-2022-base.qcow2"
+    windows-server-2022-core: "/var/lib/libvirt/images/windows-server-2022-core.qcow2"
+    windows-server-2019: "/var/lib/libvirt/images/windows-server-2019-base.qcow2"
+    
+    # Additional drivers
+    virtio-drivers: "/var/lib/libvirt/images/virtio-win.iso"
+
+# VM configuration defaults
+vm:
+  # Default cloud-init directory
+  cloudInitDir: "/var/lib/libvirt/cloud-init"
+  
+  # Template directory
+  templateDir: "./configs/templates"
+  
+  # Default values for different OS types
+  defaults:
+    windows:
+      cpu:
+        count: 4
+        model: "host-passthrough"
+        cores: 2
+        threads: 1
+        sockets: 2
+      memory:
+        sizeGB: 8           # 8GB minimum for Windows 11
+      disk:
+        sizeGB: 100         # 100GB recommended
+        format: "qcow2"
+        bus: "sata"         # Start with SATA, switch to VirtIO later
+      network:
+        model: "e1000e"     # More compatible than VirtIO initially
+    
+    linux:
+      cpu:
+        count: 2
+        model: "host-passthrough"
+      memory:
+        sizeGB: 2
+      disk:
+        sizeGB: 20
+        format: "qcow2"
+        bus: "virtio"
+      network:
+        model: "virtio"
+
+# Export configuration
+export:
+  outputDir: "/var/lib/libvirt/exports"
+  tempDir: "/tmp/libgo-exports"
+  defaultFormat: "qcow2"
+  retention: 168h           # 7 days
+  
+  # Concurrent export jobs
+  maxConcurrentJobs: 3
+  
+  # Export formats
+  allowedFormats:
+    - "qcow2"
+    - "vmdk"
+    - "vdi"
+    - "raw"
+    - "ova"
+
+# Metrics configuration
+metrics:
+  enabled: true
+  port: 9090
+  path: "/metrics"
+  
+  # Metric collection intervals
+  intervals:
+    vm: 10s
+    host: 30s
+    storage: 60s
+
+# Feature flags
+features:
+  cloudInit: true          # Enable cloud-init for Linux VMs
+  export: true             # Enable VM export functionality
+  metrics: true            # Enable Prometheus metrics
+  rbacEnabled: true        # Enable role-based access control
+  storageCleanup: true     # Clean up storage on VM deletion
+  websocket: true          # Enable WebSocket for real-time updates
+  snapshots: true          # Enable snapshot functionality
+  
+  # Windows-specific features
+  windows:
+    unattendedInstall: true    # Support unattended Windows installation
+    virtioDrivers: true        # Automatically attach VirtIO drivers ISO
+    guestAgent: true           # Support for QEMU guest agent
+    rdpEnabled: true           # Enable RDP by default
+
+# WebSocket configuration
+websocket:
+  enabled: true
+  pingInterval: 30
+  maxMessageSize: 8192
+  writeWait: 10s
+  pongWait: 60s
+  metricsInterval: 5s
+  
+  # Console access
+  console:
+    enabled: true
+    maxSessions: 10        # Maximum concurrent console sessions
+
+# Health check configuration
+health:
+  libvirtCheck: true
+  storageCheck: true
+  networkCheck: true
+  interval: 30s
+
+# Performance tuning
+performance:
+  # Connection pool settings
+  connectionPool:
+    maxIdleConns: 10
+    maxOpenConns: 100
+    connMaxLifetime: 3600s
+  
+  # Worker pool settings
+  workerPool:
+    size: 10
+    queueSize: 100
+  
+  # Rate limiting
+  rateLimit:
+    enabled: true
+    requestsPerMinute: 100
+    burst: 20
+
+# Security settings
+security:
+  # CORS configuration
+  cors:
+    enabled: true
+    allowedOrigins:
+      - "http://localhost:3000"
+      - "http://localhost:5173"
+    allowedMethods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowedHeaders:
+      - "Authorization"
+      - "Content-Type"
+    exposedHeaders:
+      - "X-Total-Count"
+    allowCredentials: true
+    maxAge: 86400
+  
+  # API key authentication (alternative to JWT)
+  apiKey:
+    enabled: false
+    headerName: "X-API-Key"
+  
+  # IP whitelist
+  ipWhitelist:
+    enabled: false
+    allowed:
+      - "127.0.0.1"
+      - "192.168.0.0/16"
+      - "10.0.0.0/8"

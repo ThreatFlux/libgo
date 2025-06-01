@@ -6,29 +6,49 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
-	"github.com/wroersma/libgo/internal/export/formats"
-	customErrors "github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/export"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
-	"github.com/wroersma/libgo/test/mocks/logger"
+	customErrors "github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/export/formats"
+	"github.com/threatflux/libgo/internal/models/vm"
+	mocks_domain "github.com/threatflux/libgo/test/mocks/libvirt/domain"
+	mocks_storage "github.com/threatflux/libgo/test/mocks/libvirt/storage"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
+// testConverter is a test implementation of formats.Converter
+type testConverter struct {
+	formatName  string
+	convertErr  error
+	validateErr error
+}
+
+func (tc *testConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
+	return tc.convertErr
+}
+
+func (tc *testConverter) GetFormatName() string {
+	return tc.formatName
+}
+
+func (tc *testConverter) ValidateOptions(options map[string]string) error {
+	return tc.validateErr
+}
+
 func TestExportManager_CreateExportJob(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping export manager test with background goroutines in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
@@ -38,16 +58,18 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
-	// Mock converter for testing
-	mockConverter := export.NewMockConverter(ctrl)
-	mockConverter.EXPECT().GetFormatName().Return("test-format").AnyTimes()
-	mockConverter.EXPECT().ValidateOptions(gomock.Any()).Return(nil).AnyTimes()
+	// Create test converter
+	testConverter := &testConverter{
+		formatName:  "test-format",
+		convertErr:  nil,
+		validateErr: nil,
+	}
 
-	// Create manager with mock converter
+	// Create manager with test converter
 	manager := &ExportManager{
 		jobStore: newJobStore(),
 		formatManagers: map[string]formats.Converter{
-			"test-format": mockConverter,
+			"test-format": testConverter,
 		},
 		storageManager: mockStorageManager,
 		domainManager:  mockDomainManager,
@@ -100,7 +122,7 @@ func TestExportManager_CreateExportJob(t *testing.T) {
 
 	t.Run("Valid export job", func(t *testing.T) {
 		mockDomainManager.EXPECT().Get(gomock.Any(), "test-vm").
-			Return(testVM, nil)
+			Return(testVM, nil).AnyTimes()
 
 		job, err := manager.CreateExportJob(context.Background(), "test-vm", Params{
 			Format:   "test-format",
@@ -126,9 +148,9 @@ func TestExportManager_GetJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -171,9 +193,9 @@ func TestExportManager_ListJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "export-test-")
@@ -209,13 +231,16 @@ func TestExportManager_ListJobs(t *testing.T) {
 }
 
 func TestExportManager_CancelJob(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping export manager test with background goroutines in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorageManager := libvirt.NewMockVolumeManager(ctrl)
-	mockDomainManager := libvirt.NewMockManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -245,13 +270,13 @@ func TestExportManager_CancelJob(t *testing.T) {
 		// Verify job status
 		updatedJob, exists := manager.jobStore.getJob(job.ID)
 		assert.True(t, exists)
-		assert.Equal(t, StatusCancelled, updatedJob.Status)
+		assert.Equal(t, StatusCanceled, updatedJob.Status)
 	})
 
 	t.Run("Cancel running job", func(t *testing.T) {
 		// Create a test job
 		job := manager.jobStore.createJob("test-vm", "qcow2", nil)
-		
+
 		// Set job to running
 		manager.jobStore.updateJobStatus(job.ID, StatusRunning, 50, nil)
 
@@ -268,13 +293,13 @@ func TestExportManager_CancelJob(t *testing.T) {
 		// Verify job status
 		updatedJob, exists := manager.jobStore.getJob(job.ID)
 		assert.True(t, exists)
-		assert.Equal(t, StatusCancelled, updatedJob.Status)
+		assert.Equal(t, StatusCanceled, updatedJob.Status)
 	})
 
 	t.Run("Cancel completed job", func(t *testing.T) {
 		// Create a test job
 		job := manager.jobStore.createJob("test-vm", "qcow2", nil)
-		
+
 		// Set job to completed
 		manager.jobStore.updateJobStatus(job.ID, StatusCompleted, 100, nil)
 

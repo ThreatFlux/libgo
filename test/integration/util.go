@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchrify/require"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
+	"github.com/stretchr/testify/require"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 // Global auth token for all API requests
@@ -113,7 +114,7 @@ type ExportJobResponse struct {
 // ExportJob represents a VM export job
 type ExportJob struct {
 	ID           string            `json:"id"`
-	VMID         string            `vmId"`
+	VMID         string            `json:"vmId"`
 	VMName       string            `json:"vmName"`
 	Format       string            `json:"format"`
 	Status       string            `json:"status"`
@@ -141,7 +142,8 @@ func getExportJob(ctx context.Context, t *testing.T, apiURL, jobID string) *Expo
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to send HTTP request: %w", err)
+		t.Errorf("Failed to send HTTP request: %v", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
@@ -232,7 +234,7 @@ func readResponseBody(resp *http.Response) ([]byte, error) {
 
 // marshalJSON marshals an object to JSON
 func marshalJSON(v interface{}) (*bytes.Buffer, error) {
-	body := json.Marshal(v)
+	body, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
@@ -266,5 +268,201 @@ func startVM(ctx context.Context, t *testing.T, apiURL, vmName string) error {
 		return fmt.Errorf("start VM failed with status code %d", resp.StatusCode)
 	}
 
+	return nil
+}
+
+// getVM gets VM details via the API
+func getVM(ctx context.Context, t *testing.T, apiURL, vmName string) *vmmodels.VM {
+	url := fmt.Sprintf("%s/api/v1/vms/%s", apiURL, vmName)
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	require.NoError(t, err, "Failed to create HTTP request")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to send HTTP request")
+	defer resp.Body.Close()
+
+	// If VM not found, return nil
+	if resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+
+	// Read response
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err, "Failed to read response body")
+
+	// Check response status
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Expected status code 200, got %d. Response: %s", resp.StatusCode, string(respBody))
+
+	// Parse response
+	var vmResp struct {
+		VM *vmmodels.VM `json:"vm"`
+	}
+	err = json.Unmarshal(respBody, &vmResp)
+	require.NoError(t, err, "Failed to unmarshal response")
+
+	return vmResp.VM
+}
+
+// createVM creates a new VM via the API
+func createVM(ctx context.Context, t *testing.T, apiURL string, params vmmodels.VMParams) *vmmodels.VM {
+	url := fmt.Sprintf("%s/api/v1/vms", apiURL)
+
+	// Marshal request body
+	body, err := json.Marshal(params)
+	require.NoError(t, err, "Failed to marshal VM parameters")
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	require.NoError(t, err, "Failed to create HTTP request")
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to send HTTP request")
+	defer resp.Body.Close()
+
+	// Read response
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err, "Failed to read response body")
+
+	// Check response status
+	require.Equal(t, http.StatusCreated, resp.StatusCode, "Expected status code 201, got %d. Response: %s", resp.StatusCode, string(respBody))
+
+	// Parse response
+	var createResp CreateVMResponse
+	err = json.Unmarshal(respBody, &createResp)
+	require.NoError(t, err, "Failed to unmarshal response")
+
+	return createResp.VM
+}
+
+// login performs authentication and stores the token
+func login(ctx context.Context, t *testing.T, apiURL, username, password string) (string, error) {
+	url := fmt.Sprintf("%s/api/v1/auth/login", apiURL)
+
+	// Create login request
+	loginReq := LoginRequest{
+		Username: username,
+		Password: password,
+	}
+
+	body, err := json.Marshal(loginReq)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal login request: %w", err)
+	}
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("login failed with status code %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	// Parse response
+	var loginResp LoginResponse
+	err = json.Unmarshal(respBody, &loginResp)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal login response: %w", err)
+	}
+
+	authToken = loginResp.Token
+	return loginResp.Token, nil
+}
+
+// cleanupVM deletes a VM if it exists
+func cleanupVM(ctx context.Context, t *testing.T, apiURL, vmName string) {
+	// Check if VM exists
+	vm := getVM(ctx, t, apiURL, vmName)
+	if vm == nil {
+		return
+	}
+
+	url := fmt.Sprintf("%s/api/v1/vms/%s", apiURL, vmName)
+
+	// Create request
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	require.NoError(t, err, "Failed to create HTTP request")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to send HTTP request")
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			t.Logf("Failed to close response body")
+		}
+	}(resp.Body)
+
+	// Check response status - just log if not OK since this is cleanup code
+	if resp.StatusCode != http.StatusOK {
+		t.Logf("Warning: VM deletion returned status code %d", resp.StatusCode)
+		return
+	}
+
+	// Wait for VM to be deleted
+	deadline := time.Now().Add(30 * time.Second)
+	for time.Now().Before(deadline) {
+		vm := getVM(ctx, t, apiURL, vmName)
+		if vm == nil {
+			return
+		}
+
+		t.Logf("Waiting for VM %s to be deleted", vmName)
+		time.Sleep(2 * time.Second)
+	}
+}
+
+// waitForVMStatus waits for a VM to reach the specified status
+func waitForVMStatus(ctx context.Context, t *testing.T, apiURL, vmName string, targetStatus vmmodels.VMStatus, timeout time.Duration) *vmmodels.VM {
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		vm := getVM(ctx, t, apiURL, vmName)
+		if vm != nil && vm.Status == targetStatus {
+			return vm
+		}
+
+		var currentStatus string
+		if vm == nil {
+			currentStatus = "not found"
+		} else {
+			currentStatus = string(vm.Status)
+		}
+
+		t.Logf("Waiting for VM %s to reach status %s, current status: %s", vmName, targetStatus, currentStatus)
+		time.Sleep(5 * time.Second)
+	}
+
+	t.Fatalf("Timed out waiting for VM %s to reach status %s", vmName, targetStatus)
 	return nil
 }

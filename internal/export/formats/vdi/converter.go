@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
 // VDIConverter implements Converter for VDI format
@@ -32,7 +32,7 @@ func (c *VDIConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	args := []string{
 		"convert",
 		"-f", "qcow2", // Source format, assume qcow2 as libvirt generally uses this
-		"-O", "vdi",   // Output format
+		"-O", "vdi", // Output format
 	}
 
 	// Add static allocation if requested
