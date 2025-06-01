@@ -33,8 +33,19 @@ type libvirtDomain struct {
 		Value uint64 `xml:",chardata"`
 		Unit  string `xml:"unit,attr"`
 	} `xml:"memory"`
-	VCPUs   int    `xml:"vcpu"`
-	Status  string `xml:"state,attr"`
+	VCPUs  int    `xml:"vcpu"`
+	Status string `xml:"state,attr"`
+	CPU    struct {
+		Mode  string `xml:"mode,attr"`
+		Model struct {
+			Value string `xml:",chardata"`
+		} `xml:"model"`
+		Topology struct {
+			Sockets int `xml:"sockets,attr"`
+			Cores   int `xml:"cores,attr"`
+			Threads int `xml:"threads,attr"`
+		} `xml:"topology"`
+	} `xml:"cpu"`
 	Devices struct {
 		Disks []struct {
 			Type   string `xml:"type,attr"`
@@ -163,8 +174,8 @@ func (m *DomainManager) List(ctx context.Context) ([]*vm.VM, error) {
 
 	libvirtConn := conn.GetLibvirtConnection()
 
-	// Get all domains using the recommended method
-	domains, _, err := libvirtConn.ConnectListAllDomains(1, 0)
+	// Get all domains
+	domains, _, err := libvirtConn.ConnectListAllDomains(-1, libvirt.ConnectListDomainsActive|libvirt.ConnectListDomainsInactive)
 	if err != nil {
 		return nil, fmt.Errorf("listing domains: %w", err)
 	}
@@ -382,13 +393,30 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 		UUID:   domainXML.UUID,
 		Status: status,
 		CPU: vm.CPUInfo{
-			Count: domainXML.VCPUs,
+			Count:   domainXML.VCPUs,
+			Model:   domainXML.CPU.Model.Value,
+			Sockets: domainXML.CPU.Topology.Sockets,
+			Cores:   domainXML.CPU.Topology.Cores,
+			Threads: domainXML.CPU.Topology.Threads,
 		},
 		Memory: vm.MemoryInfo{
 			SizeBytes: memoryBytes,
 			SizeMB:    memoryBytes / (1024 * 1024),
 		},
 		CreatedAt: time.Now(), // TODO: Get actual creation time if available
+	}
+
+	// Set default CPU topology if not specified
+	if result.CPU.Sockets == 0 && result.CPU.Cores == 0 && result.CPU.Threads == 0 {
+		// Default to single socket with all CPUs as cores
+		result.CPU.Sockets = 1
+		result.CPU.Cores = result.CPU.Count
+		result.CPU.Threads = 1
+	}
+
+	// Set default CPU model if not specified
+	if result.CPU.Model == "" {
+		result.CPU.Model = "host-model"
 	}
 
 	// Process disks

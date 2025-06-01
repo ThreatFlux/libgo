@@ -153,7 +153,6 @@ interface VMMetricsChartProps {
 }
 
 export const VMMetricsChart: React.FC<VMMetricsChartProps> = ({
-  vmName,
   metrics,
   className = '',
 }) => {

@@ -1,4 +1,4 @@
-import { VM, VMStatus } from '@/types/api';
+import { VMStatus } from '@/types/api';
 
 // WebSocket message types
 export type MessageType =
@@ -361,5 +361,10 @@ export class VMWebSocketClient {
       console.log(`Attempting to reconnect to ${this.vmName}...`);
       this.connect();
     }, 5000);
+  }
+
+  // Public getter for connection status
+  public isConnected(): boolean {
+    return this.connected;
   }
 }

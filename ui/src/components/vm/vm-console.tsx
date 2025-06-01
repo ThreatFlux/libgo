@@ -43,7 +43,7 @@ export const VMConsole: React.FC<VMConsoleProps> = ({
         background: '#1a1b26',
         foreground: '#c0caf5',
         cursor: '#c0caf5',
-        selection: 'rgba(128, 203, 196, 0.3)',
+        selectionBackground: 'rgba(128, 203, 196, 0.3)',
         black: '#1a1b26',
         red: '#f7768e',
         green: '#9ece6a',
