@@ -1,0 +1,26 @@
+{
+  "name": "ubuntu-desktop-24.04",
+  "description": "Ubuntu 24.04 Desktop Fresh Install Template",
+  "cpu": {
+    "count": 4,
+    "model": "host-model"
+  },
+  "memory": {
+    "sizeBytes": 4294967296
+  },
+  "disk": {
+    "sizeBytes": 53687091200,
+    "format": "qcow2",
+    "bus": "virtio"
+  },
+  "network": {
+    "type": "network",
+    "source": "default",
+    "model": "virtio"
+  },
+  "cloudInit": {
+    "userData": "",
+    "metaData": "",
+    "networkConfig": ""
+  }
+}

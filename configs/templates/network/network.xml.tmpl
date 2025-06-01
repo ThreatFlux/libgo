@@ -1,11 +1,12 @@
+<?xml version="1.0"?>
 <network>
   <name>{{.Name}}</name>
-  <forward mode='nat'/>
-  <bridge name='{{.BridgeName}}' stp='on' delay='0'/>
-  <ip address='{{.CIDR}}' netmask='255.255.255.0'>
+  <bridge name="{{.Bridge}}"/>
+  <forward mode="nat"/>
+  <ip address="{{.Address}}" netmask="{{.Netmask}}">
     {{if .DHCP}}
     <dhcp>
-      <range start='{{.DHCP.Start}}' end='{{.DHCP.End}}'/>
+      <range start="{{.RangeStart}}" end="{{.RangeEnd}}"/>
     </dhcp>
     {{end}}
   </ip>

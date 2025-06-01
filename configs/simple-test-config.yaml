@@ -1,0 +1,48 @@
+# Simple test configuration focused on VM creation
+server:
+  host: "0.0.0.0"
+  port: 8080
+  readTimeout: 30s
+  writeTimeout: 30s
+
+libvirt:
+  uri: "qemu:///system"
+  connectionTimeout: 10s
+  maxConnections: 5
+  poolName: "default"
+  networkName: "default"
+
+auth:
+  enabled: false
+
+database:
+  driver: "sqlite"
+  dsn: "libgo.db"
+
+logging:
+  level: "debug"
+  format: "console"
+
+storage:
+  defaultPool: "default"
+  poolPath: "/home/vtriple/libgo/storage"
+  templates: {}
+
+templatesPath: "configs/templates"
+
+vm:
+  cloudInitDir: "/home/vtriple/libgo/cloud-init"
+
+export:
+  outputDir: "/home/vtriple/libgo/exports"
+  tempDir: "/tmp"
+  defaultFormat: "qcow2"
+  retention: "168h"
+
+features:
+  cloudInit: true
+  export: true
+  metrics: false
+  rbacEnabled: false
+  storageCleanup: true
+  websocket: false

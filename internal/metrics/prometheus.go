@@ -1,11 +1,12 @@
 package metrics
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // PrometheusMetrics implements metrics collection
@@ -15,21 +16,21 @@ type PrometheusMetrics struct {
 	requests        *prometheus.CounterVec
 
 	// VM operation metrics
-	vmOperations    *prometheus.CounterVec
-	vmCount         prometheus.GaugeFunc
+	vmOperations *prometheus.CounterVec
+	vmCount      prometheus.GaugeFunc
 
 	// Export metrics
-	exportCount     prometheus.GaugeFunc
-	exportDuration  *prometheus.HistogramVec
+	exportCount    prometheus.GaugeFunc
+	exportDuration *prometheus.HistogramVec
 
 	// Libvirt metrics
-	libvirtErrors   *prometheus.CounterVec
-	libvirtLatency  *prometheus.HistogramVec
+	libvirtErrors  *prometheus.CounterVec
+	libvirtLatency *prometheus.HistogramVec
 
 	// Dependencies
-	vmManager      interface{}
-	exportManager  interface{}
-	logger         logger.Logger
+	vmManager     interface{}
+	exportManager interface{}
+	logger        logger.Logger
 }
 
 // NewPrometheusMetrics creates a new PrometheusMetrics
@@ -126,7 +127,7 @@ func NewPrometheusMetrics(vmManager interface{}, exportManager interface{}, logg
 
 // RecordRequest records an API request
 func (m *PrometheusMetrics) RecordRequest(method, path string, status int, duration time.Duration) {
-	statusStr := prometheus.Labels{"method": method, "path": path, "status": string(status)}
+	statusStr := prometheus.Labels{"method": method, "path": path, "status": fmt.Sprintf("%d", status)}
 	m.requests.With(statusStr).Inc()
 	m.requestDuration.With(statusStr).Observe(duration.Seconds())
 }

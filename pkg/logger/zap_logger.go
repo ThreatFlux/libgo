@@ -3,7 +3,7 @@ package logger
 import (
 	"os"
 
-	"github.com/wroersma/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

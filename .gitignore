@@ -52,4 +52,13 @@ ehthumbs.db
 Thumbs.db
 
 # Generated files
-test/mocks/
+# test/mocks/ - Temporarily allowing mocks for CI
+
+# Node.js dependencies
+node_modules/
+ui/node_modules/
+ui/dist/
+
+# Claude Code configuration
+**/.claude/settings.local.json
+.mcp.json

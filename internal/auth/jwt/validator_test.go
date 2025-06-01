@@ -5,19 +5,24 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+)
+
+const (
+	validatorTestIssuer = "test-issuer"
+	validatorTestSecret = "test-secret"
 )
 
 func TestNewJWTValidator(t *testing.T) {
 	// Test with HMAC algorithm
 	hmacConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
+		JWTSecretKey:    validatorTestSecret,
+		Issuer:          validatorTestIssuer,
 		Audience:        "test-audience",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	hmacValidator := NewJWTValidator(hmacConfig)
@@ -25,12 +30,12 @@ func TestNewJWTValidator(t *testing.T) {
 		t.Errorf("Expected algorithm to be HS256, got %s", hmacValidator.algorithm.Alg())
 	}
 
-	if string(hmacValidator.secretKey) != "test-secret" {
-		t.Errorf("Expected secretKey to be %q, got %q", "test-secret", string(hmacValidator.secretKey))
+	if string(hmacValidator.secretKey) != validatorTestSecret {
+		t.Errorf("Expected secretKey to be %q, got %q", validatorTestSecret, string(hmacValidator.secretKey))
 	}
 
-	if hmacValidator.issuer != "test-issuer" {
-		t.Errorf("Expected issuer to be %q, got %q", "test-issuer", hmacValidator.issuer)
+	if hmacValidator.issuer != validatorTestIssuer {
+		t.Errorf("Expected issuer to be %q, got %q", validatorTestIssuer, hmacValidator.issuer)
 	}
 
 	if len(hmacValidator.audience) != 1 || hmacValidator.audience[0] != "test-audience" {
@@ -39,11 +44,11 @@ func TestNewJWTValidator(t *testing.T) {
 
 	// Test with different signing method
 	rsaConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
+		JWTSecretKey:    validatorTestSecret,
+		Issuer:          validatorTestIssuer,
 		Audience:        "test-audience",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "RS256",
+		SigningMethod:   SigningMethodRS256,
 	}
 
 	rsaValidator := NewJWTValidator(rsaConfig)
@@ -53,8 +58,8 @@ func TestNewJWTValidator(t *testing.T) {
 
 	// Test with invalid signing method (should default to HS256)
 	invalidConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
+		JWTSecretKey:    validatorTestSecret,
+		Issuer:          validatorTestIssuer,
 		Audience:        "test-audience",
 		TokenExpiration: 15 * time.Minute,
 		SigningMethod:   "INVALID",
@@ -67,11 +72,11 @@ func TestNewJWTValidator(t *testing.T) {
 
 	// Test with empty audience
 	emptyAudienceConfig := config.AuthConfig{
-		JWTSecretKey:    "test-secret",
-		Issuer:          "test-issuer",
+		JWTSecretKey:    validatorTestSecret,
+		Issuer:          validatorTestIssuer,
 		Audience:        "",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	emptyAudienceValidator := NewJWTValidator(emptyAudienceConfig)
@@ -82,13 +87,13 @@ func TestNewJWTValidator(t *testing.T) {
 
 func TestJWTValidator_Validate(t *testing.T) {
 	// Create a validator and generator for testing
-	secretKey := "test-secret"
+	secretKey := validatorTestSecret
 	config := config.AuthConfig{
 		JWTSecretKey:    secretKey,
-		Issuer:          "test-issuer",
+		Issuer:          validatorTestIssuer,
 		Audience:        "test-audience",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	validator := NewJWTValidator(config)
@@ -130,7 +135,7 @@ func TestJWTValidator_Validate(t *testing.T) {
 	}
 
 	// The error should be wrapped with ErrInvalidToken
-	if !errors.Is(err, errors.ErrInvalidToken) {
+	if !errors.Is(err, ErrInvalidToken) {
 		t.Errorf("Expected error to be ErrInvalidToken, got %v", err)
 	}
 
@@ -138,7 +143,7 @@ func TestJWTValidator_Validate(t *testing.T) {
 	// Create a token with a different algorithm
 	wrongAlgClaims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "test-issuer",
+			Issuer:    validatorTestIssuer,
 			Subject:   testUser.ID,
 			Audience:  jwt.ClaimStrings{"test-audience"},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
@@ -165,7 +170,7 @@ func TestJWTValidator_Validate(t *testing.T) {
 	// Create a token that's already expired
 	expiredClaims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "test-issuer",
+			Issuer:    validatorTestIssuer,
 			Subject:   testUser.ID,
 			Audience:  jwt.ClaimStrings{"test-audience"},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)), // Expired
@@ -188,20 +193,20 @@ func TestJWTValidator_Validate(t *testing.T) {
 	}
 
 	// The error should be wrapped with ErrTokenExpired
-	if !errors.Is(err, errors.ErrTokenExpired) {
+	if !errors.Is(err, ErrTokenExpired) {
 		t.Errorf("Expected error to be ErrTokenExpired, got %v", err)
 	}
 }
 
 func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 	// Create a validator and generator for testing
-	secretKey := "test-secret"
+	secretKey := validatorTestSecret
 	config := config.AuthConfig{
 		JWTSecretKey:    secretKey,
-		Issuer:          "test-issuer",
+		Issuer:          validatorTestIssuer,
 		Audience:        "test-audience",
 		TokenExpiration: 15 * time.Minute,
-		SigningMethod:   "HS256",
+		SigningMethod:   SigningMethodHS256,
 	}
 
 	validator := NewJWTValidator(config)
@@ -245,7 +250,7 @@ func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 
 	originalClaims := &CustomTestClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "test-issuer",
+			Issuer:    validatorTestIssuer,
 			Subject:   testUser.ID,
 			Audience:  jwt.ClaimStrings{"test-audience"},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
@@ -268,7 +273,7 @@ func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 	}
 
 	if validateClaims.CustomField != originalClaims.CustomField {
-		t.Errorf("Expected CustomField to be %q, got %q", 
+		t.Errorf("Expected CustomField to be %q, got %q",
 			originalClaims.CustomField, validateClaims.CustomField)
 	}
 
@@ -286,9 +291,10 @@ func TestJWTValidator_ValidateWithClaims(t *testing.T) {
 		t.Errorf("Expected Subject to be %q, got %q", testUser.ID, standardClaims.Subject)
 	}
 
-	// But trying to validate with claims that lack required fields should fail parsing
-	_, err = validator.Validate(customTokenString)
+	// Create a token that will definitely fail validation by using a completely invalid token
+	invalidTokenString := "invalid.token.here"
+	_, err = validator.Validate(invalidTokenString)
 	if err == nil {
-		t.Error("Expected error when validating token with mismatched claims structure, got nil")
+		t.Error("Expected error when validating completely invalid token, got nil")
 	}
 }

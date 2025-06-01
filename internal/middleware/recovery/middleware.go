@@ -3,7 +3,7 @@ package recovery
 import (
 	"net/http"
 
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // RecoveryMiddleware returns a middleware function that recovers from panics
@@ -20,7 +20,7 @@ func RecoveryMiddleware(log logger.Logger) func(http.ResponseWriter, *http.Reque
 				// Return 500 error
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(`{"status": 500, "code": "INTERNAL_SERVER_ERROR", "message": "Internal server error"}`))
+				_, _ = w.Write([]byte(`{"status": 500, "code": "INTERNAL_SERVER_ERROR", "message": "Internal server error"}`))
 			}
 		}()
 

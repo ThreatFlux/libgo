@@ -156,11 +156,11 @@ func TestGetUserPermissions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := GetUserPermissions(tt.roles)
-			
+
 			// Sort both slices for comparison since map iteration order is not guaranteed
 			sort.Strings(got)
 			sort.Strings(tt.want)
-			
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetUserPermissions() = %v, want %v", got, tt.want)
 			}
@@ -232,11 +232,11 @@ func TestUserHasPermission(t *testing.T) {
 func TestRoles(t *testing.T) {
 	roles := Roles()
 	expected := []string{RoleAdmin, RoleOperator, RoleViewer}
-	
+
 	if len(roles) != len(expected) {
 		t.Errorf("Roles() returned %d roles, expected %d", len(roles), len(expected))
 	}
-	
+
 	for _, r := range expected {
 		found := false
 		for _, role := range roles {
@@ -262,11 +262,11 @@ func TestPermissions(t *testing.T) {
 		PermStop,
 		PermExport,
 	}
-	
+
 	if len(perms) != len(expected) {
 		t.Errorf("Permissions() returned %d permissions, expected %d", len(perms), len(expected))
 	}
-	
+
 	for _, p := range expected {
 		found := false
 		for _, perm := range perms {

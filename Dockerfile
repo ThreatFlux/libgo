@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24.3-alpine AS builder
 
 # Set necessary environment variables
 ENV CGO_ENABLED=0 \
@@ -33,7 +33,7 @@ FROM alpine:3.19
 # Set label according to OCI image spec
 LABEL org.opencontainers.image.title="KVM VM Management API"
 LABEL org.opencontainers.image.description="RESTful API for managing KVM virtual machines"
-LABEL org.opencontainers.image.url="https://github.com/wroersma/libgo"
+LABEL org.opencontainers.image.url="https://github.com/threatflux/libgo"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.revision="${COMMIT}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"

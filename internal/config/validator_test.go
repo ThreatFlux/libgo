@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -322,9 +321,9 @@ func TestValidateLogging(t *testing.T) {
 		{
 			name: "Negative max size",
 			logging: LoggingConfig{
-				Level:    "info",
-				Format:   "json",
-				MaxSize:  -1,
+				Level:   "info",
+				Format:  "json",
+				MaxSize: -1,
 			},
 			wantErr: true,
 		},
@@ -363,7 +362,7 @@ func TestValidateLogging(t *testing.T) {
 
 func TestValidateStorage(t *testing.T) {
 	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "libgo-test-")
+	tempDir, err := os.MkdirTemp("", "libgo-test-")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -371,7 +370,7 @@ func TestValidateStorage(t *testing.T) {
 
 	// Create a test template file
 	templatePath := filepath.Join(tempDir, "template.qcow2")
-	if err := ioutil.WriteFile(templatePath, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte("test"), 0644); err != nil {
 		t.Fatalf("Failed to create test template file: %v", err)
 	}
 
@@ -462,7 +461,7 @@ func TestValidateStorage(t *testing.T) {
 
 func TestValidateExport(t *testing.T) {
 	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "libgo-test-")
+	tempDir, err := os.MkdirTemp("", "libgo-test-")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -557,7 +556,7 @@ func TestValidateExport(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	// Create a temporary directory for testing
-	tempDir, err := ioutil.TempDir("", "libgo-test-")
+	tempDir, err := os.MkdirTemp("", "libgo-test-")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}

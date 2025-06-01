@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/pkg/logger"
-	executil "github.com/wroersma/libgo/pkg/utils/exec"
-	"github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/pkg/logger"
+	executil "github.com/threatflux/libgo/pkg/utils/exec"
+	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Error types
@@ -75,8 +75,8 @@ func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volN
 			logger.String("pool", poolName),
 			logger.String("volume", volName))
 
-		if err := libvirtConn.StorageVolDelete(existingVol, 0); err != nil {
-			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, err)
+		if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
+			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
 		}
 	}
 
@@ -136,13 +136,13 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 			logger.String("pool", poolName),
 			logger.String("volume", volName))
 
-		if err := libvirtConn.StorageVolDelete(existingVol, 0); err != nil {
-			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, err)
+		if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
+			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
 		}
 	}
 
 	// Check if source image exists
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(imagePath); os.IsNotExist(statErr) {
 		return fmt.Errorf("source image %s does not exist", imagePath)
 	}
 
@@ -354,9 +354,11 @@ func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourc
 	}
 
 	// Set the name in the XML
-	if err := xml.SetElementValue(doc, "/volume/name", destVolName); err != nil {
-		return fmt.Errorf("updating volume name in XML: %w", err)
+	nameElement := xml.FindElement(doc, "/volume/name")
+	if nameElement == nil {
+		return fmt.Errorf("volume name element not found in XML")
 	}
+	nameElement.SetText(destVolName)
 
 	// Generate the new XML
 	newXML := xml.XMLToString(doc)

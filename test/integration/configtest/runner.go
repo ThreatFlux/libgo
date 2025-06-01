@@ -14,8 +14,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
 // Global auth token for all API requests
@@ -355,10 +355,10 @@ func generateTestToken() (string, error) {
 	// Create token with MapClaims which matches the structure expected by the application
 	claims := jwt.MapClaims{
 		// Standard JWT claims
-		"sub": adminID,                // Subject (user ID)
-		"exp": expiry.Unix(),          // Expiration time
-		"iat": now.Unix(),             // Issued at time
-		"nbf": now.Unix(),             // Not before time
+		"sub": adminID,       // Subject (user ID)
+		"exp": expiry.Unix(), // Expiration time
+		"iat": now.Unix(),    // Issued at time
+		"nbf": now.Unix(),    // Not before time
 
 		// Custom claims that match what the server expects
 		"userId":   adminID,           // Must match the subject
@@ -628,8 +628,8 @@ func exportVMWithOptions(ctx context.Context, t *testing.T, apiURL, vmName, form
 
 	// Build final request body
 	reqBody := map[string]interface{}{
-		"format":  format,
-		"options": reqOptions,
+		"format":   format,
+		"options":  reqOptions,
 		"fileName": fmt.Sprintf("/tmp/%s", exportFileName),
 	}
 

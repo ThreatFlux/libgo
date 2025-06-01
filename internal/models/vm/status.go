@@ -46,25 +46,25 @@ func (s VMStatus) IsActive() bool {
 
 // StatusInfo contains detailed status information
 type StatusInfo struct {
-	Status         VMStatus  `json:"status"`
-	LastStateChange time.Time `json:"lastStateChange,omitempty"`
-	Uptime         int64     `json:"uptime,omitempty"` // Uptime in seconds
-	CPUUtilization float64   `json:"cpuUtilization,omitempty"` // CPU usage percentage
-	MemoryUsage    uint64    `json:"memoryUsage,omitempty"` // Memory usage in bytes
-	NetworkUsage   NetworkUsage `json:"networkUsage,omitempty"`
-	DiskUsage      DiskUsage    `json:"diskUsage,omitempty"`
+	Status          VMStatus     `json:"status"`
+	LastStateChange time.Time    `json:"lastStateChange,omitempty"`
+	Uptime          int64        `json:"uptime,omitempty"`         // Uptime in seconds
+	CPUUtilization  float64      `json:"cpuUtilization,omitempty"` // CPU usage percentage
+	MemoryUsage     uint64       `json:"memoryUsage,omitempty"`    // Memory usage in bytes
+	NetworkUsage    NetworkUsage `json:"networkUsage,omitempty"`
+	DiskUsage       DiskUsage    `json:"diskUsage,omitempty"`
 }
 
 // NetworkUsage contains network utilization information
 type NetworkUsage struct {
-	RxBytes    uint64 `json:"rxBytes,omitempty"`    // Received bytes
-	TxBytes    uint64 `json:"txBytes,omitempty"`    // Transmitted bytes
-	RxPackets  uint64 `json:"rxPackets,omitempty"`  // Received packets
-	TxPackets  uint64 `json:"txPackets,omitempty"`  // Transmitted packets
-	RxDropped  uint64 `json:"rxDropped,omitempty"`  // Received packets dropped
-	TxDropped  uint64 `json:"txDropped,omitempty"`  // Transmitted packets dropped
-	RxErrors   uint64 `json:"rxErrors,omitempty"`   // Received errors
-	TxErrors   uint64 `json:"txErrors,omitempty"`   // Transmitted errors
+	RxBytes   uint64 `json:"rxBytes,omitempty"`   // Received bytes
+	TxBytes   uint64 `json:"txBytes,omitempty"`   // Transmitted bytes
+	RxPackets uint64 `json:"rxPackets,omitempty"` // Received packets
+	TxPackets uint64 `json:"txPackets,omitempty"` // Transmitted packets
+	RxDropped uint64 `json:"rxDropped,omitempty"` // Received packets dropped
+	TxDropped uint64 `json:"txDropped,omitempty"` // Transmitted packets dropped
+	RxErrors  uint64 `json:"rxErrors,omitempty"`  // Received errors
+	TxErrors  uint64 `json:"txErrors,omitempty"`  // Transmitted errors
 }
 
 // DiskUsage contains disk utilization information
@@ -77,11 +77,11 @@ type DiskUsage struct {
 
 // StatusTransition represents a status transition
 type StatusTransition struct {
-	From         VMStatus  `json:"from"`
-	To           VMStatus  `json:"to"`
-	Timestamp    time.Time `json:"timestamp"`
-	Initiator    string    `json:"initiator,omitempty"` // Who/what initiated the change
-	Reason       string    `json:"reason,omitempty"`    // Reason for the transition
+	From      VMStatus  `json:"from"`
+	To        VMStatus  `json:"to"`
+	Timestamp time.Time `json:"timestamp"`
+	Initiator string    `json:"initiator,omitempty"` // Who/what initiated the change
+	Reason    string    `json:"reason,omitempty"`    // Reason for the transition
 }
 
 // String returns a string representation of the status transition

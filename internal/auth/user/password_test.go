@@ -5,8 +5,12 @@ import (
 	"testing"
 )
 
+const (
+	testPasswordValue = "test-password"
+)
+
 func TestHashPassword(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 
 	// Test with default config
 	hash, err := HashPassword(password)
@@ -50,7 +54,7 @@ func TestHashPassword(t *testing.T) {
 }
 
 func TestVerifyPassword(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 	wrongPassword := "wrong-password"
 
 	// Generate a hash
@@ -92,7 +96,7 @@ func TestExtractPasswordConfig(t *testing.T) {
 		KeyLength:   32,
 	}
 
-	password := "test-password"
+	password := testPasswordValue
 	hash, err := HashPasswordWithConfig(password, knownConfig)
 	if err != nil {
 		t.Fatalf("HashPasswordWithConfig failed: %v", err)
@@ -106,27 +110,27 @@ func TestExtractPasswordConfig(t *testing.T) {
 
 	// Verify the extracted config matches the original
 	if extractedConfig.Memory != knownConfig.Memory {
-		t.Errorf("Extracted memory value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted memory value doesn't match: got %d, want %d",
 			extractedConfig.Memory, knownConfig.Memory)
 	}
 
 	if extractedConfig.Iterations != knownConfig.Iterations {
-		t.Errorf("Extracted iterations value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted iterations value doesn't match: got %d, want %d",
 			extractedConfig.Iterations, knownConfig.Iterations)
 	}
 
 	if extractedConfig.Parallelism != knownConfig.Parallelism {
-		t.Errorf("Extracted parallelism value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted parallelism value doesn't match: got %d, want %d",
 			extractedConfig.Parallelism, knownConfig.Parallelism)
 	}
 
 	if extractedConfig.SaltLength != knownConfig.SaltLength {
-		t.Errorf("Extracted salt length value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted salt length value doesn't match: got %d, want %d",
 			extractedConfig.SaltLength, knownConfig.SaltLength)
 	}
 
 	if extractedConfig.KeyLength != knownConfig.KeyLength {
-		t.Errorf("Extracted key length value doesn't match: got %d, want %d", 
+		t.Errorf("Extracted key length value doesn't match: got %d, want %d",
 			extractedConfig.KeyLength, knownConfig.KeyLength)
 	}
 
@@ -145,7 +149,7 @@ func TestExtractPasswordConfig(t *testing.T) {
 }
 
 func TestNeedsRehash(t *testing.T) {
-	password := "test-password"
+	password := testPasswordValue
 
 	// Create a hash with default config
 	defaultConfig := DefaultPasswordConfig()

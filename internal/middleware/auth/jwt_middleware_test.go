@@ -1,19 +1,18 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/test/mocks/auth"
-	"github.com/wroersma/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/models/user"
+	mocks_auth "github.com/threatflux/libgo/test/mocks/auth"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 // Setup test environment
@@ -38,7 +37,7 @@ func setupTest(t *testing.T) (
 }
 
 func TestJWTMiddleware_Authenticate_ValidToken(t *testing.T) {
-	ctrl, mockValidator, mockUserService, mockLogger, middleware := setupTest(t)
+	ctrl, mockValidator, mockUserService, _, middleware := setupTest(t)
 	defer ctrl.Finish()
 
 	// Create test router
@@ -287,7 +286,7 @@ func TestJWTMiddleware_Authenticate_InactiveUser(t *testing.T) {
 }
 
 func TestJWTMiddleware_Authorize_ValidPermission(t *testing.T) {
-	ctrl, mockValidator, mockUserService, mockLogger, middleware := setupTest(t)
+	ctrl, _, mockUserService, _, middleware := setupTest(t)
 	defer ctrl.Finish()
 
 	// Create test router with authentication and authorization

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // TemplateXMLBuilder implements XMLBuilder using templates

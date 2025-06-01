@@ -56,19 +56,19 @@ func HasPermission(role, permission string) bool {
 func GetUserPermissions(roles []string) []string {
 	// Use a map to deduplicate permissions
 	permMap := make(map[string]struct{})
-	
+
 	for _, role := range roles {
 		for _, perm := range RolePermissions[role] {
 			permMap[perm] = struct{}{}
 		}
 	}
-	
+
 	// Convert map keys to slice
 	perms := make([]string, 0, len(permMap))
 	for perm := range permMap {
 		perms = append(perms, perm)
 	}
-	
+
 	return perms
 }
 

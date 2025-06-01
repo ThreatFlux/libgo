@@ -36,20 +36,20 @@ func (t NetworkType) String() string {
 
 // NetParams contains network parameters for VM creation
 type NetParams struct {
-	Type         NetworkType `json:"type" validate:"required,oneof=bridge network direct"`
-	Source       string      `json:"source" validate:"required"`
-	Model        string      `json:"model,omitempty" validate:"omitempty,oneof=virtio e1000 rtl8139"`
-	MacAddress   string      `json:"macAddress,omitempty" validate:"omitempty,mac"`
+	Type       NetworkType `json:"type" validate:"required,oneof=bridge network direct"`
+	Source     string      `json:"source" validate:"required"`
+	Model      string      `json:"model,omitempty" validate:"omitempty,oneof=virtio e1000 rtl8139"`
+	MacAddress string      `json:"macAddress,omitempty" validate:"omitempty,mac"`
 }
 
 // NetInfo contains information about a VM's network interface
 type NetInfo struct {
-	Type         NetworkType `json:"type"`
-	Source       string      `json:"source"`
-	Model        string      `json:"model"`
-	MacAddress   string      `json:"macAddress"`
-	IPAddress    string      `json:"ipAddress,omitempty"`
-	IPAddressV6  string      `json:"ipAddressV6,omitempty"`
+	Type        NetworkType `json:"type"`
+	Source      string      `json:"source"`
+	Model       string      `json:"model"`
+	MacAddress  string      `json:"macAddress"`
+	IPAddress   string      `json:"ipAddress,omitempty"`
+	IPAddressV6 string      `json:"ipAddressV6,omitempty"`
 }
 
 // Validate validates the network parameters
@@ -110,10 +110,10 @@ func randomByte() (byte, error) {
 
 // NetworkDefinition represents a libvirt network definition
 type NetworkDefinition struct {
-	Name      string `json:"name" validate:"required"`
-	Bridge    string `json:"bridge" validate:"required"`
-	CIDR      string `json:"cidr" validate:"required,cidr"`
-	DHCPEnabled bool  `json:"dhcpEnabled"`
+	Name        string `json:"name" validate:"required"`
+	Bridge      string `json:"bridge" validate:"required"`
+	CIDR        string `json:"cidr" validate:"required,cidr"`
+	DHCPEnabled bool   `json:"dhcpEnabled"`
 }
 
 // ParseCIDR parses the CIDR notation and returns the network address and mask

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Config holds the configuration for the request logger
@@ -109,7 +109,9 @@ func RequestLogger(log logger.Logger, config Config) gin.HandlerFunc {
 
 		// Add user ID if available
 		if userID, exists := c.Get("userId"); exists {
-			logEntry = logEntry.WithFields(logger.String("userId", userID.(string)))
+			if userIDStr, ok := userID.(string); ok {
+				logEntry = logEntry.WithFields(logger.String("userId", userIDStr))
+			}
 		}
 
 		// Add request body if available

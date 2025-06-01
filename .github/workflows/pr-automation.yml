@@ -1,0 +1,108 @@
+name: PR Automation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+  assign-copilot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Copilot Review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // Try to request review from GitHub Copilot
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                reviewers: ['github-copilot[bot]']
+              });
+              console.log('Successfully requested Copilot review');
+            } catch (error) {
+              console.log('Could not assign Copilot directly, trying comment approach');
+              // Fallback: comment to trigger Copilot
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: '@copilot please review this pull request'
+              });
+            }
+
+  link-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Link Issues and Copy Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const prBody = context.payload.pull_request.body || '';
+            
+            // Extract issue numbers from title and body
+            const issueRegex = /#(\d+)|fixes?\s*#(\d+)|closes?\s*#(\d+)|resolves?\s*#(\d+)/gi;
+            const matches = [...(prTitle + ' ' + prBody).matchAll(issueRegex)];
+            const issueNumbers = [...new Set(matches.map(match => match[1] || match[2] || match[3] || match[4]).filter(Boolean))];
+            
+            if (issueNumbers.length === 0) {
+              console.log('No issue references found');
+              return;
+            }
+            
+            console.log(`Found issue references: ${issueNumbers.join(', ')}`);
+            
+            const relevantLabels = ['security', 'enhancement', 'bug', 'documentation', 'performance', 'critical'];
+            const labelsToAdd = new Set();
+            
+            // Check each referenced issue
+            for (const issueNumber of issueNumbers) {
+              try {
+                const issue = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(issueNumber)
+                });
+                
+                // Copy relevant labels
+                issue.data.labels.forEach(label => {
+                  if (relevantLabels.includes(label.name)) {
+                    labelsToAdd.add(label.name);
+                  }
+                });
+              } catch (error) {
+                console.log(`Could not fetch issue #${issueNumber}: ${error.message}`);
+              }
+            }
+            
+            // Add labels to PR
+            if (labelsToAdd.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: Array.from(labelsToAdd)
+              });
+              console.log(`Added labels: ${Array.from(labelsToAdd).join(', ')}`);
+            }
+            
+            // Add issue links to PR body if not already present
+            const issueLinks = issueNumbers.map(num => `#${num}`).join(', ');
+            if (!prBody.includes('Related Issues:')) {
+              const updatedBody = `${prBody}\n\n## Related Issues\nThis PR addresses: ${issueLinks}`;
+              
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                body: updatedBody
+              });
+              console.log('Added issue links to PR body');
+            }

@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/internal/libvirt/network"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/pkg/logger"
+
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/internal/libvirt/network"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NewLibvirtConnectionCheck creates a check for libvirt connection
+// NewLibvirtConnectionCheck creates a check for libvirt connection.
 func NewLibvirtConnectionCheck(connManager connection.Manager, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{
@@ -29,7 +30,11 @@ func NewLibvirtConnectionCheck(connManager connection.Manager, logger logger.Log
 			check.Details["error"] = fmt.Sprintf("failed to connect to libvirt: %v", err)
 			return check
 		}
-		defer connManager.Release(conn)
+		defer func() {
+			if releaseErr := connManager.Release(conn); releaseErr != nil {
+				logger.WithError(releaseErr).Error("Failed to release connection")
+			}
+		}()
 
 		// Check if connection is active
 		if !conn.IsActive() {
@@ -44,7 +49,7 @@ func NewLibvirtConnectionCheck(connManager connection.Manager, logger logger.Log
 	}
 }
 
-// NewStoragePoolCheck creates a check for storage pool
+// NewStoragePoolCheck creates a check for storage pool.
 func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{
@@ -66,7 +71,12 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 		// No Free method needed for go-libvirt
 
 		// Check if pool is active using StoragePoolGetInfo
-		libvirtConn := poolManager.(interface{ GetConnection() connection.Connection }).GetConnection()
+		connGetter, ok := poolManager.(interface{ GetConnection() connection.Connection })
+		if !ok {
+			check.Details["error"] = "failed to get connection from pool manager"
+			return check
+		}
+		libvirtConn := connGetter.GetConnection()
 
 		poolInfo, _, _, _, err := libvirtConn.GetLibvirtConnection().StoragePoolGetInfo(*pool)
 		if err != nil {
@@ -75,14 +85,14 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 		}
 
 		// State is the first returned value, 1 means running/active
-		active := uint8(poolInfo) == 1
+		active := poolInfo == 1
 		if !active {
 			check.Details["error"] = "storage pool is not active"
 			return check
 		}
 
 		// We need to get extra pool info
-		var capacity, available, allocation uint64 = 1024*1024*1024, 512*1024*1024, 256*1024*1024 // Default values for now
+		var capacity, available, allocation uint64 = 1024 * 1024 * 1024, 512 * 1024 * 1024, 256 * 1024 * 1024 // Default values for now
 
 		// If we got here, pool is healthy
 		check.Status = StatusUp
@@ -94,7 +104,7 @@ func NewStoragePoolCheck(poolManager storage.PoolManager, poolName string, logge
 	}
 }
 
-// NewNetworkCheck creates a check for network
+// NewNetworkCheck creates a check for network.
 func NewNetworkCheck(networkManager network.Manager, networkName string, logger logger.Logger) CheckFunction {
 	return func() Check {
 		check := Check{
@@ -116,7 +126,12 @@ func NewNetworkCheck(networkManager network.Manager, networkName string, logger 
 		// No Free method needed for go-libvirt
 
 		// Check if network is active using NetworkGetInfo
-		libvirtConn := networkManager.(interface{ GetConnection() connection.Connection }).GetConnection()
+		connGetter, ok := networkManager.(interface{ GetConnection() connection.Connection })
+		if !ok {
+			check.Details["error"] = "failed to get connection from network manager"
+			return check
+		}
+		libvirtConn := connGetter.GetConnection()
 
 		// Instead of using NetworkGetInfo, check if active by examining XML
 		networkXML, err := libvirtConn.GetLibvirtConnection().NetworkGetXMLDesc(*net, 0)

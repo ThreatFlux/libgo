@@ -1,0 +1,19 @@
+{
+  "name": "windows-11",
+  "description": "Windows 11 (24H2) with VirtIO drivers",
+  "version": "1.0.0",
+  "base_image": "/home/vtriple/libgo/Win11_24H2_English_x64.iso",
+  "os_type": "windows",
+  "os_variant": "win11",
+  "default_cpu_count": 4,
+  "default_memory_size": 4294967296,
+  "default_disk_size": 64424509440,
+  "network_model": "virtio",
+  "disk_bus": "virtio",
+  "display_type": "vnc",
+  "unattended_install": true,
+  "metadata": {
+    "admin_user": "Administrator",
+    "admin_password": "P@ssw0rd"
+  }
+}

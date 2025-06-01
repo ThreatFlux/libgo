@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/config"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/config"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // TestSetupAdminUser creates an admin user for testing

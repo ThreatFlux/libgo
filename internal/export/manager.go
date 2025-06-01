@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/export/formats"
-	"github.com/wroersma/libgo/internal/export/formats/ova"
-	"github.com/wroersma/libgo/internal/export/formats/qcow2"
-	"github.com/wroersma/libgo/internal/export/formats/raw"
-	"github.com/wroersma/libgo/internal/export/formats/vdi"
-	"github.com/wroersma/libgo/internal/export/formats/vmdk"
-	"github.com/wroersma/libgo/internal/libvirt/domain"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/export/formats"
+	"github.com/threatflux/libgo/internal/export/formats/ova"
+	"github.com/threatflux/libgo/internal/export/formats/qcow2"
+	"github.com/threatflux/libgo/internal/export/formats/raw"
+	"github.com/threatflux/libgo/internal/export/formats/vdi"
+	"github.com/threatflux/libgo/internal/export/formats/vmdk"
+	"github.com/threatflux/libgo/internal/libvirt/domain"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // ExportManager implements Manager
@@ -120,13 +120,13 @@ func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 		return fmt.Errorf("%w: %s", errors.ErrExportJobNotFound, jobID)
 	}
 
-	// Only pending or running jobs can be cancelled
+	// Only pending or running jobs can be canceled
 	if job.Status != StatusPending && job.Status != StatusRunning {
 		return fmt.Errorf("cannot cancel job in %s state", job.Status)
 	}
 
 	// Update job status
-	if !m.jobStore.updateJobStatus(jobID, StatusCancelled, job.Progress, nil) {
+	if !m.jobStore.updateJobStatus(jobID, StatusCanceled, job.Progress, nil) {
 		return fmt.Errorf("failed to update job status")
 	}
 
@@ -140,7 +140,7 @@ func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 		}
 	}
 
-	m.logger.Info("Export job cancelled",
+	m.logger.Info("Export job canceled",
 		logger.String("job_id", jobID),
 		logger.String("vm_name", job.VMName))
 
@@ -212,15 +212,15 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 			logger.String("pool", poolName))
 
 		// Get disk path for the explicitly specified volume
-		diskPath, err := m.storageManager.GetPath(ctx, poolName, volName)
-		if err != nil {
+		diskPath, pathErr := m.storageManager.GetPath(ctx, poolName, volName)
+		if pathErr != nil {
 			m.logger.Error("Failed to get disk path for specified source volume",
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName),
 				logger.String("pool", poolName),
 				logger.String("volume", volName),
-				logger.String("error", err.Error()))
-			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+				logger.String("error", pathErr.Error()))
+			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, pathErr)
 			return
 		}
 		sourceDiskPath = diskPath
@@ -240,8 +240,8 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 		standardVolName := fmt.Sprintf("%s-disk-0", vm.Name)
 
 		// Try to get the disk path using the standard naming convention first
-		diskPath, err := m.storageManager.GetPath(ctx, poolName, standardVolName)
-		if err == nil {
+		diskPath, stdErr := m.storageManager.GetPath(ctx, poolName, standardVolName)
+		if stdErr == nil {
 			// Standard naming convention works
 			volName = standardVolName
 			sourceDiskPath = diskPath
@@ -298,21 +298,21 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 			sourceDiskPath = diskPath
 		} else {
 			// Neither method worked
-			err := fmt.Errorf("could not determine valid disk volume name")
+			determineDiskErr := fmt.Errorf("could not determine valid disk volume name")
 			m.logger.Error("Failed to determine disk volume",
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName),
-				logger.String("error", err.Error()))
-			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+				logger.String("error", determineDiskErr.Error()))
+			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, determineDiskErr)
 			return
 		}
 	} else {
-		err := fmt.Errorf("VM has no disks")
+		diskErr := fmt.Errorf("VM has no disks")
 		m.logger.Error("Failed to find VM disks",
 			logger.String("job_id", job.ID),
 			logger.String("vm_name", job.VMName),
-			logger.String("error", err.Error()))
-		m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+			logger.String("error", diskErr.Error()))
+		m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, diskErr)
 		return
 	}
 
@@ -342,12 +342,12 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName))
 
-			if err := m.domainManager.Stop(ctx, job.VMName); err != nil {
+			if stopErr := m.domainManager.Stop(ctx, job.VMName); stopErr != nil {
 				m.logger.Error("Failed to stop VM",
 					logger.String("job_id", job.ID),
 					logger.String("vm_name", job.VMName),
-					logger.String("error", err.Error()))
-				m.jobStore.updateJobStatus(job.ID, StatusFailed, 30, err)
+					logger.String("error", stopErr.Error()))
+				m.jobStore.updateJobStatus(job.ID, StatusFailed, 30, stopErr)
 				return
 			}
 			vmWasRunning = true

@@ -5,13 +5,16 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
-	mocks_vm "github.com/wroersma/libgo/test/mocks/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
+	mocks_domain "github.com/threatflux/libgo/test/mocks/libvirt/domain"
+	mocks_network "github.com/threatflux/libgo/test/mocks/libvirt/network"
+	mocks_storage "github.com/threatflux/libgo/test/mocks/libvirt/storage"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	mocks_cloudinit "github.com/threatflux/libgo/test/mocks/vm/cloudinit"
+	mocks_template "github.com/threatflux/libgo/test/mocks/vm/template"
+	"go.uber.org/mock/gomock"
 )
 
 func TestVMManager_Create(t *testing.T) {
@@ -19,12 +22,12 @@ func TestVMManager_Create(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockStorageManager := mocks_libvirt.NewMockVolumeManager(ctrl)
-	mockNetworkManager := mocks_libvirt.NewMockNetworkManager(ctrl)
-	mockTemplateManager := mocks_vm.NewMockTemplateManager(ctrl)
-	mockCloudInitManager := mocks_vm.NewMockCloudInitManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockNetworkManager := mocks_network.NewMockManager(ctrl)
+	mockTemplateManager := mocks_template.NewMockManager(ctrl)
+	mockCloudInitManager := mocks_cloudinit.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
@@ -56,9 +59,11 @@ func TestVMManager_Create(t *testing.T) {
 		},
 		Memory: vm.MemoryParams{
 			SizeBytes: 2 * 1024 * 1024 * 1024, // 2 GB
+			SizeMB:    2 * 1024,               // 2 GB
 		},
 		Disk: vm.DiskParams{
 			SizeBytes: 20 * 1024 * 1024 * 1024, // 20 GB
+			SizeMB:    20 * 1024,               // 20 GB
 			Format:    "qcow2",
 		},
 		Network: vm.NetParams{
@@ -110,12 +115,12 @@ func TestVMManager_Create_WithTemplate(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockStorageManager := mocks_libvirt.NewMockVolumeManager(ctrl)
-	mockNetworkManager := mocks_libvirt.NewMockNetworkManager(ctrl)
-	mockTemplateManager := mocks_vm.NewMockTemplateManager(ctrl)
-	mockCloudInitManager := mocks_vm.NewMockCloudInitManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockNetworkManager := mocks_network.NewMockManager(ctrl)
+	mockTemplateManager := mocks_template.NewMockManager(ctrl)
+	mockCloudInitManager := mocks_cloudinit.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
@@ -202,12 +207,12 @@ func TestVMManager_Create_Error(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockStorageManager := mocks_libvirt.NewMockVolumeManager(ctrl)
-	mockNetworkManager := mocks_libvirt.NewMockNetworkManager(ctrl)
-	mockTemplateManager := mocks_vm.NewMockTemplateManager(ctrl)
-	mockCloudInitManager := mocks_vm.NewMockCloudInitManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockNetworkManager := mocks_network.NewMockManager(ctrl)
+	mockTemplateManager := mocks_template.NewMockManager(ctrl)
+	mockCloudInitManager := mocks_cloudinit.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
@@ -240,9 +245,11 @@ func TestVMManager_Create_Error(t *testing.T) {
 		},
 		Memory: vm.MemoryParams{
 			SizeBytes: 2 * 1024 * 1024 * 1024, // 2 GB
+			SizeMB:    2 * 1024,               // 2 GB
 		},
 		Disk: vm.DiskParams{
 			SizeBytes: 20 * 1024 * 1024 * 1024, // 20 GB
+			SizeMB:    20 * 1024,               // 20 GB
 			Format:    "qcow2",
 		},
 		Network: vm.NetParams{
@@ -316,8 +323,8 @@ func TestVMManager_Get(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create VM manager
 	manager := NewVMManager(
@@ -351,9 +358,9 @@ func TestVMManager_Delete(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockStorageManager := mocks_libvirt.NewMockVolumeManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockStorageManager := mocks_storage.NewMockVolumeManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any()).AnyTimes()
@@ -412,8 +419,8 @@ func TestVMManager_Start(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
@@ -444,8 +451,8 @@ func TestVMManager_Stop(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
@@ -476,8 +483,8 @@ func TestVMManager_Restart(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mocks
-	mockDomainManager := mocks_libvirt.NewMockDomainManager(ctrl)
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockDomainManager := mocks_domain.NewMockManager(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Setup expected logging calls
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()

@@ -3,10 +3,18 @@ package user
 import (
 	"context"
 
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
-// Service defines interface for user management
+// DefaultUserConfig represents configuration for a default user.
+type DefaultUserConfig struct {
+	Username string
+	Password string
+	Email    string
+	Roles    []string
+}
+
+// Service defines interface for user management.
 type Service interface {
 	// Authenticate authenticates a user
 	Authenticate(ctx context.Context, username, password string) (*user.User, error)
@@ -36,10 +44,5 @@ type Service interface {
 	LoadUser(u *user.User) error
 
 	// InitializeDefaultUsers creates default users from configuration
-	InitializeDefaultUsers(ctx context.Context, defaultUsers []struct {
-		Username string
-		Password string
-		Email    string
-		Roles    []string
-	}) error
+	InitializeDefaultUsers(ctx context.Context, defaultUsers []DefaultUserConfig) error
 }
