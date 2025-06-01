@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Collector provides an interface for metrics collection

@@ -110,13 +110,13 @@ func walkStructForEnvOverrides(v reflect.Value, t reflect.Type, prefix string) e
 // buildEnvVarName constructs an environment variable name from prefix and field
 func buildEnvVarName(prefix, field string) string {
 	parts := []string{}
-	
+
 	if prefix != "" {
 		parts = append(parts, prefix)
 	}
-	
+
 	parts = append(parts, field)
-	
+
 	// Join the parts and convert to uppercase
 	envName := strings.Join(parts, "_")
 	return strings.ToUpper(envName)
@@ -127,14 +127,14 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 	switch fieldValue.Kind() {
 	case reflect.String:
 		fieldValue.SetString(envValue)
-	
+
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(envValue)
 		if err != nil {
 			return fmt.Errorf("parsing bool: %w", err)
 		}
 		fieldValue.SetBool(boolValue)
-	
+
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		// Special handling for duration
 		if fieldValue.Type() == reflect.TypeOf(time.Duration(0)) {
@@ -150,24 +150,27 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 			}
 			fieldValue.SetInt(intValue)
 		}
-	
+
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		uintValue, err := strconv.ParseUint(envValue, 10, 64)
 		if err != nil {
 			return fmt.Errorf("parsing uint: %w", err)
 		}
 		fieldValue.SetUint(uintValue)
-	
+
 	case reflect.Float32, reflect.Float64:
 		floatValue, err := strconv.ParseFloat(envValue, 64)
 		if err != nil {
 			return fmt.Errorf("parsing float: %w", err)
 		}
 		fieldValue.SetFloat(floatValue)
-	
+
 	case reflect.Map:
 		// Maps in environment variables can be specified as key1:value1,key2:value2
-		mapValue := reflect.MakeMap(fieldValue.Type())
+		// Merge with existing map instead of replacing it
+		if fieldValue.IsNil() {
+			fieldValue.Set(reflect.MakeMap(fieldValue.Type()))
+		}
 		if envValue != "" {
 			pairs := strings.Split(envValue, ",")
 			for _, pair := range pairs {
@@ -175,21 +178,20 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 				if len(kv) != 2 {
 					return fmt.Errorf("invalid map format, expected key:value")
 				}
-				mapValue.SetMapIndex(reflect.ValueOf(kv[0]), reflect.ValueOf(kv[1]))
+				fieldValue.SetMapIndex(reflect.ValueOf(kv[0]), reflect.ValueOf(kv[1]))
 			}
-			fieldValue.Set(mapValue)
 		}
-	
+
 	case reflect.Slice:
 		// Slices in environment variables can be specified as value1,value2,value3
 		sliceType := fieldValue.Type().Elem()
 		sliceValues := strings.Split(envValue, ",")
-		
+
 		sliceValue := reflect.MakeSlice(fieldValue.Type(), 0, len(sliceValues))
-		
+
 		for _, val := range sliceValues {
 			var elemValue reflect.Value
-			
+
 			switch sliceType.Kind() {
 			case reflect.String:
 				elemValue = reflect.ValueOf(val)
@@ -203,15 +205,15 @@ func applyEnvValueToField(fieldValue reflect.Value, envValue string) error {
 			default:
 				return fmt.Errorf("unsupported slice element type: %s", sliceType.Kind())
 			}
-			
+
 			sliceValue = reflect.Append(sliceValue, elemValue)
 		}
-		
+
 		fieldValue.Set(sliceValue)
-		
+
 	default:
 		return fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 	}
-	
+
 	return nil
 }

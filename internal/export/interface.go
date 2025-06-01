@@ -21,7 +21,7 @@ const (
 	StatusRunning   Status = "running"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
-	StatusCancelled Status = "cancelled"
+	StatusCanceled  Status = "canceled"
 )
 
 // Job represents an export job

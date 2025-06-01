@@ -6,9 +6,10 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/stretchr/testify/assert"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/test/mocks/libvirt"
+	"github.com/threatflux/libgo/internal/models/vm"
+	mocks_connection "github.com/threatflux/libgo/test/mocks/libvirt/connection"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 const testDomainXML = `
@@ -48,25 +49,24 @@ func (m *mockXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) {
 	return m.buildFn(params)
 }
 
-// Mock libvirt connection
+// Mock libvirt connection - we need to embed *libvirt.Libvirt properly
 type mockLibvirtWithDomain struct {
-	libvirt.Libvirt
+	*libvirt.Libvirt
 	t *testing.T
 }
 
 func TestDomainManager_Create(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{
@@ -81,8 +81,8 @@ func TestDomainManager_Create(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -113,18 +113,17 @@ func TestDomainManager_Create(t *testing.T) {
 }
 
 func TestDomainManager_Get(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -133,8 +132,8 @@ func TestDomainManager_Get(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -147,18 +146,17 @@ func TestDomainManager_Get(t *testing.T) {
 }
 
 func TestDomainManager_List(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -167,8 +165,8 @@ func TestDomainManager_List(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -181,18 +179,17 @@ func TestDomainManager_List(t *testing.T) {
 }
 
 func TestDomainManager_Start(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -201,8 +198,8 @@ func TestDomainManager_Start(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -213,18 +210,17 @@ func TestDomainManager_Start(t *testing.T) {
 }
 
 func TestDomainManager_Stop(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -233,8 +229,8 @@ func TestDomainManager_Stop(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -245,18 +241,17 @@ func TestDomainManager_Stop(t *testing.T) {
 }
 
 func TestDomainManager_ForceStop(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -265,8 +260,8 @@ func TestDomainManager_ForceStop(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -277,18 +272,17 @@ func TestDomainManager_ForceStop(t *testing.T) {
 }
 
 func TestDomainManager_Delete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -297,8 +291,8 @@ func TestDomainManager_Delete(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -309,18 +303,17 @@ func TestDomainManager_Delete(t *testing.T) {
 }
 
 func TestDomainManager_GetXML(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping libvirt domain test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockConn := mocks_libvirt.NewMockConnection(ctrl)
-	mockConnMgr := mocks_libvirt.NewMockManager(ctrl)
+	mockConn := mocks_connection.NewMockConnection(ctrl)
+	mockConnMgr := mocks_connection.NewMockManager(ctrl)
 
 	// Mock logger
-	mockLog := logger.NewZapLogger(LoggingConfig{
-		Level:      "debug",
-		Format:     "json",
-		OutputPath: "stdout",
-	})
+	mockLog := mocks_logger.NewMockLogger(ctrl)
 
 	// Create a mock XML builder
 	xmlBuilder := &mockXMLBuilder{t: t}
@@ -329,8 +322,8 @@ func TestDomainManager_GetXML(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{t: t}
-	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt).AnyTimes()
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnMgr.EXPECT().Release(mockConn).Return(nil)
@@ -352,13 +345,8 @@ func (m *mockLibvirtWithDomain) DomainGetXMLDesc(domain libvirt.Domain, flags ui
 	return testDomainXML, nil
 }
 
-func (m *mockLibvirtWithDomain) DomainGetInfo(domain libvirt.Domain) (libvirt.DomainInfo, error) {
-	return libvirt.DomainInfo{
-		State:     libvirt.DomainRunning,
-		MaxMem:    2097152, // 2GB in KiB
-		Memory:    2097152,
-		NrVirtCpu: 2,
-	}, nil
+func (m *mockLibvirtWithDomain) DomainGetInfo(domain libvirt.Domain) (rState uint8, rMaxMem uint64, rMemory uint64, rNrVirtCPU uint16, rCPUTime uint64, err error) {
+	return uint8(libvirt.DomainRunning), 2097152, 2097152, 2, 0, nil
 }
 
 func (m *mockLibvirtWithDomain) DomainCreate(domain libvirt.Domain) error {
@@ -393,11 +381,4 @@ func (m *mockLibvirtWithDomain) Domains() ([]libvirt.Domain, error) {
 			Name: "test-vm",
 		},
 	}, nil
-}
-
-// LoggingConfig for tests
-type LoggingConfig struct {
-	Level      string
-	Format     string
-	OutputPath string
 }

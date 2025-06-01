@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - API_URL=/api/v1
+    networks:
+      - libgo-network
+    depends_on:
+      - api
+
+  api:
+    image: libgo-api:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock
+      - /etc/libvirt:/etc/libvirt:ro
+      - ./configs:/app/configs
+    environment:
+      - GIN_MODE=debug
+      - CORS_ALLOW_ORIGINS=*
+    networks:
+      - libgo-network
+
+networks:
+  libgo-network:
+    driver: bridge

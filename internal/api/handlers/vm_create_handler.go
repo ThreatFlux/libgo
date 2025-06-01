@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	apierrors "github.com/wroersma/libgo/internal/errors"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
+	apierrors "github.com/threatflux/libgo/internal/errors"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // CreateVMResponse represents the response for a VM creation request

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/health"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/health"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // HealthHandler handles health check endpoints
@@ -26,13 +26,13 @@ func NewHealthHandler(checker *health.Checker, logger logger.Logger) *HealthHand
 func (h *HealthHandler) GetHealth(c *gin.Context) {
 	// Run health checks
 	result := h.checker.RunChecks()
-	
+
 	// Determine response status code
 	statusCode := http.StatusOK
 	if result.Status == health.StatusDown {
 		statusCode = http.StatusServiceUnavailable
 	}
-	
+
 	// Return health check result
 	c.JSON(statusCode, result)
 }
@@ -49,13 +49,13 @@ func (h *HealthHandler) GetHealthLiveness(c *gin.Context) {
 func (h *HealthHandler) GetHealthReadiness(c *gin.Context) {
 	// Run full health checks for readiness
 	result := h.checker.RunChecks()
-	
+
 	// Determine response status code
 	statusCode := http.StatusOK
 	if result.Status == health.StatusDown {
 		statusCode = http.StatusServiceUnavailable
 	}
-	
+
 	// Return health check result
 	c.JSON(statusCode, result)
 }

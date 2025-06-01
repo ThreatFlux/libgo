@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	userservice "github.com/wroersma/libgo/internal/auth/user"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	userservice "github.com/threatflux/libgo/internal/auth/user"
+	usermodels "github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // AuthHandler handles authentication-related requests
@@ -42,9 +42,9 @@ type LoginRequest struct {
 
 // LoginResponse represents a login response
 type LoginResponse struct {
-	Token     string            `json:"token"`
-	ExpiresAt time.Time         `json:"expiresAt"`
-	User      *usermodels.User  `json:"user"`
+	Token     string           `json:"token"`
+	ExpiresAt time.Time        `json:"expiresAt"`
+	User      *usermodels.User `json:"user"`
 }
 
 // Login handles user login

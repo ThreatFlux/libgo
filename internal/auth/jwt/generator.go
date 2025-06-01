@@ -6,23 +6,36 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/models/user"
 )
 
-// Generator defines interface for JWT token generation
+// Signing method constants.
+const (
+	SigningMethodHS256 = "HS256"
+	SigningMethodHS384 = "HS384"
+	SigningMethodHS512 = "HS512"
+	SigningMethodRS256 = "RS256"
+	SigningMethodRS384 = "RS384"
+	SigningMethodRS512 = "RS512"
+	SigningMethodES256 = "ES256"
+	SigningMethodES384 = "ES384"
+	SigningMethodES512 = "ES512"
+)
+
+// Generator defines interface for JWT token generation.
 type Generator interface {
-	// Generate generates a JWT token for a user
+	// Generate generates a JWT token for a user.
 	Generate(user *user.User) (string, error)
 
-	// GenerateWithExpiration generates a JWT token with specific expiration
+	// GenerateWithExpiration generates a JWT token with specific expiration.
 	GenerateWithExpiration(user *user.User, expiration time.Duration) (string, error)
 
-	// Parse parses and validates a JWT token
+	// Parse parses and validates a JWT token.
 	Parse(tokenString string) (*Claims, error)
 }
 
-// JWTGenerator implements Generator
+// JWTGenerator implements Generator.
 type JWTGenerator struct {
 	secretKey     []byte
 	privateKey    *rsa.PrivateKey
@@ -34,7 +47,7 @@ type JWTGenerator struct {
 	signingMethod string
 }
 
-// NewJWTGenerator creates a new JWTGenerator
+// NewJWTGenerator creates a new JWTGenerator.
 func NewJWTGenerator(config config.AuthConfig) *JWTGenerator {
 	var algorithm jwt.SigningMethod
 	var privateKey *rsa.PrivateKey
@@ -42,23 +55,23 @@ func NewJWTGenerator(config config.AuthConfig) *JWTGenerator {
 
 	// Choose signing method based on configuration
 	switch config.SigningMethod {
-	case "HS256":
+	case SigningMethodHS256:
 		algorithm = jwt.SigningMethodHS256
-	case "HS384":
+	case SigningMethodHS384:
 		algorithm = jwt.SigningMethodHS384
-	case "HS512":
+	case SigningMethodHS512:
 		algorithm = jwt.SigningMethodHS512
-	case "RS256":
+	case SigningMethodRS256:
 		algorithm = jwt.SigningMethodRS256
-	case "RS384":
+	case SigningMethodRS384:
 		algorithm = jwt.SigningMethodRS384
-	case "RS512":
+	case SigningMethodRS512:
 		algorithm = jwt.SigningMethodRS512
-	case "ES256":
+	case SigningMethodES256:
 		algorithm = jwt.SigningMethodES256
-	case "ES384":
+	case SigningMethodES384:
 		algorithm = jwt.SigningMethodES384
-	case "ES512":
+	case SigningMethodES512:
 		algorithm = jwt.SigningMethodES512
 	default:
 		// Default to HS256 for safety
@@ -83,12 +96,12 @@ func NewJWTGenerator(config config.AuthConfig) *JWTGenerator {
 	}
 }
 
-// Generate implements Generator.Generate
+// Generate implements Generator.Generate.
 func (g *JWTGenerator) Generate(user *user.User) (string, error) {
 	return g.GenerateWithExpiration(user, g.expiresIn)
 }
 
-// GenerateWithExpiration implements Generator.GenerateWithExpiration
+// GenerateWithExpiration implements Generator.GenerateWithExpiration.
 func (g *JWTGenerator) GenerateWithExpiration(user *user.User, expiration time.Duration) (string, error) {
 	now := time.Now()
 	expirationTime := now.Add(expiration)
@@ -112,7 +125,7 @@ func (g *JWTGenerator) GenerateWithExpiration(user *user.User, expiration time.D
 	var tokenString string
 	var err error
 
-	if g.signingMethod == "RS256" || g.signingMethod == "RS384" || g.signingMethod == "RS512" {
+	if g.signingMethod == SigningMethodRS256 || g.signingMethod == SigningMethodRS384 || g.signingMethod == SigningMethodRS512 {
 		if g.privateKey == nil {
 			return "", fmt.Errorf("RSA private key not set")
 		}
@@ -128,7 +141,7 @@ func (g *JWTGenerator) GenerateWithExpiration(user *user.User, expiration time.D
 	return tokenString, nil
 }
 
-// Parse implements Generator.Parse
+// Parse implements Generator.Parse.
 func (g *JWTGenerator) Parse(tokenString string) (*Claims, error) {
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -138,7 +151,7 @@ func (g *JWTGenerator) Parse(tokenString string) (*Claims, error) {
 		}
 
 		// Use the appropriate key based on signing method
-		if g.signingMethod == "RS256" || g.signingMethod == "RS384" || g.signingMethod == "RS512" {
+		if g.signingMethod == SigningMethodRS256 || g.signingMethod == SigningMethodRS384 || g.signingMethod == SigningMethodRS512 {
 			if g.publicKey == nil {
 				return nil, fmt.Errorf("RSA public key not set")
 			}

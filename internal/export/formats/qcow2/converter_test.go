@@ -5,21 +5,22 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
-	pkgExec "github.com/wroersma/libgo/pkg/utils/exec"
-	"github.com/wroersma/libgo/test/mocks/logger"
-	"github.com/wroersma/libgo/test/mocks/utils/exec"
+	pkgExec "github.com/threatflux/libgo/pkg/utils/exec"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 )
 
 func TestQCOW2Converter_Convert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping converter test that requires filesystem operations in short mode")
+	}
 	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -94,7 +95,7 @@ func TestQCOW2Converter_GetFormatName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	converter := NewQCOW2Converter(mockLogger)
 
 	// Test format name
@@ -106,7 +107,7 @@ func TestQCOW2Converter_ValidateOptions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	converter := NewQCOW2Converter(mockLogger)
 
 	testCases := []struct {

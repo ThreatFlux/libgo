@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	userservice "github.com/wroersma/libgo/internal/auth/user"
-	apierrors "github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	userservice "github.com/threatflux/libgo/internal/auth/user"
+	apierrors "github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Define context keys

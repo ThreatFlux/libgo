@@ -1,1 +1,7 @@
-/home/vtriple/libgo/libgo/configs/templates/storage/volume.xml.tmpl
+<volume>
+  <name>{{.Name}}</name>
+  <capacity unit="bytes">{{.CapacityBytes}}</capacity>
+  <target>
+    <format type="{{.Format}}"/>
+  </target>
+</volume>

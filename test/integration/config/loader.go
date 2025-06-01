@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 	"gopkg.in/yaml.v3"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
 )
 
 // TestConfig represents the structure of a test configuration file
@@ -18,13 +18,13 @@ type TestConfig struct {
 	} `yaml:"test"`
 
 	VM struct {
-		Name        string               `yaml:"name"`
-		Template    string               `yaml:"template"`
-		Description string               `yaml:"description"`
-		CPU         vmmodels.CPUParams   `yaml:"cpu,omitempty"`
+		Name        string                `yaml:"name"`
+		Template    string                `yaml:"template"`
+		Description string                `yaml:"description"`
+		CPU         vmmodels.CPUParams    `yaml:"cpu,omitempty"`
 		Memory      vmmodels.MemoryParams `yaml:"memory,omitempty"`
-		Disk        vmmodels.DiskParams  `yaml:"disk,omitempty"`
-		Network     vmmodels.NetParams   `yaml:"network,omitempty"`
+		Disk        vmmodels.DiskParams   `yaml:"disk,omitempty"`
+		Network     vmmodels.NetParams    `yaml:"network,omitempty"`
 
 		Provisioning struct {
 			Method        string `yaml:"method"` // cloudinit, unattended, preconfigured

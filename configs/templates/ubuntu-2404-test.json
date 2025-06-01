@@ -1,0 +1,26 @@
+{
+  "name": "ubuntu-2404-test",
+  "description": "Ubuntu 24.04 LTS (Nascent Numbat) Template",
+  "cpu": {
+    "count": 2,
+    "architecture": "x86_64",
+    "model": "host-passthrough"
+  },
+  "memory": {
+    "sizeBytes": 2147483648
+  },
+  "disk": {
+    "sizeBytes": 10737418240,
+    "format": "qcow2",
+    "storagePool": "libgo",
+    "bus": "virtio"
+  },
+  "network": {
+    "type": "network",
+    "source": "default",
+    "model": "virtio"
+  },
+  "cloudInit": {
+    "userData": "#cloud-config\npackage_update: true\npackage_upgrade: true\npackages:\n  - qemu-guest-agent\n\nruncmd:\n  - systemctl enable qemu-guest-agent\n  - systemctl start qemu-guest-agent\n"
+  }
+}

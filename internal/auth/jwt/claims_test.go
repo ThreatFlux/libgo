@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/wroersma/libgo/internal/models/user"
+	"github.com/threatflux/libgo/internal/models/user"
 )
+
+const claimsTestIssuer = "test-issuer"
 
 func TestNewClaims(t *testing.T) {
 	// Create a user for testing
@@ -18,7 +20,7 @@ func TestNewClaims(t *testing.T) {
 	}
 
 	// Create registered claims
-	issuer := "test-issuer"
+	issuer := claimsTestIssuer
 	audience := jwt.ClaimStrings{"test-audience"}
 	subject := "test-subject"
 	issuedAt := jwt.NewNumericDate(time.Now())
@@ -43,15 +45,22 @@ func TestNewClaims(t *testing.T) {
 		t.Errorf("Expected Subject to be %q, got %q", subject, claims.Subject)
 	}
 
-	if !claims.Audience.Contains(audience[0]) {
+	found := false
+	for _, aud := range claims.Audience {
+		if aud == audience[0] {
+			found = true
+			break
+		}
+	}
+	if !found {
 		t.Errorf("Expected Audience to contain %q", audience[0])
 	}
 
-	if !claims.ExpiresAt.Equal(*expiration) {
+	if claims.ExpiresAt == nil || !claims.ExpiresAt.Equal(expiration.Time) {
 		t.Errorf("Expected ExpiresAt to be %v, got %v", expiration, claims.ExpiresAt)
 	}
 
-	if !claims.IssuedAt.Equal(*issuedAt) {
+	if claims.IssuedAt == nil || !claims.IssuedAt.Equal(issuedAt.Time) {
 		t.Errorf("Expected IssuedAt to be %v, got %v", issuedAt, claims.IssuedAt)
 	}
 
@@ -80,7 +89,7 @@ func TestClaims_Valid(t *testing.T) {
 	expiry := now.Add(15 * time.Minute)
 
 	validRegisteredClaims := jwt.RegisteredClaims{
-		Issuer:    "test-issuer",
+		Issuer:    claimsTestIssuer,
 		Subject:   "test-subject",
 		Audience:  jwt.ClaimStrings{"test-audience"},
 		ExpiresAt: jwt.NewNumericDate(expiry),

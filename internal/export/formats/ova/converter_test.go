@@ -3,14 +3,15 @@ package ova
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
+	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wroersma/libgo/internal/models/vm"
-	"github.com/wroersma/libgo/pkg/logger"
-	mocklogger "github.com/wroersma/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/internal/models/vm"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
+	"go.uber.org/mock/gomock"
 )
 
 // Mock the exec.ExecuteCommand function to avoid running the actual command
@@ -44,10 +45,10 @@ func TestOVAConverter_GetFormatName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 	require.NoError(t, err)
-	
+
 	converter := NewOVAConverter(templateGenerator, mockLogger)
 	assert.Equal(t, "ova", converter.GetFormatName())
 }
@@ -56,10 +57,10 @@ func TestOVAConverter_ValidateOptions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 	require.NoError(t, err)
-	
+
 	converter := NewOVAConverter(templateGenerator, mockLogger)
 
 	testCases := []struct {
@@ -104,20 +105,23 @@ func TestOVAConverter_ValidateOptions(t *testing.T) {
 }
 
 func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping OVA converter test in short mode")
+	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLogger := mocklogger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 	require.NoError(t, err)
-	
+
 	converter := NewOVAConverter(templateGenerator, mockLogger)
 
 	testCases := []struct {
-		name          string
-		options       map[string]string
-		expectedVM    *vm.VM
-		expectErr     bool
+		name       string
+		options    map[string]string
+		expectedVM *vm.VM
+		expectErr  bool
 	}{
 		{
 			name: "Valid options with minimal fields",
@@ -150,10 +154,10 @@ func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name:      "Missing required vm_name",
-			options:   map[string]string{},
+			name:       "Missing required vm_name",
+			options:    map[string]string{},
 			expectedVM: nil,
-			expectErr: true,
+			expectErr:  true,
 		},
 		{
 			name: "Invalid cpu_count format",
@@ -174,15 +178,15 @@ func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			vmInfo, err := converter.getVMInfoFromOptions(tc.options)
-			
+
 			if tc.expectErr {
 				assert.Error(t, err)
 				return
 			}
-			
+
 			assert.NoError(t, err)
 			assert.NotNil(t, vmInfo)
-			
+
 			if tc.expectedVM != nil {
 				assert.Equal(t, tc.expectedVM.Name, vmInfo.Name)
 				assert.Equal(t, tc.expectedVM.UUID, vmInfo.UUID)
@@ -195,13 +199,16 @@ func TestOVAConverter_getVMInfoFromOptions(t *testing.T) {
 
 // This test mocks the execution functions to avoid running actual commands
 func TestOVAConverter_Convert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping OVA converter test in short mode")
+	}
 	// Save original functions for restoration
 	originalExecCommand := execCommand
 	originalStatFunc := osStatFunc
 	originalMkdirTempFunc := osMkdirTempFunc
 	originalRemoveAllFunc := osRemoveAllFunc
 	originalWriteOVFToFile := writeOVFToFileFunc
-	
+
 	defer func() {
 		execCommand = originalExecCommand
 		osStatFunc = originalStatFunc
@@ -231,22 +238,22 @@ func TestOVAConverter_Convert(t *testing.T) {
 				execCommand = func(ctx context.Context, name string, args []string, opts interface{}) ([]byte, error) {
 					return []byte("Success"), nil
 				}
-				
+
 				// Mock file info
 				osStatFunc = func(path string) (os.FileInfo, error) {
 					return createMockFileInfo(1024 * 1024 * 1024), nil
 				}
-				
+
 				// Mock successful temp dir creation
 				osMkdirTempFunc = func(dir, prefix string) (string, error) {
 					return "/tmp/ova-export-12345", nil
 				}
-				
+
 				// Mock successful removal
 				osRemoveAllFunc = func(path string) error {
 					return nil
 				}
-				
+
 				// Mock successful OVF writing
 				writeOVFToFileFunc = func(content, path string) error {
 					return nil
@@ -295,7 +302,7 @@ func TestOVAConverter_Convert(t *testing.T) {
 				osMkdirTempFunc = func(dir, prefix string) (string, error) {
 					return "/tmp/ova-export-12345", nil
 				}
-				
+
 				// But disk conversion fails
 				execCommand = func(ctx context.Context, name string, args []string, opts interface{}) ([]byte, error) {
 					if name == "qemu-img" {
@@ -319,12 +326,12 @@ func TestOVAConverter_Convert(t *testing.T) {
 				osMkdirTempFunc = func(dir, prefix string) (string, error) {
 					return "/tmp/ova-export-12345", nil
 				}
-				
+
 				// Disk conversion succeeds
 				execCommand = func(ctx context.Context, name string, args []string, opts interface{}) ([]byte, error) {
 					return []byte("Success"), nil
 				}
-				
+
 				// But getting disk size fails
 				osStatFunc = func(path string) (os.FileInfo, error) {
 					return nil, errors.New("stat failed")
@@ -345,17 +352,17 @@ func TestOVAConverter_Convert(t *testing.T) {
 				osMkdirTempFunc = func(dir, prefix string) (string, error) {
 					return "/tmp/ova-export-12345", nil
 				}
-				
+
 				// Disk conversion succeeds
 				execCommand = func(ctx context.Context, name string, args []string, opts interface{}) ([]byte, error) {
 					return []byte("Success"), nil
 				}
-				
+
 				// Disk size retrieval succeeds
 				osStatFunc = func(path string) (os.FileInfo, error) {
 					return createMockFileInfo(1024 * 1024 * 1024), nil
 				}
-				
+
 				// But writing OVF fails
 				writeOVFToFileFunc = func(content, path string) error {
 					return errors.New("write failed")
@@ -372,7 +379,7 @@ func TestOVAConverter_Convert(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockLogger := mocklogger.NewMockLogger(ctrl)
+			mockLogger := mocks_logger.NewMockLogger(ctrl)
 			// Configure logger expectations
 			mockLogger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
 			if tc.expectErr {
@@ -381,7 +388,7 @@ func TestOVAConverter_Convert(t *testing.T) {
 
 			templateGenerator, err := NewOVFTemplateGenerator(mockLogger)
 			require.NoError(t, err)
-			
+
 			converter := NewOVAConverter(templateGenerator, mockLogger)
 
 			// Setup mocks for this test case

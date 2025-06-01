@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/exec"
-	mock_logger "github.com/wroersma/libgo/test/mocks/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
+	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
 )
 
@@ -42,7 +41,7 @@ func TestVDIConverter_Convert(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mock logger
-	mockLogger := mock_logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Test cases
 	testCases := []struct {
@@ -184,7 +183,7 @@ func TestVDIConverter_GetFormatName(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mock logger
-	mockLogger := mock_logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create the converter
 	converter := NewVDIConverter(mockLogger)
@@ -201,7 +200,7 @@ func TestVDIConverter_ValidateOptions(t *testing.T) {
 	defer ctrl.Finish()
 
 	// Create mock logger
-	mockLogger := mock_logger.NewMockLogger(ctrl)
+	mockLogger := mocks_logger.NewMockLogger(ctrl)
 
 	// Create the converter
 	converter := NewVDIConverter(mockLogger)

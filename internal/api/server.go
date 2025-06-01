@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // Server represents the HTTP server

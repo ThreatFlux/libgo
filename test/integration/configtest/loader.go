@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 	"gopkg.in/yaml.v3"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
 )
 
 // TestConfig represents the structure of a test configuration file
@@ -18,13 +18,13 @@ type TestConfig struct {
 	} `yaml:"test"`
 
 	VM struct {
-		Name        string               `yaml:"name"`
-		Template    string               `yaml:"template"`
-		Description string               `yaml:"description"`
-		CPU         vmmodels.CPUParams   `yaml:"cpu,omitempty"`
+		Name        string                `yaml:"name"`
+		Template    string                `yaml:"template"`
+		Description string                `yaml:"description"`
+		CPU         vmmodels.CPUParams    `yaml:"cpu,omitempty"`
 		Memory      vmmodels.MemoryParams `yaml:"memory,omitempty"`
-		Disk        vmmodels.DiskParams  `yaml:"disk,omitempty"`
-		Network     vmmodels.NetParams   `yaml:"network,omitempty"`
+		Disk        vmmodels.DiskParams   `yaml:"disk,omitempty"`
+		Network     vmmodels.NetParams    `yaml:"network,omitempty"`
 
 		Provisioning struct {
 			Method        string `yaml:"method"` // cloudinit, unattended, preconfigured
@@ -77,9 +77,11 @@ func (c *TestConfig) CreateVMParams() vmmodels.VMParams {
 		},
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 2 * 1024 * 1024 * 1024, // Explicitly use 2GB
+			SizeMB:    2 * 1024,               // 2GB
 		},
 		Disk: vmmodels.DiskParams{
 			SizeBytes:   10 * 1024 * 1024 * 1024, // 10GB
+			SizeMB:      10 * 1024,               // 10GB
 			Format:      "qcow2",
 			StoragePool: "default",
 			Bus:         "virtio",

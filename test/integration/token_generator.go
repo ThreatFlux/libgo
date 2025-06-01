@@ -23,15 +23,15 @@ func GenerateTestToken() (string, error) {
 	// the structure expected by the server validation code
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		// Standard JWT claims
-		"sub": adminID,                   // Subject (user ID)
-		"exp": expiry.Unix(),             // Expiration time
-		"iat": now.Unix(),                // Issued at time
-		"nbf": now.Unix(),                // Not before time
+		"sub": adminID,       // Subject (user ID)
+		"exp": expiry.Unix(), // Expiration time
+		"iat": now.Unix(),    // Issued at time
+		"nbf": now.Unix(),    // Not before time
 
 		// Custom claims that match what the server expects
-		"userId":   adminID,              // Must match the subject
-		"username": "admin",              // Must match username in test-config.yaml
-		"roles":    []string{"admin"},    // Must match roles in test-config.yaml
+		"userId":   adminID,           // Must match the subject
+		"username": "admin",           // Must match username in test-config.yaml
+		"roles":    []string{"admin"}, // Must match roles in test-config.yaml
 	})
 
 	// Sign and return the token

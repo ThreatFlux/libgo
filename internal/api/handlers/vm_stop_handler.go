@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/logger"
 )
 
 // StopVMResponse represents the response for a VM stop request

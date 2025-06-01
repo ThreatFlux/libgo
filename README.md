@@ -23,7 +23,7 @@ A comprehensive RESTful API for managing KVM virtual machines with features for 
 
 ```bash
 # Clone the repository
-git clone https://github.com/wroersma/libgo.git
+git clone https://github.com/threatflux/libgo.git
 cd libgo
 
 # Build the application

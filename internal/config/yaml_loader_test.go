@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -315,14 +316,14 @@ func TestBuildEnvVarName(t *testing.T) {
 
 func TestApplyEnvValueToField(t *testing.T) {
 	type testStruct struct {
-		String        string
-		Int           int
-		Bool          bool
-		Float         float64
-		Duration      time.Duration
-		Map           map[string]string
-		StringSlice   []string
-		IntSlice      []int
+		String      string
+		Int         int
+		Bool        bool
+		Float       float64
+		Duration    time.Duration
+		Map         map[string]string
+		StringSlice []string
+		IntSlice    []int
 	}
 
 	tests := []struct {
@@ -422,49 +423,78 @@ func TestApplyEnvValueToField(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create a new instance of testStruct
 			s := testStruct{}
-			
+
 			// Get the field to set
 			v := reflect.ValueOf(&s).Elem()
 			field := v.FieldByName(tt.field)
-			
+
 			// Apply the environment value
 			err := applyEnvValueToField(field, tt.envValue)
-			
+
 			// Check for expected errors
 			if (err != nil) != tt.expectErr {
 				t.Errorf("applyEnvValueToField() error = %v, expectErr %v", err, tt.expectErr)
 				return
 			}
-			
+
 			if err != nil {
 				// If we expected an error, no need to check the value
 				return
 			}
-			
+
 			// Check the field value based on its type
 			switch tt.field {
 			case "String":
-				if s.String != tt.expected.(string) {
-					t.Errorf("s.String = %v; want %v", s.String, tt.expected)
+				expectedString, ok := tt.expected.(string)
+				if !ok {
+					t.Errorf("expected value is not a string: %T", tt.expected)
+					return
+				}
+				if s.String != expectedString {
+					t.Errorf("s.String = %v; want %v", s.String, expectedString)
 				}
 			case "Int":
-				if s.Int != tt.expected.(int) {
-					t.Errorf("s.Int = %v; want %v", s.Int, tt.expected)
+				expectedInt, ok := tt.expected.(int)
+				if !ok {
+					t.Errorf("expected value is not an int: %T", tt.expected)
+					return
+				}
+				if s.Int != expectedInt {
+					t.Errorf("s.Int = %v; want %v", s.Int, expectedInt)
 				}
 			case "Bool":
-				if s.Bool != tt.expected.(bool) {
-					t.Errorf("s.Bool = %v; want %v", s.Bool, tt.expected)
+				expectedBool, ok := tt.expected.(bool)
+				if !ok {
+					t.Errorf("expected value is not a bool: %T", tt.expected)
+					return
+				}
+				if s.Bool != expectedBool {
+					t.Errorf("s.Bool = %v; want %v", s.Bool, expectedBool)
 				}
 			case "Float":
-				if s.Float != tt.expected.(float64) {
-					t.Errorf("s.Float = %v; want %v", s.Float, tt.expected)
+				expectedFloat, ok := tt.expected.(float64)
+				if !ok {
+					t.Errorf("expected value is not a float64: %T", tt.expected)
+					return
+				}
+				if s.Float != expectedFloat {
+					t.Errorf("s.Float = %v; want %v", s.Float, expectedFloat)
 				}
 			case "Duration":
-				if s.Duration != tt.expected.(time.Duration) {
-					t.Errorf("s.Duration = %v; want %v", s.Duration, tt.expected)
+				expectedDuration, ok := tt.expected.(time.Duration)
+				if !ok {
+					t.Errorf("expected value is not a time.Duration: %T", tt.expected)
+					return
+				}
+				if s.Duration != expectedDuration {
+					t.Errorf("s.Duration = %v; want %v", s.Duration, expectedDuration)
 				}
 			case "Map":
-				expectedMap := tt.expected.(map[string]string)
+				expectedMap, ok := tt.expected.(map[string]string)
+				if !ok {
+					t.Errorf("expected value is not a map[string]string: %T", tt.expected)
+					return
+				}
 				if len(s.Map) != len(expectedMap) {
 					t.Errorf("len(s.Map) = %v; want %v", len(s.Map), len(expectedMap))
 				}
@@ -474,7 +504,11 @@ func TestApplyEnvValueToField(t *testing.T) {
 					}
 				}
 			case "StringSlice":
-				expectedSlice := tt.expected.([]string)
+				expectedSlice, ok := tt.expected.([]string)
+				if !ok {
+					t.Errorf("expected value is not a []string: %T", tt.expected)
+					return
+				}
 				if len(s.StringSlice) != len(expectedSlice) {
 					t.Errorf("len(s.StringSlice) = %v; want %v", len(s.StringSlice), len(expectedSlice))
 				}
@@ -484,7 +518,11 @@ func TestApplyEnvValueToField(t *testing.T) {
 					}
 				}
 			case "IntSlice":
-				expectedSlice := tt.expected.([]int)
+				expectedSlice, ok := tt.expected.([]int)
+				if !ok {
+					t.Errorf("expected value is not a []int: %T", tt.expected)
+					return
+				}
 				if len(s.IntSlice) != len(expectedSlice) {
 					t.Errorf("len(s.IntSlice) = %v; want %v", len(s.IntSlice), len(expectedSlice))
 				}

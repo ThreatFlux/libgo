@@ -3,7 +3,7 @@ package cloudinit
 import (
 	"context"
 
-	"github.com/wroersma/libgo/internal/models/vm"
+	"github.com/threatflux/libgo/internal/models/vm"
 )
 
 // Manager defines the interface for cloud-init operations

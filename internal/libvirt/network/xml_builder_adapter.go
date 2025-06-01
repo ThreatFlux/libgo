@@ -1,15 +1,15 @@
 package network
 
 import (
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // XMLBuilderAdapter adapts a TemplateXMLBuilder to work with a TemplateLoader
 type XMLBuilderAdapter struct {
-	builder     *TemplateXMLBuilder
-	loader      *xml.TemplateLoader // not used, just for compatibility
-	logger      logger.Logger
+	builder *TemplateXMLBuilder
+	loader  *xml.TemplateLoader // not used, just for compatibility
+	logger  logger.Logger
 }
 
 // TemplateXMLBuilderWithLoader creates a new XMLBuilderAdapter

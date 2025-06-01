@@ -11,82 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchrify/require"
-	usermodels "github.com/wroersma/libgo/internal/models/user"
-	vmmodels "github.com/wroersma/libgo/internal/models/vm"
+	"github.com/stretchr/testify/require"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
-
-// Global auth token for all API requests
-var authToken string
-
-// LoginRequest represents a login request
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// LoginResponse represents a login response
-type LoginResponse struct {
-	Token     string           `json:"token"`
-	ExpiresAt time.Time        `json:"expiresAt"`
-	User      *usermodels.User `json:"user"`
-}
-
-// login performs authentication and stores the token
-func login(ctx context.Context, t *testing.T, apiURL string) string {
-	url := fmt.Sprintf("%s/api/v1/auth/login", apiURL)
-
-	// Create login request
-	loginReq := LoginRequest{
-		Username: "admin",
-		Password: "admin",
-	}
-
-	body, err := json.Marshal(loginReq)
-	require.NoError(t, err, "Failed to marshal login request")
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	require.NoError(t, err, "Failed to create HTTP request")
-
-	req.Header.Set("Content-Type", "application/json")
-	// No Authorization needed for login
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	require.NoError(t, err, "Failed to send HTTP request")
-	defer func(Body io.ReadCloser) {
-
-		if err != nil {
-			t.Logf("Failed to close response body: %v", err)
-		}
-	}(resp.Body)
-
-	// Read response
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err, "Failed to read response body")
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		t.Logf("Login failed with status code %d: %s", resp.StatusCode, string(respBody))
-		// Fall back to generated test token
-		t.Log("Falling back to generated test token")
-		token, err := GenerateTestToken()
-		require.NoError(t, err, "Failed to generate test token")
-		return token
-	}
-
-	// Parse response
-	var loginResp LoginResponse
-	err = json.Unmarshal(respBody, &loginResp)
-	require.NoError(t, err, "Failed to unmarshal login response")
-
-	// Log success
-	t.Logf("Login successful, got token of length: %d", len(loginResp.Token))
-	t.Logf("User data: ID=%s, Username=%s", loginResp.User.ID, loginResp.User.Username)
-	return loginResp.Token
-}
 
 // TestUbuntuDockerDeployment performs an end-to-end test of creating an Ubuntu VM,
 // installing Docker with cloud-init, deploying Nginx, and exporting the VM
@@ -101,7 +28,14 @@ func TestUbuntuDockerDeployment(t *testing.T) {
 
 	// Authenticate
 	t.Log("Authenticating")
-	authToken = login(ctx, t, apiURL)
+	token, err := login(ctx, t, apiURL, "admin", "admin")
+	if err != nil {
+		// Fall back to generated test token
+		t.Log("Login failed, falling back to generated test token")
+		token, err = GenerateTestToken()
+		require.NoError(t, err, "Failed to generate test token")
+	}
+	authToken = token
 	require.NotEmpty(t, authToken, "Authentication token should not be empty")
 
 	// 1. Clean up any existing VM with the same name
@@ -174,31 +108,6 @@ func TestUbuntuDockerDeployment(t *testing.T) {
 	t.Log("Test completed successfully")
 }
 
-// Structure definitions for API responses
-type CreateVMResponse struct {
-	VM *vmmodels.VM `json:"vm"`
-}
-
-type ExportJobResponse struct {
-	Job ExportJob `json:"job"`
-}
-
-type ExportJob struct {
-	ID           string            `json:"id"`
-	VMID         string            `json:"vmId"`
-	VMName       string            `json:"vmName"`
-	Format       string            `json:"format"`
-	Status       string            `json:"status"`
-	Progress     int               `json:"progress"`
-	FilePath     string            `json:"filePath,omitempty"`
-	FileSize     int64             `json:"fileSize,omitempty"`
-	Error        string            `json:"error,omitempty"`
-	StartTime    time.Time         `json:"startTime"`
-	EndTime      time.Time         `json:"endTime,omitempty"`
-	Options      map[string]string `json:"options,omitempty"`
-	DownloadLink string            `json:"downloadLink,omitempty"`
-}
-
 // Helper Functions
 
 // createUbuntuVMParams creates parameters for an Ubuntu 24.04 VM with Docker and Nginx
@@ -253,14 +162,16 @@ runcmd:
 		},
 		Memory: vmmodels.MemoryParams{
 			SizeBytes: 2 * 1024 * 1024 * 1024, // 2GB
+			SizeMB:    2 * 1024,               // 2GB
 		},
 		Disk: vmmodels.DiskParams{
 			SizeBytes:   10 * 1024 * 1024 * 1024, // 10GB
+			SizeMB:      10 * 1024,               // 10GB
 			Format:      "qcow2",
 			StoragePool: "default",
 			Bus:         "virtio",
 		},
-		Network: vmParams.NetParams{
+		Network: vmmodels.NetParams{
 			Type:   "network",
 			Source: "default",
 			Model:  "virtio",
@@ -272,184 +183,21 @@ runcmd:
 	}
 }
 
-// createVM creates a new VM via the API
-func createVM(ctx context.Context, t *testing.T, apiURL string, params vmmodels.VMParams) *vmmodels.VM {
-	url := fmt.Sprintf("%s/api/v1/vms", apiURL)
-
-	// Marshal request body
-	body, err := json.Marshal(params)
-	require.NoError(t, err, "Failed to marshal VM parameters")
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	require.NoError(t, err, "Failed to create HTTP request")
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+authToken)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	require.NoError(t, err, "Failed to send HTTP request")
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Failed to close response body")
-		}
-	}(resp.Body)
-
-	// Read response
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err, "Failed to read response body")
-
-	// Check response status
-	require.Equal(t, http.StatusCreated, resp.StatusCode, "Expected status code 201, got %d. Response: %s", resp.StatusCode, string(respBody))
-
-	// Parse response
-	var createResp CreateVMResponse
-	err = json.Unmarshal(respBody, &createResp)
-	require.NoError(t, err, "Failed to unmarshal response")
-
-	return createResp.VM
-}
-
-// getVM gets VM details via the API
-func getVM(ctx context.Context, t *testing.T, apiURL, vmName string) *vmmodels.VM {
-	url := fmt.Sprintf("%s/api/v1/vms/%s", apiURL, vmName)
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	require.NoError(t, err, "Failed to create HTTP request")
-	// This is required as you need a token to use the API
-	req.Header.Set("Authorization", "Bearer "+authToken)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	require.NoError(t, err, "Failed to send HTTP request")
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Failed to close response body")
-		}
-	}(resp.Body)
-
-	// If VM not found or auth error, return nil
-	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusUnauthorized {
-		return nil
-	}
-
-	// Read response
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err, "Failed to read response body")
-
-	// Check response status (this shouldn't fail anymore since we check for 401 above)
-	require.Equal(t, http.StatusOK, resp.StatusCode, "Expected status code 200, got %d. Response: %s", resp.StatusCode, string(respBody))
-
-	// Parse response
-	var vmResp struct {
-		VM *vmmodels.VM `json:"vm"`
-	}
-	err = json.Unmarshal(respBody, &vmResp)
-	require.NoError(t, err, "Failed to unmarshal response")
-
-	return vmResp.VM
-}
-
-// waitForVMStatus waits for a VM to reach the specified status
-func waitForVMStatus(ctx context.Context, t *testing.T, apiURL, vmName string, targetStatus vmmodels.VMStatus, timeout time.Duration) *vmmodels.VM {
-	deadline := time.Now().Add(timeout)
-
-	for time.Now().Before(deadline) {
-		vm := getVM(ctx, t, apiURL, vmName)
-		if vm != nil && vm.Status == targetStatus {
-			return vm
-		}
-
-		// For integration testing, we'll treat a nil VM as "in progress"
-		// and wait for the VM to appear with the correct status
-		var currentStatus string
-		if vm == nil {
-			currentStatus = "not found"
-		} else {
-			currentStatus = string(vm.Status)
-		}
-
-		t.Logf("Waiting for VM %s to reach status %s, current status: %s", vmName, targetStatus, currentStatus)
-
-		// In real mode, we'll keep waiting for the VM to appear
-
-		time.Sleep(5 * time.Second)
-	}
-
-	t.Fatalf("Timed out waiting for VM %s to reach status %s", vmName, targetStatus)
-	return nil
-}
-
-// cleanupVM deletes a VM if it exists
-func cleanupVM(ctx context.Context, t *testing.T, apiURL, vmName string) {
-	// Check if VM exists
-	vm := getVM(ctx, t, apiURL, vmName)
-	if vm == nil {
-		return
-	}
-
-	url := fmt.Sprintf("%s/api/v1/vms/%s", apiURL, vmName)
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
-	require.NoError(t, err, "Failed to create HTTP request")
-	req.Header.Set("Authorization", "Bearer "+authToken)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	require.NoError(t, err, "Failed to send HTTP request")
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Failed to close response body")
-		}
-	}(resp.Body)
-
-	// Check response status - just log if not OK since this is cleanup code
-	if resp.StatusCode != http.StatusOK {
-		t.Logf("Warning: VM deletion returned status code %d", resp.StatusCode)
-		return
-	}
-
-	// Wait for VM to be deleted
-	deadline := time.Now().Add(30 * time.Second)
-	for time.Now().Before(deadline) {
-		vm := getVM(ctx, t, apiURL, vmName)
-		if vm == nil {
-			return
-		}
-
-		t.Logf("Waiting for VM %s to be deleted", vmName)
-		time.Sleep(2 * time.Second)
-	}
-}
-
 // exportVM creates an export job for a VM
 func exportVM(ctx context.Context, t *testing.T, apiURL, vmName, format string) *ExportJob {
 	url := fmt.Sprintf("%s/api/v1/vms/%s/export", apiURL, vmName)
 
 	// Create request body
-	// Create a temp file path for the exported VM
 	exportFileName := fmt.Sprintf("%s-export.%s", vmName, format)
-
-	// Temporary approach: use a file accessible to the current user
-	// Create an easily accessible temporary file location
 	reqBody := map[string]interface{}{
 		"format": format,
 		"options": map[string]string{
-			"compress": "true",
-			"source_volume": fmt.Sprintf("%s-disk-0", vmName), // Explicitly tell which volume to use
-			"keep_export": "true", // Ensure the export file is kept even if the VM is deleted
-			"use_sudo": "true", // Use sudo to access libvirt files
+			"compress":      "true",
+			"source_volume": fmt.Sprintf("%s-disk-0", vmName),
+			"keep_export":   "true",
+			"use_sudo":      "true",
 		},
-		"fileName": fmt.Sprintf("/tmp/%s", exportFileName), // Use /tmp directory which is world-writable
+		"fileName": fmt.Sprintf("/tmp/%s", exportFileName),
 	}
 
 	// Marshal request body
@@ -467,12 +215,7 @@ func exportVM(ctx context.Context, t *testing.T, apiURL, vmName, format string) 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	require.NoError(t, err, "Failed to send HTTP request")
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Failed to close response body")
-		}
-	}(resp.Body)
+	defer resp.Body.Close()
 
 	// Read response
 	respBody, err := io.ReadAll(resp.Body)
@@ -483,114 +226,10 @@ func exportVM(ctx context.Context, t *testing.T, apiURL, vmName, format string) 
 
 	// Parse response
 	var exportResp ExportJobResponse
-	err = unmarshalJSON(respBody, &exportResp)
+	err = json.Unmarshal(respBody, &exportResp)
 	require.NoError(t, err, "Failed to unmarshal response")
 
 	return &exportResp.Job
-}
-
-// getExportJob gets export job details via the API
-func getExportJob(ctx context.Context, t *testing.T, apiURL, jobID string) *ExportJob {
-	url := fmt.Sprintf("%s/api/v1/exports/%s", apiURL, jobID)
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	require.NoError(t, err, "Failed to create HTTP request")
-	// Add authorization header
-	req.Header.Set("Authorization", "Bearer "+authToken)
-
-	// Send request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to send HTTP request: %w", err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Failed to close response body")
-		}
-	}(resp.Body)
-
-	// If job not found, return nil
-	if resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
-
-	// Read response
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err, "Failed to read response body")
-
-	// Check response status
-	require.Equal(t, http.StatusOK, resp.StatusCode, "Expected status code 200, got %d. Response: %s", resp.StatusCode, string(respBody))
-
-	// Parse response
-	var jobResp ExportJobResponse
-	err = json.Unmarshal(respBody, &jobResp)
-	require.NoError(t, err, "Failed to unmarshal response")
-
-	return &jobResp.Job
-}
-
-// waitForExportJobCompletion waits for an export job to reach completed status
-func waitForExportJobCompletion(ctx context.Context, t *testing.T, apiURL, jobID string, timeout time.Duration) *ExportJob {
-	deadline := time.Now().Add(timeout)
-
-	// In real mode, we don't use mock export jobs
-
-	// Regular waiting for real export jobs
-	for time.Now().Before(deadline) {
-		job := getExportJob(ctx, t, apiURL, jobID)
-		if job != nil {
-			if job.Status == "completed" {
-				return job
-			}
-
-			if job.Status == "failed" {
-				t.Fatalf("Export job failed: %s", job.Error)
-				return nil
-			}
-		}
-
-		t.Logf("Waiting for export job %s to complete, current status: %s, progress: %d%%",
-			jobID, job.Status, job.Progress)
-		time.Sleep(5 * time.Second)
-	}
-
-	t.Fatalf("Timed out waiting for export job %s to complete", jobID)
-	return nil
-}
-
-// getVMIPAddress gets the IP address of a VM by parsing the detailed information
-// from its network interfaces
-func getVMIPAddress(ctx context.Context, t *testing.T, apiURL, vmName string) string {
-	// Get the VM details
-	vm := getVM(ctx, t, apiURL, vmName)
-	require.NotNil(t, vm, "VM should exist to get IP address")
-
-	// For libvirt VMs, we'll parse the IP address from interfaces
-	// In a real-world scenario, this would retrieve the IP from a network interface
-	if vm.Networks != nil && len(vm.Networks) > 0 {
-		for _, nic := range vm.Networks {
-			if nic.IPAddress != "" {
-				return nic.IPAddress
-			}
-		}
-	}
-
-	// Fallback to a standard IP for local testing
-	// In a real environment, we would fail the test, but for this integration test,
-	// we know the IP will be assigned via DHCP on the default libvirt network
-	// which is typically in the 192.168.122.0/24 range
-	t.Log("Could not find IP address in VM details, using DHCP lookup")
-
-	// Execute a command to lookup MAC->IP mappings from libvirt
-	// For testing purposes, we'll simulate this with a reasonable timeout
-	// This is a simplified version; a real implementation would parse virsh net-dhcp-leases
-	time.Sleep(2 * time.Second)
-
-	// Hardcoded fallback for testing (in a real implementation this would be dynamically determined)
-	return "192.168.122.2"
 }
 
 // verifyNginxRunning checks if Nginx is running on the specified IP by making an HTTP request

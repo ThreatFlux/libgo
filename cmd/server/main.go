@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,29 +12,29 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/wroersma/libgo/internal/api"
-	"github.com/wroersma/libgo/internal/api/handlers"
-	"github.com/wroersma/libgo/internal/auth/jwt"
-	"github.com/wroersma/libgo/internal/auth/user"
-	"github.com/wroersma/libgo/internal/config"
-	"github.com/wroersma/libgo/internal/database"
-	"github.com/wroersma/libgo/internal/export"
-	"github.com/wroersma/libgo/internal/export/formats/ova"
-	"github.com/wroersma/libgo/internal/health"
-	"github.com/wroersma/libgo/internal/libvirt/connection"
-	"github.com/wroersma/libgo/internal/libvirt/domain"
-	"github.com/wroersma/libgo/internal/libvirt/network"
-	"github.com/wroersma/libgo/internal/libvirt/storage"
-	"github.com/wroersma/libgo/internal/metrics"
-	"github.com/wroersma/libgo/internal/middleware"
-	"github.com/wroersma/libgo/internal/middleware/auth"
-	"github.com/wroersma/libgo/internal/middleware/logging"
-	"github.com/wroersma/libgo/internal/middleware/recovery"
-	"github.com/wroersma/libgo/internal/vm"
-	"github.com/wroersma/libgo/internal/vm/cloudinit"
-	"github.com/wroersma/libgo/internal/vm/template"
-	"github.com/wroersma/libgo/pkg/logger"
-	"github.com/wroersma/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/internal/api"
+	"github.com/threatflux/libgo/internal/api/handlers"
+	"github.com/threatflux/libgo/internal/auth/jwt"
+	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/config"
+	"github.com/threatflux/libgo/internal/database"
+	"github.com/threatflux/libgo/internal/export"
+	"github.com/threatflux/libgo/internal/export/formats/ova"
+	"github.com/threatflux/libgo/internal/health"
+	"github.com/threatflux/libgo/internal/libvirt/connection"
+	"github.com/threatflux/libgo/internal/libvirt/domain"
+	"github.com/threatflux/libgo/internal/libvirt/network"
+	"github.com/threatflux/libgo/internal/libvirt/storage"
+	"github.com/threatflux/libgo/internal/metrics"
+	"github.com/threatflux/libgo/internal/middleware"
+	"github.com/threatflux/libgo/internal/middleware/auth"
+	"github.com/threatflux/libgo/internal/middleware/logging"
+	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/internal/vm"
+	"github.com/threatflux/libgo/internal/vm/cloudinit"
+	"github.com/threatflux/libgo/internal/vm/template"
+	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
 // Build information
@@ -89,6 +90,11 @@ func main() {
 	components, err := initComponents(ctx, cfg, connManager, log)
 	if err != nil {
 		log.Fatal("Failed to initialize components", logger.Error(err))
+	}
+
+	// Ensure storage pool exists
+	if poolErr := ensureStoragePool(ctx, components.PoolManager, cfg, log); poolErr != nil {
+		log.Fatal("Failed to ensure storage pool", logger.Error(poolErr))
 	}
 
 	// Initialize default users if configured
@@ -199,28 +205,28 @@ func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.
 // ComponentDependencies holds all the component dependencies
 type ComponentDependencies struct {
 	// Connection managers
-	ConnManager     connection.Manager
-	DomainManager   domain.Manager
-	StorageManager  storage.VolumeManager
-	PoolManager     storage.PoolManager
-	NetworkManager  network.Manager
+	ConnManager    connection.Manager
+	DomainManager  domain.Manager
+	StorageManager storage.VolumeManager
+	PoolManager    storage.PoolManager
+	NetworkManager network.Manager
 
 	// VM related
-	TemplateManager template.Manager
+	TemplateManager  template.Manager
 	CloudInitManager cloudinit.Manager
-	VMManager       vm.Manager
+	VMManager        vm.Manager
 
 	// Export
-	ExportManager   export.Manager
+	ExportManager export.Manager
 
 	// Authentication
-	UserService     user.Service
-	JWTGenerator    jwt.Generator
-	JWTValidator    jwt.Validator
+	UserService  user.Service
+	JWTGenerator jwt.Generator
+	JWTValidator jwt.Validator
 
 	// Middleware
-	JWTMiddleware     *auth.JWTMiddleware
-	RoleMiddleware    *auth.RoleMiddleware
+	JWTMiddleware      *auth.JWTMiddleware
+	RoleMiddleware     *auth.RoleMiddleware
 	RecoveryMiddleware func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))
 	LoggingMiddleware  func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request))
 
@@ -300,7 +306,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 		StoragePoolName: cfg.Libvirt.PoolName,
 		NetworkName:     cfg.Libvirt.NetworkName,
 		WorkDir:         filepath.Join(cfg.Export.TempDir, "vms"),
-		CloudInitDir:    "/home/vtriple/libgo-temp/cloudinit",
+		CloudInitDir:    filepath.Join(cfg.Export.TempDir, "cloudinit"),
 	}
 
 	components.VMManager = vm.NewVMManager(
@@ -385,11 +391,13 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		router,
 		log,
 		components.JWTMiddleware,
+		components.RoleMiddleware,
 		vmHandler,
 		exportHandler,
 		authHandler,
 		healthHandler,
 		metricsHandler,
+		cfg, // Pass the configuration
 	)
 }
 
@@ -398,20 +406,10 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 	log.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
 
 	// Convert DefaultUser config structs to the format expected by InitializeDefaultUsers
-	userConfigs := make([]struct {
-		Username string
-		Password string
-		Email    string
-		Roles    []string
-	}, len(defaultUsers))
+	userConfigs := make([]user.DefaultUserConfig, len(defaultUsers))
 
 	for i, u := range defaultUsers {
-		userConfigs[i] = struct {
-			Username string
-			Password string
-			Email    string
-			Roles    []string
-		}{
+		userConfigs[i] = user.DefaultUserConfig{
 			Username: u.Username,
 			Password: u.Password,
 			Email:    u.Email,
@@ -446,4 +444,98 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 	}()
 
 	return stopCh
+}
+
+// ensureStoragePool ensures the required storage pool exists and is active
+func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log logger.Logger) error {
+	// Get the configured pool name and path
+	poolName := cfg.Storage.DefaultPool
+	poolPath := cfg.Storage.PoolPath
+
+	// Use libvirt pool name as fallback if storage pool not specified
+	if poolName == "" {
+		poolName = cfg.Libvirt.PoolName
+		log.Warn("Storage default pool not specified, using libvirt pool name",
+			logger.String("pool", poolName))
+	}
+
+	// Ensure the path exists
+	if poolPath == "" {
+		poolPath = "/tmp/libgo-storage"
+		log.Warn("Storage pool path not specified, using default path",
+			logger.String("path", poolPath))
+	}
+
+	// Create the directory with generous permissions
+	if err := os.MkdirAll(poolPath, 0777); err != nil {
+		return fmt.Errorf("failed to create storage path %s: %w", poolPath, err)
+	}
+
+	// Ensure the storage pool exists
+	if err := poolManager.EnsureExists(ctx, poolName, poolPath); err != nil {
+		return fmt.Errorf("failed to ensure storage pool %s exists: %w", poolName, err)
+	}
+
+	// Copy template images if needed
+	for templateName, imagePath := range cfg.Storage.Templates {
+		// Check if the source image exists
+		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+			log.Warn("Template image not found, skipping copy",
+				logger.String("template", templateName),
+				logger.String("path", imagePath))
+			continue
+		}
+
+		// Copy the image to the pool path if needed
+		destPath := filepath.Join(poolPath, filepath.Base(imagePath))
+		if _, err := os.Stat(destPath); os.IsNotExist(err) {
+			log.Info("Copying template image to storage pool",
+				logger.String("template", templateName),
+				logger.String("source", imagePath),
+				logger.String("destination", destPath))
+
+			// Use io.Copy with file handles
+			src, err := os.Open(imagePath)
+			if err != nil {
+				log.Warn("Failed to open source template image",
+					logger.String("template", templateName),
+					logger.String("path", imagePath),
+					logger.Error(err))
+				continue
+			}
+			defer src.Close()
+
+			dst, err := os.Create(destPath)
+			if err != nil {
+				log.Warn("Failed to create destination file",
+					logger.String("path", destPath),
+					logger.Error(err))
+				continue
+			}
+			defer dst.Close()
+
+			// Set generous permissions on destination
+			if err := dst.Chmod(0666); err != nil {
+				log.Warn("Failed to set permissions on destination file",
+					logger.String("path", destPath),
+					logger.Error(err))
+			}
+
+			// Copy the file
+			if _, err := io.Copy(dst, src); err != nil {
+				log.Warn("Failed to copy template image",
+					logger.String("template", templateName),
+					logger.String("source", imagePath),
+					logger.String("destination", destPath),
+					logger.Error(err))
+				continue
+			}
+
+			log.Info("Template image copied successfully",
+				logger.String("template", templateName),
+				logger.String("destination", destPath))
+		}
+	}
+
+	return nil
 }

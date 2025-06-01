@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/wroersma/libgo/internal/errors"
-	"github.com/wroersma/libgo/internal/models/user"
-	"github.com/wroersma/libgo/pkg/logger"
+	"github.com/threatflux/libgo/internal/errors"
+	"github.com/threatflux/libgo/internal/models/user"
+	"github.com/threatflux/libgo/pkg/logger"
 	"gorm.io/gorm"
 )
 
-// GormUserService implements Service interface using GORM
+// GormUserService implements Service interface using GORM.
 type GormUserService struct {
 	db     *gorm.DB
 	logger logger.Logger
 }
 
-// NewGormUserService creates a new GormUserService
+// NewGormUserService creates a new GormUserService.
 func NewGormUserService(db *gorm.DB, logger logger.Logger) (*GormUserService, error) {
 	// Auto-migrate the schema
 	if err := db.AutoMigrate(&user.GormUser{}); err != nil {
@@ -29,7 +29,7 @@ func NewGormUserService(db *gorm.DB, logger logger.Logger) (*GormUserService, er
 	}, nil
 }
 
-// Authenticate implements Service.Authenticate
+// Authenticate implements Service.Authenticate.
 func (s *GormUserService) Authenticate(ctx context.Context, username, password string) (*user.User, error) {
 	var gormUser user.GormUser
 	if err := s.db.WithContext(ctx).Where("username = ?", username).First(&gormUser).Error; err != nil {
@@ -52,7 +52,7 @@ func (s *GormUserService) Authenticate(ctx context.Context, username, password s
 	return gormUser.ToUser(), nil
 }
 
-// GetByID implements Service.GetByID
+// GetByID implements Service.GetByID.
 func (s *GormUserService) GetByID(ctx context.Context, id string) (*user.User, error) {
 	var gormUser user.GormUser
 	if err := s.db.WithContext(ctx).First(&gormUser, "id = ?", id).Error; err != nil {
@@ -64,7 +64,7 @@ func (s *GormUserService) GetByID(ctx context.Context, id string) (*user.User, e
 	return gormUser.ToUser(), nil
 }
 
-// GetByUsername implements Service.GetByUsername
+// GetByUsername implements Service.GetByUsername.
 func (s *GormUserService) GetByUsername(ctx context.Context, username string) (*user.User, error) {
 	var gormUser user.GormUser
 	if err := s.db.WithContext(ctx).Where("username = ?", username).First(&gormUser).Error; err != nil {
@@ -76,7 +76,7 @@ func (s *GormUserService) GetByUsername(ctx context.Context, username string) (*
 	return gormUser.ToUser(), nil
 }
 
-// HasPermission implements Service.HasPermission
+// HasPermission implements Service.HasPermission.
 func (s *GormUserService) HasPermission(ctx context.Context, userID string, permission string) (bool, error) {
 	u, err := s.GetByID(ctx, userID)
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *GormUserService) HasPermission(ctx context.Context, userID string, perm
 	return user.UserHasPermission(u.Roles, permission), nil
 }
 
-// Create implements Service.Create
+// Create implements Service.Create.
 func (s *GormUserService) Create(ctx context.Context, username, password, email string, roles []string) (*user.User, error) {
 	// Check if username already exists
 	if _, err := s.GetByUsername(ctx, username); err == nil {
@@ -127,7 +127,7 @@ func (s *GormUserService) Create(ctx context.Context, username, password, email 
 	return gormUser.ToUser(), nil
 }
 
-// Update implements Service.Update
+// Update implements Service.Update.
 func (s *GormUserService) Update(ctx context.Context, userID string, updateFunc func(*user.User) error) (*user.User, error) {
 	var result *user.User
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -166,7 +166,7 @@ func (s *GormUserService) Update(ctx context.Context, userID string, updateFunc 
 	return result, nil
 }
 
-// Delete implements Service.Delete
+// Delete implements Service.Delete.
 func (s *GormUserService) Delete(ctx context.Context, userID string) error {
 	if err := s.db.WithContext(ctx).Delete(&user.GormUser{}, "id = ?", userID).Error; err != nil {
 		return errors.Wrap(err, "deleting user")
@@ -174,7 +174,7 @@ func (s *GormUserService) Delete(ctx context.Context, userID string) error {
 	return nil
 }
 
-// List implements Service.List
+// List implements Service.List.
 func (s *GormUserService) List(ctx context.Context) ([]*user.User, error) {
 	var gormUsers []user.GormUser
 	if err := s.db.WithContext(ctx).Find(&gormUsers).Error; err != nil {
@@ -188,7 +188,7 @@ func (s *GormUserService) List(ctx context.Context) ([]*user.User, error) {
 	return users, nil
 }
 
-// LoadUser implements Service.LoadUser
+// LoadUser implements Service.LoadUser.
 func (s *GormUserService) LoadUser(u *user.User) error {
 	gormUser := user.FromUser(u)
 	if err := s.db.Create(gormUser).Error; err != nil {
@@ -197,13 +197,8 @@ func (s *GormUserService) LoadUser(u *user.User) error {
 	return nil
 }
 
-// InitializeDefaultUsers implements Service.InitializeDefaultUsers
-func (s *GormUserService) InitializeDefaultUsers(ctx context.Context, defaultUsers []struct {
-	Username string
-	Password string
-	Email    string
-	Roles    []string
-}) error {
+// InitializeDefaultUsers implements Service.InitializeDefaultUsers.
+func (s *GormUserService) InitializeDefaultUsers(ctx context.Context, defaultUsers []DefaultUserConfig) error {
 	s.logger.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
 
 	for _, defaultUser := range defaultUsers {
