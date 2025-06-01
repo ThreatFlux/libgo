@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { VMStatus } from '@/types/api';
 import { 
   VMWebSocketClient,
   VMMetrics,
