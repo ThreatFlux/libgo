@@ -27,7 +27,7 @@ jobs:
               });
               console.log('Successfully requested Copilot review');
             } catch (error) {
-              console.log('Could not assign Copilot directly, trying comment approach');
+              console.log('Could not assign Copilot directly:', error.message);
               // Fallback: comment to trigger Copilot
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
