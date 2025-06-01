@@ -4,7 +4,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 )
 
-// Manager defines interface for VM templates
+// Manager defines interface for VM templates.
 type Manager interface {
 	// GetTemplate gets a VM template by name
 	GetTemplate(name string) (*vm.VMParams, error)

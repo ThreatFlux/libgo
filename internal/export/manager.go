@@ -212,15 +212,15 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 			logger.String("pool", poolName))
 
 		// Get disk path for the explicitly specified volume
-		diskPath, err := m.storageManager.GetPath(ctx, poolName, volName)
-		if err != nil {
+		diskPath, pathErr := m.storageManager.GetPath(ctx, poolName, volName)
+		if pathErr != nil {
 			m.logger.Error("Failed to get disk path for specified source volume",
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName),
 				logger.String("pool", poolName),
 				logger.String("volume", volName),
-				logger.String("error", err.Error()))
-			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+				logger.String("error", pathErr.Error()))
+			m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, pathErr)
 			return
 		}
 		sourceDiskPath = diskPath
@@ -240,8 +240,8 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 		standardVolName := fmt.Sprintf("%s-disk-0", vm.Name)
 
 		// Try to get the disk path using the standard naming convention first
-		diskPath, err := m.storageManager.GetPath(ctx, poolName, standardVolName)
-		if err == nil {
+		diskPath, stdErr := m.storageManager.GetPath(ctx, poolName, standardVolName)
+		if stdErr == nil {
 			// Standard naming convention works
 			volName = standardVolName
 			sourceDiskPath = diskPath
@@ -307,12 +307,12 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 			return
 		}
 	} else {
-		err := fmt.Errorf("VM has no disks")
+		diskErr := fmt.Errorf("VM has no disks")
 		m.logger.Error("Failed to find VM disks",
 			logger.String("job_id", job.ID),
 			logger.String("vm_name", job.VMName),
-			logger.String("error", err.Error()))
-		m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, err)
+			logger.String("error", diskErr.Error()))
+		m.jobStore.updateJobStatus(job.ID, StatusFailed, 10, diskErr)
 		return
 	}
 
@@ -342,12 +342,12 @@ func (m *ExportManager) processExportJob(job *Job, fileName string) {
 				logger.String("job_id", job.ID),
 				logger.String("vm_name", job.VMName))
 
-			if err := m.domainManager.Stop(ctx, job.VMName); err != nil {
+			if stopErr := m.domainManager.Stop(ctx, job.VMName); stopErr != nil {
 				m.logger.Error("Failed to stop VM",
 					logger.String("job_id", job.ID),
 					logger.String("vm_name", job.VMName),
-					logger.String("error", err.Error()))
-				m.jobStore.updateJobStatus(job.ID, StatusFailed, 30, err)
+					logger.String("error", stopErr.Error()))
+				m.jobStore.updateJobStatus(job.ID, StatusFailed, 30, stopErr)
 				return
 			}
 			vmWasRunning = true

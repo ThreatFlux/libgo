@@ -8,12 +8,12 @@ import (
 	"github.com/beevik/etree"
 )
 
-// ParseXML parses XML data into a structured object
+// ParseXML parses XML data into a structured object.
 func ParseXML(data []byte, v interface{}) error {
 	return xml.Unmarshal(data, v)
 }
 
-// ParseXMLFile parses an XML file into a structured object
+// ParseXMLFile parses an XML file into a structured object.
 func ParseXMLFile(filePath string, v interface{}) error {
 	// Read the file
 	data, err := os.ReadFile(filePath)
@@ -25,7 +25,7 @@ func ParseXMLFile(filePath string, v interface{}) error {
 	return ParseXML(data, v)
 }
 
-// CreateXMLDocument creates a new XML document with root element
+// CreateXMLDocument creates a new XML document with root element.
 func CreateXMLDocument(rootElement string) *etree.Document {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
@@ -33,7 +33,7 @@ func CreateXMLDocument(rootElement string) *etree.Document {
 	return doc
 }
 
-// AddElement adds an element to a parent with text content
+// AddElement adds an element to a parent with text content.
 func AddElement(parent *etree.Element, name, text string) *etree.Element {
 	elem := parent.CreateElement(name)
 	if text != "" {
@@ -42,7 +42,7 @@ func AddElement(parent *etree.Element, name, text string) *etree.Element {
 	return elem
 }
 
-// AddElementWithAttributes adds an element with attributes
+// AddElementWithAttributes adds an element with attributes.
 func AddElementWithAttributes(parent *etree.Element, name string, attrs map[string]string) *etree.Element {
 	elem := parent.CreateElement(name)
 	for key, value := range attrs {
@@ -51,17 +51,17 @@ func AddElementWithAttributes(parent *etree.Element, name string, attrs map[stri
 	return elem
 }
 
-// SetElementAttribute sets an attribute on an element
+// SetElementAttribute sets an attribute on an element.
 func SetElementAttribute(elem *etree.Element, name, value string) {
 	elem.CreateAttr(name, value)
 }
 
-// GetElementText gets the text content of an element
+// GetElementText gets the text content of an element.
 func GetElementText(elem *etree.Element) string {
 	return elem.Text()
 }
 
-// GetElementAttribute gets an attribute value from an element
+// GetElementAttribute gets an attribute value from an element.
 func GetElementAttribute(elem *etree.Element, name string) string {
 	attr := elem.SelectAttr(name)
 	if attr != nil {
@@ -70,22 +70,22 @@ func GetElementAttribute(elem *etree.Element, name string) string {
 	return ""
 }
 
-// FindElement finds the first element matching the path
+// FindElement finds the first element matching the path.
 func FindElement(doc *etree.Document, path string) *etree.Element {
 	return doc.FindElement(path)
 }
 
-// FindElements finds all elements matching the path
+// FindElements finds all elements matching the path.
 func FindElements(doc *etree.Document, path string) []*etree.Element {
 	return doc.FindElements(path)
 }
 
-// ParseXMLFromString parses XML from a string
+// ParseXMLFromString parses XML from a string.
 func ParseXMLFromString(xmlString string, v interface{}) error {
 	return xml.Unmarshal([]byte(xmlString), v)
 }
 
-// LoadXMLDocument loads an XML document from file
+// LoadXMLDocument loads an XML document from file.
 func LoadXMLDocument(filePath string) (*etree.Document, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(filePath); err != nil {
@@ -94,7 +94,7 @@ func LoadXMLDocument(filePath string) (*etree.Document, error) {
 	return doc, nil
 }
 
-// LoadXMLDocumentFromString loads an XML document from string
+// LoadXMLDocumentFromString loads an XML document from string.
 func LoadXMLDocumentFromString(xmlString string) (*etree.Document, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(xmlString); err != nil {
@@ -103,12 +103,12 @@ func LoadXMLDocumentFromString(xmlString string) (*etree.Document, error) {
 	return doc, nil
 }
 
-// SaveXMLDocument saves an XML document to a file
+// SaveXMLDocument saves an XML document to a file.
 func SaveXMLDocument(doc *etree.Document, filePath string) error {
 	return doc.WriteToFile(filePath)
 }
 
-// XMLToString converts an XML document to a string
+// XMLToString converts an XML document to a string.
 func XMLToString(doc *etree.Document) string {
 	doc.Indent(2)
 	xmlString, err := doc.WriteToString()
@@ -118,7 +118,7 @@ func XMLToString(doc *etree.Document) string {
 	return xmlString
 }
 
-// PrettyPrintXML formats XML data with proper indentation
+// PrettyPrintXML formats XML data with proper indentation.
 func PrettyPrintXML(xmlData []byte) ([]byte, error) {
 	// Parse the XML
 	doc := etree.NewDocument()
