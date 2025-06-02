@@ -52,7 +52,7 @@ MOCK_INTERFACES=internal/libvirt/connection/interface.go internal/libvirt/domain
                 internal/auth/jwt/claims.go internal/auth/user/service_interface.go \
                 pkg/logger/interface.go
 
-.PHONY: all build clean test unit-test integration-test coverage lint sec-scan sec-scan-report install-gosec install-staticcheck vuln-check mocks help docker-build docker-run setup
+.PHONY: all build clean test unit-test integration-test coverage lint sec-scan sec-scan-report install-gosec install-staticcheck vuln-check mocks help docker-build docker-run setup start stop start-backend stop-backend start-frontend stop-frontend
 
 all: test build
 
@@ -80,6 +80,7 @@ clean: ## Clean build artifacts
 	$(GOCLEAN)
 	rm -rf $(BUILD_DIR)
 	rm -f $(COVERAGE_PROFILE) $(COVERAGE_HTML)
+	rm -f .backend.pid .frontend.pid backend.log frontend.log
 
 version-check: ## Verify required tool versions
 	@echo "Checking Go version..."
@@ -181,6 +182,54 @@ docker-clean: ## Clean Docker artifacts
 	@echo "Cleaning Docker artifacts..."
 	$(DOCKER) rm -f $(BINARY_NAME) 2>/dev/null || true
 	$(DOCKER) rmi -f $(DOCKER_IMAGE):$(DOCKER_TAG) 2>/dev/null || true
+
+start-backend: build ## Start the backend server
+	@echo "Starting backend server..."
+	@if [ -f .backend.pid ]; then \
+		echo "Backend is already running with PID $$(cat .backend.pid)"; \
+	else \
+		$(BUILD_DIR)/$(BINARY_NAME) -config configs/simple-test-config.yaml > backend.log 2>&1 & \
+		echo $$! > .backend.pid; \
+		echo "Backend started with PID $$(cat .backend.pid)"; \
+	fi
+
+stop-backend: ## Stop the backend server
+	@echo "Stopping backend server..."
+	@if [ -f .backend.pid ]; then \
+		kill $$(cat .backend.pid) 2>/dev/null || true; \
+		rm -f .backend.pid; \
+		echo "Backend stopped"; \
+	else \
+		echo "Backend is not running"; \
+	fi
+
+start-frontend: ## Start the frontend development server
+	@echo "Starting frontend development server..."
+	@if [ -f .frontend.pid ]; then \
+		echo "Frontend is already running with PID $$(cat .frontend.pid)"; \
+	else \
+		cd ui && npm run dev > ../frontend.log 2>&1 & \
+		echo $$! > ../.frontend.pid; \
+		echo "Frontend started with PID $$(cat .frontend.pid)"; \
+		echo "Frontend available at http://localhost:3700"; \
+	fi
+
+stop-frontend: ## Stop the frontend development server
+	@echo "Stopping frontend development server..."
+	@if [ -f .frontend.pid ]; then \
+		kill $$(cat .frontend.pid) 2>/dev/null || true; \
+		rm -f .frontend.pid; \
+		echo "Frontend stopped"; \
+	else \
+		echo "Frontend is not running"; \
+	fi
+
+start: start-backend start-frontend ## Start both backend and frontend servers
+	@echo "All services started"
+
+stop: stop-frontend stop-backend ## Stop both backend and frontend servers
+	@echo "All services stopped"
+	@rm -f backend.log frontend.log
 
 help: ## Display this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
