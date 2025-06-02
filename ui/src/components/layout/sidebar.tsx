@@ -18,7 +18,8 @@ import {
   LuChevronRight,
   LuMoon,
   LuSun,
-  LuUser
+  LuUser,
+  LuGitBranch
 } from 'react-icons/lu';
 
 const navItems = [
@@ -41,6 +42,11 @@ const navItems = [
     name: 'Storage', 
     path: '/storage', 
     icon: <LuHardDrive className="h-5 w-5" /> 
+  },
+  { 
+    name: 'OVS Bridges', 
+    path: '/ovs/bridges', 
+    icon: <LuGitBranch className="h-5 w-5" /> 
   },
   { 
     name: 'Exports', 

@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make unit-test` - Run only unit tests (with `-short` flag)
 - `make integration-test` - Run integration tests only
 - `make test-ubuntu-docker` - Run the Ubuntu Docker deployment integration test
+- `make test-ovs` - Run OpenVSwitch integration tests (requires OVS installation and root)
 - `make coverage` - Generate HTML coverage report
 
 ### Code Quality
@@ -27,6 +28,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Setup
 - `make setup` - Install development tools (golangci-lint, gosec, govulncheck, mockgen)
+- `make test-setup` - Install development tools and OpenVSwitch packages for testing
+- `make install-ovs` - Install OpenVSwitch packages only
 - `make mocks` - Generate mock implementations for interfaces
 
 ## Architecture Overview
@@ -41,9 +44,10 @@ The application is a KVM/libvirt management API built with layered dependency in
    - `internal/libvirt/domain/` - VM lifecycle operations
    - `internal/libvirt/storage/` - Disk and storage pool management  
    - `internal/libvirt/network/` - Network configuration
-3. **Business Logic** (`internal/vm/`) - Orchestrates resource managers for VM operations
-4. **API Layer** (`internal/api/`) - HTTP handlers and routing
-5. **Export System** (`internal/export/`) - VM export to multiple formats (QCOW2, VMDK, VDI, OVA)
+3. **SDN Management** (`internal/ovs/`) - OpenVSwitch software-defined networking
+4. **Business Logic** (`internal/vm/`) - Orchestrates resource managers for VM operations
+5. **API Layer** (`internal/api/`) - HTTP handlers and routing
+6. **Export System** (`internal/export/`) - VM export to multiple formats (QCOW2, VMDK, VDI, OVA)
 
 ### Key Patterns
 - **XML Template System**: All libvirt XML is generated from templates in `configs/templates/`
@@ -83,14 +87,17 @@ The application is a KVM/libvirt management API built with layered dependency in
 - `cmd/server/main.go` - Application bootstrap and dependency wiring
 - `internal/vm/manager.go` - Core VM management orchestration
 - `internal/export/manager.go` - VM export job management  
+- `internal/ovs/manager.go` - OpenVSwitch bridge, port, and flow management
+- `internal/ovs/libvirt_integration.go` - OVS-libvirt integration for VM networking
 - `internal/api/router.go` - API route definitions
 - `internal/libvirt/connection/manager.go` - Libvirt connection pooling
 
 ### Required Tools
 - Go 1.24.0+
 - Libvirt 9.0.0+ with development headers
+- OpenVSwitch 2.13.0+ (for SDN functionality) - install with `make install-ovs`
 - Docker for containerization
-- Various linting tools (installed via `make setup`)
+- Various linting tools (installed via `make setup` or `make test-setup`)
 
 ### Database
 Uses GORM with SQLite (default) or PostgreSQL support for user management and persistent storage.

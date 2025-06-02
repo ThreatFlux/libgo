@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { networkAPI, NetworkInfo } from '../api/network';
 import { Button } from '../components/ui/button';
 
 export function NetworkDetail() {
-  const { name } = useParams<{ name: string }>();
+  const { name } = useParams({ from: '/networks/$name' });
   const navigate = useNavigate();
   const [network, setNetwork] = useState<NetworkInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ export function NetworkDetail() {
 
     try {
       await networkAPI.delete(name!);
-      navigate('/networks');
+      navigate({ to: '/networks' });
     } catch (err) {
       console.error('Error deleting network:', err);
       alert('Failed to delete network. It may be in use.');
@@ -88,7 +88,7 @@ export function NetworkDetail() {
       <div className="mb-6">
         <Button
           variant="outline"
-          onClick={() => navigate('/networks')}
+          onClick={() => navigate({ to: '/networks' })}
           className="mb-4"
         >
           ← Back to Networks

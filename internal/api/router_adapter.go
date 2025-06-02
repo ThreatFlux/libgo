@@ -119,6 +119,7 @@ func ConfigureRoutes(
 	metricsHandler *handlers.MetricsHandler,
 	networkHandlers *NetworkHandlers,
 	storageHandlers *StorageHandlers,
+	ovsHandlers *OVSHandlers,
 	config *config.Config, // Add config parameter
 ) {
 	// Register health check endpoints
@@ -187,6 +188,15 @@ func ConfigureRoutes(
 			networks.PUT("/:name/start", networkHandlers.Start.Handle)
 			networks.PUT("/:name/stop", networkHandlers.Stop.Handle)
 		}
+
+		// Bridge network management
+		bridges := protected.Group("/bridge-networks")
+		{
+			bridges.GET("", networkHandlers.ListBridges.Handle)
+			bridges.POST("", networkHandlers.CreateBridge.Handle)
+			bridges.GET("/:name", networkHandlers.GetBridge.Handle)
+			bridges.DELETE("/:name", networkHandlers.DeleteBridge.Handle)
+		}
 	}
 
 	// Storage management
@@ -203,10 +213,30 @@ func ConfigureRoutes(
 			storage.PUT("/pools/:name/stop", storageHandlers.StopPool.Handle)
 
 			// Volume management
-			storage.GET("/pools/:poolName/volumes", storageHandlers.ListVolumes.Handle)
-			storage.POST("/pools/:poolName/volumes", storageHandlers.CreateVolume.Handle)
-			storage.DELETE("/pools/:poolName/volumes/:volumeName", storageHandlers.DeleteVolume.Handle)
-			storage.POST("/pools/:poolName/volumes/:volumeName/upload", storageHandlers.UploadVolume.Handle)
+			storage.GET("/pools/:name/volumes", storageHandlers.ListVolumes.Handle)
+			storage.POST("/pools/:name/volumes", storageHandlers.CreateVolume.Handle)
+			storage.DELETE("/pools/:name/volumes/:volumeName", storageHandlers.DeleteVolume.Handle)
+			storage.POST("/pools/:name/volumes/:volumeName/upload", storageHandlers.UploadVolume.Handle)
+		}
+	}
+
+	// OVS management
+	if ovsHandlers != nil {
+		ovs := protected.Group("/ovs")
+		{
+			// Bridge management
+			ovs.GET("/bridges", ovsHandlers.ListBridges.Handle)
+			ovs.POST("/bridges", ovsHandlers.CreateBridge.Handle)
+			ovs.GET("/bridges/:bridge", ovsHandlers.GetBridge.Handle)
+			ovs.DELETE("/bridges/:bridge", ovsHandlers.DeleteBridge.Handle)
+
+			// Port management
+			ovs.GET("/bridges/:bridge/ports", ovsHandlers.ListPorts.Handle)
+			ovs.POST("/bridges/:bridge/ports", ovsHandlers.CreatePort.Handle)
+			ovs.DELETE("/bridges/:bridge/ports/:port", ovsHandlers.DeletePort.Handle)
+
+			// Flow management
+			ovs.POST("/bridges/:bridge/flows", ovsHandlers.CreateFlow.Handle)
 		}
 	}
 

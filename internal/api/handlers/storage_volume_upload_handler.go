@@ -29,7 +29,7 @@ func (h *StorageVolumeUploadHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Get pool and volume names from URL parameters
-	poolName := c.Param("poolName")
+	poolName := c.Param("name")
 	volumeName := c.Param("volumeName")
 
 	if poolName == "" || volumeName == "" {

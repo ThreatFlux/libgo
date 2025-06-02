@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { 
   ArrowLeft, 
   HardDrive, 
@@ -22,7 +22,7 @@ import {
 } from '../api/storage';
 
 export function StorageDetail() {
-  const { poolName } = useParams<{ poolName: string }>();
+  const { poolName } = useParams({ from: '/storage/pools/$poolName' });
   const navigate = useNavigate();
   const [pool, setPool] = useState<StoragePoolInfo | null>(null);
   const [volumes, setVolumes] = useState<StorageVolumeInfo[]>([]);
@@ -160,7 +160,7 @@ export function StorageDetail() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/storage')}
+          onClick={() => navigate({ to: '/storage' })}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

@@ -30,10 +30,12 @@ import (
 	"github.com/threatflux/libgo/internal/middleware/auth"
 	"github.com/threatflux/libgo/internal/middleware/logging"
 	"github.com/threatflux/libgo/internal/middleware/recovery"
+	"github.com/threatflux/libgo/internal/ovs"
 	"github.com/threatflux/libgo/internal/vm"
 	"github.com/threatflux/libgo/internal/vm/cloudinit"
 	"github.com/threatflux/libgo/internal/vm/template"
 	"github.com/threatflux/libgo/pkg/logger"
+	"github.com/threatflux/libgo/pkg/utils/exec"
 	"github.com/threatflux/libgo/pkg/utils/xml"
 )
 
@@ -210,6 +212,7 @@ type ComponentDependencies struct {
 	StorageManager storage.VolumeManager
 	PoolManager    storage.PoolManager
 	NetworkManager network.Manager
+	OVSManager     ovs.Manager
 
 	// VM related
 	TemplateManager  template.Manager
@@ -268,6 +271,10 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	networkXMLBuilder := network.TemplateXMLBuilderWithLoader(networkXMLLoader, log)
 
 	components.NetworkManager = network.NewLibvirtNetworkManager(connManager, networkXMLBuilder, log)
+
+	// Initialize OVS manager
+	commandExecutor := &exec.DefaultCommandExecutor{}
+	components.OVSManager = ovs.NewOVSManager(commandExecutor, log)
 
 	// Initialize cloud-init components
 	cloudInitTemplateLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
@@ -387,6 +394,12 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		Delete: handlers.NewNetworkDeleteHandler(components.NetworkManager, log),
 		Start:  handlers.NewNetworkStartHandler(components.NetworkManager, log),
 		Stop:   handlers.NewNetworkStopHandler(components.NetworkManager, log),
+
+		// Bridge network handlers
+		ListBridges:  handlers.NewBridgeNetworkListHandler(components.NetworkManager, log),
+		CreateBridge: handlers.NewBridgeNetworkCreateHandler(components.NetworkManager, log),
+		GetBridge:    handlers.NewBridgeNetworkGetHandler(components.NetworkManager, log),
+		DeleteBridge: handlers.NewBridgeNetworkDeleteHandler(components.NetworkManager, log),
 	}
 
 	// Create storage handlers
@@ -401,6 +414,18 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		CreateVolume: handlers.NewStorageVolumeCreateHandler(components.StorageManager, log),
 		DeleteVolume: handlers.NewStorageVolumeDeleteHandler(components.StorageManager, log),
 		UploadVolume: handlers.NewStorageVolumeUploadHandler(components.StorageManager, log),
+	}
+
+	// Create OVS handlers
+	ovsHandlers := &api.OVSHandlers{
+		CreateBridge: handlers.NewOVSBridgeCreateHandler(components.OVSManager, log),
+		ListBridges:  handlers.NewOVSBridgeListHandler(components.OVSManager, log),
+		GetBridge:    handlers.NewOVSBridgeGetHandler(components.OVSManager, log),
+		DeleteBridge: handlers.NewOVSBridgeDeleteHandler(components.OVSManager, log),
+		CreatePort:   handlers.NewOVSPortCreateHandler(components.OVSManager, log),
+		ListPorts:    handlers.NewOVSPortListHandler(components.OVSManager, log),
+		DeletePort:   handlers.NewOVSPortDeleteHandler(components.OVSManager, log),
+		CreateFlow:   handlers.NewOVSFlowCreateHandler(components.OVSManager, log),
 	}
 
 	// Setup router
@@ -424,6 +449,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		metricsHandler,
 		networkHandlers,
 		storageHandlers,
+		ovsHandlers,
 		cfg, // Pass the configuration
 	)
 }

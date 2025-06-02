@@ -27,7 +27,7 @@ func (h *StorageVolumeCreateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Get pool name from URL parameter
-	poolName := c.Param("poolName")
+	poolName := c.Param("name")
 	if poolName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Pool name is required",

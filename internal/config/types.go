@@ -12,6 +12,7 @@ type Config struct {
 	Storage       StorageConfig  `yaml:"storage" json:"storage"`
 	Export        ExportConfig   `yaml:"export" json:"export"`
 	Features      FeaturesConfig `yaml:"features" json:"features"`
+	OVS           OVSConfig      `yaml:"ovs" json:"ovs"`
 	TemplatesPath string         `yaml:"templatesPath" json:"templatesPath"`
 }
 
@@ -107,4 +108,36 @@ type FeaturesConfig struct {
 	Metrics        bool `yaml:"metrics" json:"metrics"`
 	RBACEnabled    bool `yaml:"rbacEnabled" json:"rbacEnabled"`
 	StorageCleanup bool `yaml:"storageCleanup" json:"storageCleanup"`
+	OVSEnabled     bool `yaml:"ovsEnabled" json:"ovsEnabled"`
+}
+
+// OVSConfig holds Open vSwitch configuration
+type OVSConfig struct {
+	Enabled            bool              `yaml:"enabled" json:"enabled"`
+	DefaultBridges     []OVSBridgeConfig `yaml:"defaultBridges" json:"defaultBridges"`
+	LibvirtIntegration bool              `yaml:"libvirtIntegration" json:"libvirtIntegration"`
+	CommandTimeout     time.Duration     `yaml:"commandTimeout" json:"commandTimeout"`
+}
+
+// OVSBridgeConfig holds configuration for an OVS bridge
+type OVSBridgeConfig struct {
+	Name         string            `yaml:"name" json:"name"`
+	DatapathType string            `yaml:"datapathType" json:"datapathType"`
+	Controller   string            `yaml:"controller" json:"controller"`
+	AutoCreate   bool              `yaml:"autoCreate" json:"autoCreate"`
+	ExternalIDs  map[string]string `yaml:"externalIds" json:"externalIds"`
+	Ports        []OVSPortConfig   `yaml:"ports" json:"ports"`
+}
+
+// OVSPortConfig holds configuration for an OVS port
+type OVSPortConfig struct {
+	Name        string            `yaml:"name" json:"name"`
+	Type        string            `yaml:"type" json:"type"`
+	Tag         *int              `yaml:"tag" json:"tag"`
+	Trunks      []int             `yaml:"trunks" json:"trunks"`
+	PeerPort    string            `yaml:"peerPort" json:"peerPort"`
+	RemoteIP    string            `yaml:"remoteIP" json:"remoteIP"`
+	TunnelType  string            `yaml:"tunnelType" json:"tunnelType"`
+	ExternalIDs map[string]string `yaml:"externalIds" json:"externalIds"`
+	AutoCreate  bool              `yaml:"autoCreate" json:"autoCreate"`
 }

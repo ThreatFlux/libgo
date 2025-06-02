@@ -9,6 +9,25 @@ import (
 	"time"
 )
 
+// CommandExecutor defines an interface for executing commands
+type CommandExecutor interface {
+	Execute(cmd string, args ...string) ([]byte, error)
+	ExecuteContext(ctx context.Context, cmd string, args ...string) ([]byte, error)
+}
+
+// DefaultCommandExecutor implements CommandExecutor using the system commands
+type DefaultCommandExecutor struct{}
+
+// Execute implements CommandExecutor.Execute
+func (e *DefaultCommandExecutor) Execute(cmd string, args ...string) ([]byte, error) {
+	return e.ExecuteContext(context.Background(), cmd, args...)
+}
+
+// ExecuteContext implements CommandExecutor.ExecuteContext
+func (e *DefaultCommandExecutor) ExecuteContext(ctx context.Context, cmd string, args ...string) ([]byte, error) {
+	return executeCommandImpl(ctx, cmd, args, CommandOptions{})
+}
+
 // ExecuteCommandFunc is a function type for command execution (allows mocking in tests)
 type ExecuteCommandFunc func(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error)
 

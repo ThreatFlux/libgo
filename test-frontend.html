@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Debug Test</title>
+</head>
+<body>
+    <h1>Testing Frontend at http://localhost:3700</h1>
+    <iframe src="http://localhost:3700" width="100%" height="600" style="border: 1px solid #ccc;"></iframe>
+    
+    <script>
+        // Try to fetch the main.tsx to see if it loads
+        fetch('http://localhost:3700/src/main.tsx')
+            .then(response => response.text())
+            .then(text => console.log('main.tsx loaded successfully'))
+            .catch(error => console.error('Error loading main.tsx:', error));
+    </script>
+</body>
+</html>

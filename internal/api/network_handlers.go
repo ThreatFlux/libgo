@@ -16,4 +16,10 @@ type NetworkHandlers struct {
 	Delete Handler
 	Start  Handler
 	Stop   Handler
+
+	// Bridge network handlers
+	ListBridges  Handler
+	CreateBridge Handler
+	GetBridge    Handler
+	DeleteBridge Handler
 }

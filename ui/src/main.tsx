@@ -25,6 +25,10 @@ import { NetworkDetail } from '@/pages/network-detail';
 import { StorageList } from '@/pages/storage-list';
 import { StorageCreate } from '@/pages/storage-create';
 import { StorageDetail } from '@/pages/storage-detail';
+import OVSBridgeListPage from '@/pages/ovs-bridge-list';
+import OVSBridgeDetailPage from '@/pages/ovs-bridge-detail';
+import OVSBridgeCreatePage from '@/pages/ovs-bridge-create';
+import OVSPortCreatePage from '@/pages/ovs-port-create';
 import '@/styles/globals.css';
 
 // Create a query client
@@ -164,6 +168,34 @@ const storageDetailRoute = createRoute({
   component: StorageDetail,
 });
 
+// OVS bridge list route
+const ovsBridgeListRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/ovs/bridges',
+  component: OVSBridgeListPage,
+});
+
+// OVS bridge create route
+const ovsBridgeCreateRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/ovs/bridges/create',
+  component: OVSBridgeCreatePage,
+});
+
+// OVS bridge detail route
+const ovsBridgeDetailRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/ovs/bridges/$name',
+  component: OVSBridgeDetailPage,
+});
+
+// OVS port create route
+const ovsPortCreateRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/ovs/bridges/$bridgeName/ports/create',
+  component: OVSPortCreatePage,
+});
+
 // Create the router
 const router = new Router({
   routeTree: rootRoute.addChildren([
@@ -181,6 +213,10 @@ const router = new Router({
       storageListRoute,
       storageCreateRoute,
       storageDetailRoute,
+      ovsBridgeListRoute,
+      ovsBridgeCreateRoute,
+      ovsBridgeDetailRoute,
+      ovsPortCreateRoute,
     ]),
   ]),
   defaultPreload: 'intent',

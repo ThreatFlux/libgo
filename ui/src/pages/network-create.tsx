@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { networkAPI, CreateNetworkParams } from '../api/network';
 import { Button } from '../components/ui/button';
 
@@ -39,7 +39,7 @@ export function NetworkCreate() {
       };
 
       await networkAPI.create(params);
-      navigate('/networks');
+      navigate({ to: '/networks' });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create network');
     } finally {
@@ -249,7 +249,7 @@ export function NetworkCreate() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/networks')}
+            onClick={() => navigate({ to: '/networks' })}
             disabled={loading}
           >
             Cancel

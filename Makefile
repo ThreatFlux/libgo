@@ -52,11 +52,45 @@ MOCK_INTERFACES=internal/libvirt/connection/interface.go internal/libvirt/domain
                 internal/auth/jwt/claims.go internal/auth/user/service_interface.go \
                 pkg/logger/interface.go
 
-.PHONY: all build clean test unit-test integration-test coverage lint sec-scan sec-scan-report install-gosec install-staticcheck vuln-check mocks help docker-build docker-run setup start stop start-backend stop-backend start-frontend stop-frontend
+.PHONY: all build clean test unit-test integration-test coverage lint sec-scan sec-scan-report install-gosec install-staticcheck install-ovs vuln-check mocks help docker-build docker-run setup test-setup test-ovs start stop start-backend stop-backend start-frontend stop-frontend
 
 all: test build
 
 setup: install-tools ## Set up development environment
+
+test-setup: install-tools install-ovs ## Set up test environment with OVS support
+
+install-ovs: ## Install OpenVSwitch packages for testing
+	@echo "Installing OpenVSwitch packages..."
+	@if command -v apt-get >/dev/null 2>&1; then \
+		sudo apt-get update && \
+		sudo apt-get install -y openvswitch-switch openvswitch-common openvswitch-testcontroller; \
+	elif command -v yum >/dev/null 2>&1; then \
+		sudo yum install -y openvswitch openvswitch-devel; \
+	elif command -v dnf >/dev/null 2>&1; then \
+		sudo dnf install -y openvswitch openvswitch-devel; \
+	elif command -v brew >/dev/null 2>&1; then \
+		brew install openvswitch; \
+	else \
+		echo "Warning: Package manager not detected. Please install OpenVSwitch manually:"; \
+		echo "  Ubuntu/Debian: sudo apt-get install openvswitch-switch openvswitch-common"; \
+		echo "  RHEL/CentOS:   sudo yum install openvswitch openvswitch-devel"; \
+		echo "  Fedora:        sudo dnf install openvswitch openvswitch-devel"; \
+		echo "  macOS:         brew install openvswitch"; \
+	fi
+	@echo "Verifying OVS installation..."
+	@if command -v ovs-vsctl >/dev/null 2>&1; then \
+		echo "✓ ovs-vsctl is available"; \
+		ovs-vsctl --version | head -1; \
+	else \
+		echo "✗ ovs-vsctl not found - OVS may not be properly installed"; \
+	fi
+	@if command -v ovs-ofctl >/dev/null 2>&1; then \
+		echo "✓ ovs-ofctl is available"; \
+		ovs-ofctl --version | head -1; \
+	else \
+		echo "✗ ovs-ofctl not found - OVS may not be properly installed"; \
+	fi
 
 install-tools: ## Install development tools
 	@echo "Installing development tools..."
@@ -155,6 +189,11 @@ integration-test: ## Run integration tests
 test-ubuntu-docker: ## Run the Ubuntu Docker deployment test
 	@chmod +x ./test/integration/run-docker-test.sh
 	@./test/integration/run-docker-test.sh
+
+test-ovs: ## Run OVS integration tests (requires OVS installation and root)
+	@echo "Running OVS integration tests..."
+	@echo "Note: These tests require OpenVSwitch to be installed and may require root privileges"
+	$(GOTEST) -tags=integration -run="TestOVSManager_RealOVSIntegration" ./internal/ovs/...
 
 coverage: test ## Generate test coverage report
 	@echo "Generating coverage report..."

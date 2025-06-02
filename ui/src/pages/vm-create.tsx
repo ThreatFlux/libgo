@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { createVM } from '@/api/vm';
 import { VMCreateParams } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/lib/components';
+import { listBridgeNetworks, BridgeNetwork } from '@/api/bridge-network';
 
 // Icons
 import { 
@@ -98,6 +99,8 @@ export const VMCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
+  const [bridgeNetworks, setBridgeNetworks] = useState<BridgeNetwork[]>([]);
+  const [bridgeNetworksLoading, setBridgeNetworksLoading] = useState(false);
   
   // Form setup
   const { 
@@ -110,6 +113,27 @@ export const VMCreatePage: React.FC = () => {
     defaultValues,
     mode: 'onChange'
   });
+
+  // Watch network type to load appropriate networks
+  const networkType = watch('network.type');
+
+  // Load bridge networks when network type is 'network'
+  useEffect(() => {
+    if (networkType === 'network') {
+      setBridgeNetworksLoading(true);
+      listBridgeNetworks()
+        .then(response => {
+          setBridgeNetworks(response.networks);
+        })
+        .catch(error => {
+          console.error('Failed to load bridge networks:', error);
+          setBridgeNetworks([]);
+        })
+        .finally(() => {
+          setBridgeNetworksLoading(false);
+        });
+    }
+  }, [networkType]);
 
   // VM creation mutation
   const createMutation = useMutation({
@@ -656,18 +680,49 @@ export const VMCreatePage: React.FC = () => {
                   <Controller
                     name="network.source"
                     control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        id="network-source"
-                        type="text"
-                        className="w-full p-2 border rounded-md bg-background"
-                        placeholder="default"
-                      />
-                    )}
+                    render={({ field }) => {
+                      if (networkType === 'network') {
+                        return (
+                          <select
+                            {...field}
+                            id="network-source"
+                            className="w-full p-2 border rounded-md bg-background"
+                            disabled={bridgeNetworksLoading}
+                          >
+                            <option value="">Select a network...</option>
+                            <option value="default">default (NAT)</option>
+                            {bridgeNetworks.map((network) => (
+                              <option key={network.name} value={network.name}>
+                                {network.name} (Bridge: {network.bridge_name})
+                              </option>
+                            ))}
+                          </select>
+                        );
+                      }
+                      
+                      return (
+                        <input
+                          {...field}
+                          id="network-source"
+                          type="text"
+                          className="w-full p-2 border rounded-md bg-background"
+                          placeholder={
+                            networkType === 'bridge' 
+                              ? 'Bridge name (e.g., br0)' 
+                              : 'Interface name'
+                          }
+                        />
+                      );
+                    }}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Network name, bridge name, or device name depending on type
+                    {networkType === 'network' 
+                      ? 'Select a virtual network or bridge network' 
+                      : networkType === 'bridge'
+                      ? 'Name of the Linux bridge to connect to'
+                      : 'Network device name depending on type'
+                    }
+                    {bridgeNetworksLoading && networkType === 'network' && ' (Loading networks...)'}
                   </p>
                 </div>
               </div>

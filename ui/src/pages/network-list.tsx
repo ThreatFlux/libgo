@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { networkAPI, NetworkInfo } from '../api/network';
 import { Button } from '../components/ui/button';
 
@@ -71,7 +71,7 @@ export function NetworkList() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Networks</h1>
-        <Button onClick={() => navigate('/networks/create')}>
+        <Button onClick={() => navigate({ to: '/networks/create' })}>
           Create Network
         </Button>
       </div>
@@ -120,7 +120,7 @@ export function NetworkList() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/networks/${network.name}`)}
+                      onClick={() => navigate({ to: `/networks/${network.name}` })}
                     >
                       Details
                     </Button>

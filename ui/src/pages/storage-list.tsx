@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Plus, HardDrive, Play, Square, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { storagePoolApi, formatBytes, getPoolStateColor, StoragePoolInfo } from '../api/storage';
@@ -94,7 +94,7 @@ export function StorageList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Storage Pools</h1>
-        <Button onClick={() => navigate('/storage/create')}>
+        <Button onClick={() => navigate({ to: '/storage/create' })}>
           <Plus className="mr-2 h-4 w-4" />
           Create Pool
         </Button>
@@ -108,7 +108,7 @@ export function StorageList() {
             <p className="text-muted-foreground mb-4">
               Get started by creating your first storage pool.
             </p>
-            <Button onClick={() => navigate('/storage/create')}>
+            <Button onClick={() => navigate({ to: '/storage/create' })}>
               <Plus className="mr-2 h-4 w-4" />
               Create Pool
             </Button>
@@ -193,7 +193,7 @@ export function StorageList() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/storage/pools/${pool.name}`)}
+                    onClick={() => navigate({ to: `/storage/pools/${pool.name}` })}
                   >
                     View Volumes
                   </Button>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, HardDrive } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { storagePoolApi, CreatePoolParams } from '../api/storage';
@@ -46,7 +46,7 @@ export function StorageCreate() {
       setLoading(true);
       setError(null);
       await storagePoolApi.create(formData);
-      navigate('/storage');
+      navigate({ to: '/storage' });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create storage pool');
       console.error(err);
@@ -63,7 +63,7 @@ export function StorageCreate() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/storage')}
+          onClick={() => navigate({ to: '/storage' })}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -214,7 +214,7 @@ export function StorageCreate() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/storage')}
+            onClick={() => navigate({ to: '/storage' })}
             disabled={loading}
           >
             Cancel
