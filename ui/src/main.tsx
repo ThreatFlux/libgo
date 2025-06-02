@@ -19,6 +19,9 @@ import { VMDetailPage } from '@/pages/vm-detail';
 import { VMCreatePage } from '@/pages/vm-create';
 import { VMExportPage } from '@/pages/vm-export';
 import { ExportsPage } from '@/pages/exports';
+import { NetworkList } from '@/pages/network-list';
+import { NetworkCreate } from '@/pages/network-create';
+import { NetworkDetail } from '@/pages/network-detail';
 import '@/styles/globals.css';
 
 // Create a query client
@@ -116,6 +119,27 @@ const exportsRoute = createRoute({
   component: ExportsPage,
 });
 
+// Network list route
+const networkListRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/networks',
+  component: NetworkList,
+});
+
+// Network create route
+const networkCreateRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/networks/create',
+  component: NetworkCreate,
+});
+
+// Network detail route
+const networkDetailRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/networks/$name',
+  component: NetworkDetail,
+});
+
 // Create the router
 const router = new Router({
   routeTree: rootRoute.addChildren([
@@ -127,6 +151,9 @@ const router = new Router({
       vmDetailRoute,
       vmExportRoute,
       exportsRoute,
+      networkListRoute,
+      networkCreateRoute,
+      networkDetailRoute,
     ]),
   ]),
   defaultPreload: 'intent',

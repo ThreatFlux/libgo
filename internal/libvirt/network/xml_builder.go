@@ -72,7 +72,7 @@ func (b *TemplateXMLBuilder) BuildNetworkXML(name string, bridgeName string, cid
 	if dhcp {
 		// For DHCP range, use from .100 to .200 in the subnet
 		// This is a simple approach - for production, might want more flexibility
-		rangeStart, rangeEnd := calculateDHCPRange(networkIP, ipNet.Mask)
+		rangeStart, rangeEnd := calculateDHCPRangeFromIPNet(networkIP, ipNet.Mask)
 		data.RangeStart = rangeStart
 		data.RangeEnd = rangeEnd
 	}
@@ -92,8 +92,8 @@ func (b *TemplateXMLBuilder) BuildNetworkXML(name string, bridgeName string, cid
 	return xmlBuffer.String(), nil
 }
 
-// calculateDHCPRange calculates DHCP range based on network address
-func calculateDHCPRange(networkIP net.IP, mask net.IPMask) (string, string) {
+// calculateDHCPRangeFromIPNet calculates DHCP range based on network address
+func calculateDHCPRangeFromIPNet(networkIP net.IP, mask net.IPMask) (string, string) {
 	// Clone the IP to avoid modifying the original
 	rangeStartIP := make(net.IP, len(networkIP))
 	copy(rangeStartIP, networkIP)

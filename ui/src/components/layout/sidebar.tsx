@@ -10,6 +10,7 @@ import {
   LuLayoutDashboard as LuHome, 
   LuServer, 
   LuDownload, 
+  LuNetwork,
   LuSettings, 
   LuLogOut,
   LuChevronLeft,
@@ -29,6 +30,11 @@ const navItems = [
     name: 'Virtual Machines', 
     path: '/vms', 
     icon: <LuServer className="h-5 w-5" /> 
+  },
+  { 
+    name: 'Networks', 
+    path: '/networks', 
+    icon: <LuNetwork className="h-5 w-5" /> 
   },
   { 
     name: 'Exports', 

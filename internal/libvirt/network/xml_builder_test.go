@@ -123,7 +123,7 @@ func TestCalculateDHCPRange(t *testing.T) {
 			networkIP := ip.Mask(ipNet.Mask)
 
 			// Calculate DHCP range
-			startIP, endIP := calculateDHCPRange(networkIP, ipNet.Mask)
+			startIP, endIP := calculateDHCPRangeFromIPNet(networkIP, ipNet.Mask)
 
 			assert.Equal(t, tt.wantStart, startIP)
 			assert.Equal(t, tt.wantEnd, endIP)

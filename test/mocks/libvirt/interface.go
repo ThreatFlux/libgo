@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	libvirt "github.com/digitalocean/go-libvirt"
+	network "github.com/threatflux/libgo/internal/libvirt/network"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -39,6 +40,21 @@ func NewMockManager(ctrl *gomock.Controller) *MockManager {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockManager) EXPECT() *MockManagerMockRecorder {
 	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockManager) Create(ctx context.Context, params *network.CreateNetworkParams) (*network.NetworkInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(*network.NetworkInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockManagerMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockManager)(nil).Create), ctx, params)
 }
 
 // Delete mocks base method.
@@ -112,6 +128,123 @@ func (m *MockManager) GetDHCPLeases(ctx context.Context, name string) ([]libvirt
 func (mr *MockManagerMockRecorder) GetDHCPLeases(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDHCPLeases", reflect.TypeOf((*MockManager)(nil).GetDHCPLeases), ctx, name)
+}
+
+// GetInfo mocks base method.
+func (m *MockManager) GetInfo(ctx context.Context, name string) (*network.NetworkInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInfo", ctx, name)
+	ret0, _ := ret[0].(*network.NetworkInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetInfo indicates an expected call of GetInfo.
+func (mr *MockManagerMockRecorder) GetInfo(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockManager)(nil).GetInfo), ctx, name)
+}
+
+// GetXML mocks base method.
+func (m *MockManager) GetXML(ctx context.Context, name string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetXML", ctx, name)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetXML indicates an expected call of GetXML.
+func (mr *MockManagerMockRecorder) GetXML(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetXML", reflect.TypeOf((*MockManager)(nil).GetXML), ctx, name)
+}
+
+// IsActive mocks base method.
+func (m *MockManager) IsActive(ctx context.Context, name string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsActive", ctx, name)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsActive indicates an expected call of IsActive.
+func (mr *MockManagerMockRecorder) IsActive(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockManager)(nil).IsActive), ctx, name)
+}
+
+// List mocks base method.
+func (m *MockManager) List(ctx context.Context) ([]*network.NetworkInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx)
+	ret0, _ := ret[0].([]*network.NetworkInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockManagerMockRecorder) List(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockManager)(nil).List), ctx)
+}
+
+// SetAutostart mocks base method.
+func (m *MockManager) SetAutostart(ctx context.Context, name string, autostart bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAutostart", ctx, name, autostart)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAutostart indicates an expected call of SetAutostart.
+func (mr *MockManagerMockRecorder) SetAutostart(ctx, name, autostart any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAutostart", reflect.TypeOf((*MockManager)(nil).SetAutostart), ctx, name, autostart)
+}
+
+// Start mocks base method.
+func (m *MockManager) Start(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Start", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockManagerMockRecorder) Start(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockManager)(nil).Start), ctx, name)
+}
+
+// Stop mocks base method.
+func (m *MockManager) Stop(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Stop", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Stop indicates an expected call of Stop.
+func (mr *MockManagerMockRecorder) Stop(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockManager)(nil).Stop), ctx, name)
+}
+
+// Update mocks base method.
+func (m *MockManager) Update(ctx context.Context, name string, params *network.UpdateNetworkParams) (*network.NetworkInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, name, params)
+	ret0, _ := ret[0].(*network.NetworkInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockManagerMockRecorder) Update(ctx, name, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockManager)(nil).Update), ctx, name, params)
 }
 
 // MockXMLBuilder is a mock of XMLBuilder interface.

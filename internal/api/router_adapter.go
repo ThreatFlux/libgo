@@ -117,6 +117,7 @@ func ConfigureRoutes(
 	authHandler *handlers.AuthHandler,
 	healthHandler *handlers.HealthHandler,
 	metricsHandler *handlers.MetricsHandler,
+	networkHandlers *NetworkHandlers,
 	config *config.Config, // Add config parameter
 ) {
 	// Register health check endpoints
@@ -171,6 +172,20 @@ func ConfigureRoutes(
 		exports.GET("", exportHandler.ListExports)
 		exports.GET("/:id", exportHandler.GetExportStatus)
 		exports.DELETE("/:id", exportHandler.CancelExport)
+	}
+
+	// Network management
+	if networkHandlers != nil {
+		networks := protected.Group("/networks")
+		{
+			networks.GET("", networkHandlers.List.Handle)
+			networks.POST("", networkHandlers.Create.Handle)
+			networks.GET("/:name", networkHandlers.Get.Handle)
+			networks.PUT("/:name", networkHandlers.Update.Handle)
+			networks.DELETE("/:name", networkHandlers.Delete.Handle)
+			networks.PUT("/:name/start", networkHandlers.Start.Handle)
+			networks.PUT("/:name/stop", networkHandlers.Stop.Handle)
+		}
 	}
 
 	// Setup WebSocket routes if VM handler provides a VM manager

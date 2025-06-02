@@ -378,6 +378,17 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 	healthHandler := handlers.NewHealthHandler(healthChecker, log)
 	metricsHandler := handlers.NewMetricsHandler(components.MetricsCollector, log)
 
+	// Create network handlers
+	networkHandlers := &api.NetworkHandlers{
+		List:   handlers.NewNetworkListHandler(components.NetworkManager, log),
+		Create: handlers.NewNetworkCreateHandler(components.NetworkManager, log),
+		Get:    handlers.NewNetworkGetHandler(components.NetworkManager, log),
+		Update: handlers.NewNetworkUpdateHandler(components.NetworkManager, log),
+		Delete: handlers.NewNetworkDeleteHandler(components.NetworkManager, log),
+		Start:  handlers.NewNetworkStartHandler(components.NetworkManager, log),
+		Stop:   handlers.NewNetworkStopHandler(components.NetworkManager, log),
+	}
+
 	// Setup router
 	router := server.Router()
 
@@ -397,6 +408,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		authHandler,
 		healthHandler,
 		metricsHandler,
+		networkHandlers,
 		cfg, // Pass the configuration
 	)
 }
