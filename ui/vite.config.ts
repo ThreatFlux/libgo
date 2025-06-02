@@ -19,7 +19,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api/v1': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8700',
         changeOrigin: true,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
@@ -34,7 +34,7 @@ export default defineConfig({
         },
       },
       '/ws/vms': {
-        target: 'ws://localhost:8080',
+        target: 'ws://localhost:8700',
         ws: true,
         changeOrigin: true,
         configure: (proxy, _options) => {
