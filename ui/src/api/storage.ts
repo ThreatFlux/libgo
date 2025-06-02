@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import apiClient from './client';
 
 // Storage pool types
 export interface StoragePoolInfo {
@@ -73,31 +73,31 @@ export interface CreateVolumeParams {
 // Storage pool API
 export const storagePoolApi = {
   list: async () => {
-    const response = await apiClient.get<{ pools: StoragePoolInfo[] }>('/storage/pools');
+    const response = await apiClient.get<{ pools: StoragePoolInfo[] }>('/api/v1/storage/pools');
     return response.data.pools;
   },
 
   get: async (name: string) => {
-    const response = await apiClient.get<StoragePoolInfo>(`/storage/pools/${name}`);
+    const response = await apiClient.get<StoragePoolInfo>(`/api/v1/storage/pools/${name}`);
     return response.data;
   },
 
   create: async (params: CreatePoolParams) => {
-    const response = await apiClient.post<StoragePoolInfo>('/storage/pools', params);
+    const response = await apiClient.post<StoragePoolInfo>('/api/v1/storage/pools', params);
     return response.data;
   },
 
   delete: async (name: string) => {
-    await apiClient.delete(`/storage/pools/${name}`);
+    await apiClient.delete(`/api/v1/storage/pools/${name}`);
   },
 
   start: async (name: string) => {
-    const response = await apiClient.put<{ message: string }>(`/storage/pools/${name}/start`);
+    const response = await apiClient.put<{ message: string }>(`/api/v1/storage/pools/${name}/start`);
     return response.data;
   },
 
   stop: async (name: string) => {
-    const response = await apiClient.put<{ message: string }>(`/storage/pools/${name}/stop`);
+    const response = await apiClient.put<{ message: string }>(`/api/v1/storage/pools/${name}/stop`);
     return response.data;
   },
 };
@@ -105,17 +105,17 @@ export const storagePoolApi = {
 // Storage volume API
 export const storageVolumeApi = {
   list: async (poolName: string) => {
-    const response = await apiClient.get<{ volumes: StorageVolumeInfo[] }>(`/storage/pools/${poolName}/volumes`);
+    const response = await apiClient.get<{ volumes: StorageVolumeInfo[] }>(`/api/v1/storage/pools/${poolName}/volumes`);
     return response.data.volumes;
   },
 
   create: async (poolName: string, params: CreateVolumeParams) => {
-    const response = await apiClient.post<StorageVolumeInfo>(`/storage/pools/${poolName}/volumes`, params);
+    const response = await apiClient.post<StorageVolumeInfo>(`/api/v1/storage/pools/${poolName}/volumes`, params);
     return response.data;
   },
 
   delete: async (poolName: string, volumeName: string) => {
-    await apiClient.delete(`/storage/pools/${poolName}/volumes/${volumeName}`);
+    await apiClient.delete(`/api/v1/storage/pools/${poolName}/volumes/${volumeName}`);
   },
 
   upload: async (poolName: string, volumeName: string, file: File, onProgress?: (progress: number) => void) => {
@@ -123,13 +123,13 @@ export const storageVolumeApi = {
     formData.append('file', file);
 
     const response = await apiClient.post(
-      `/storage/pools/${poolName}/volumes/${volumeName}/upload`,
+      `/api/v1/storage/pools/${poolName}/volumes/${volumeName}/upload`,
       formData,
       {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent: any) => {
           if (onProgress && progressEvent.total) {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             onProgress(progress);

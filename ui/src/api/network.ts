@@ -1,4 +1,4 @@
-import { client } from './client';
+import apiClient from './client';
 
 // Network types
 export interface NetworkForward {
@@ -71,42 +71,42 @@ export interface NetworkListResponse {
 export const networkAPI = {
   // List all networks
   list: async (): Promise<NetworkListResponse> => {
-    const response = await client.get<NetworkListResponse>('/networks');
+    const response = await apiClient.get<NetworkListResponse>('/api/v1/networks');
     return response.data;
   },
 
   // Get network details
   get: async (name: string): Promise<NetworkInfo> => {
-    const response = await client.get<NetworkInfo>(`/networks/${name}`);
+    const response = await apiClient.get<NetworkInfo>(`/api/v1/networks/${name}`);
     return response.data;
   },
 
   // Create a new network
   create: async (params: CreateNetworkParams): Promise<NetworkInfo> => {
-    const response = await client.post<NetworkInfo>('/networks', params);
+    const response = await apiClient.post<NetworkInfo>('/api/v1/networks', params);
     return response.data;
   },
 
   // Update network
   update: async (name: string, params: UpdateNetworkParams): Promise<NetworkInfo> => {
-    const response = await client.put<NetworkInfo>(`/networks/${name}`, params);
+    const response = await apiClient.put<NetworkInfo>(`/api/v1/networks/${name}`, params);
     return response.data;
   },
 
   // Delete network
   delete: async (name: string): Promise<void> => {
-    await client.delete(`/networks/${name}`);
+    await apiClient.delete(`/api/v1/networks/${name}`);
   },
 
   // Start network
   start: async (name: string): Promise<NetworkInfo> => {
-    const response = await client.put<NetworkInfo>(`/networks/${name}/start`);
+    const response = await apiClient.put<NetworkInfo>(`/api/v1/networks/${name}/start`);
     return response.data;
   },
 
   // Stop network
   stop: async (name: string): Promise<NetworkInfo> => {
-    const response = await client.put<NetworkInfo>(`/networks/${name}/stop`);
+    const response = await apiClient.put<NetworkInfo>(`/api/v1/networks/${name}/stop`);
     return response.data;
   },
 };
