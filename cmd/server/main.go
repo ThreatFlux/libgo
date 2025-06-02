@@ -389,6 +389,20 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		Stop:   handlers.NewNetworkStopHandler(components.NetworkManager, log),
 	}
 
+	// Create storage handlers
+	storageHandlers := &api.StorageHandlers{
+		ListPools:    handlers.NewStorageListHandler(components.PoolManager, log),
+		CreatePool:   handlers.NewStorageCreateHandler(components.PoolManager, log),
+		GetPool:      handlers.NewStorageGetHandler(components.PoolManager, log),
+		DeletePool:   handlers.NewStorageDeleteHandler(components.PoolManager, log),
+		StartPool:    handlers.NewStorageStartHandler(components.PoolManager, log),
+		StopPool:     handlers.NewStorageStopHandler(components.PoolManager, log),
+		ListVolumes:  handlers.NewStorageVolumeListHandler(components.StorageManager, log),
+		CreateVolume: handlers.NewStorageVolumeCreateHandler(components.StorageManager, log),
+		DeleteVolume: handlers.NewStorageVolumeDeleteHandler(components.StorageManager, log),
+		UploadVolume: handlers.NewStorageVolumeUploadHandler(components.StorageManager, log),
+	}
+
 	// Setup router
 	router := server.Router()
 
@@ -409,6 +423,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		healthHandler,
 		metricsHandler,
 		networkHandlers,
+		storageHandlers,
 		cfg, // Pass the configuration
 	)
 }

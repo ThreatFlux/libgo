@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
@@ -432,4 +434,212 @@ func (m *LibvirtVolumeManager) getImageInfo(ctx context.Context, imagePath strin
 		VirtualSize: result.VirtualSize,
 		ActualSize:  result.ActualSize,
 	}, nil
+}
+
+// List implements VolumeManager.List
+func (m *LibvirtVolumeManager) List(ctx context.Context, poolName string) ([]*StorageVolumeInfo, error) {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	libvirtConn := conn.GetLibvirtConnection()
+
+	// Get the pool
+	pool, err := m.poolManager.Get(ctx, poolName)
+	if err != nil {
+		return nil, fmt.Errorf("getting storage pool: %w", err)
+	}
+
+	// List all volumes in the pool
+	volumes, _, err := libvirtConn.StoragePoolListAllVolumes(*pool, -1, 0)
+	if err != nil {
+		return nil, fmt.Errorf("listing volumes: %w", err)
+	}
+
+	var volumeInfos []*StorageVolumeInfo
+	for _, vol := range volumes {
+		volInfo, err := m.getVolumeInfo(libvirtConn, &vol, poolName)
+		if err != nil {
+			m.logger.Warn("Failed to get volume info",
+				logger.String("volume", vol.Name),
+				logger.Error(err))
+			continue
+		}
+		volumeInfos = append(volumeInfos, volInfo)
+	}
+
+	return volumeInfos, nil
+}
+
+// GetInfo implements VolumeManager.GetInfo
+func (m *LibvirtVolumeManager) GetInfo(ctx context.Context, poolName string, volName string) (*StorageVolumeInfo, error) {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	libvirtConn := conn.GetLibvirtConnection()
+
+	// Get the pool
+	pool, err := m.poolManager.Get(ctx, poolName)
+	if err != nil {
+		return nil, fmt.Errorf("getting storage pool: %w", err)
+	}
+
+	// Look up the volume
+	vol, err := libvirtConn.StorageVolLookupByName(*pool, volName)
+	if err != nil {
+		return nil, fmt.Errorf("volume %s in pool %s: %w", volName, poolName, ErrVolumeNotFound)
+	}
+
+	return m.getVolumeInfo(libvirtConn, &vol, poolName)
+}
+
+// GetXML implements VolumeManager.GetXML
+func (m *LibvirtVolumeManager) GetXML(ctx context.Context, poolName string, volName string) (string, error) {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	libvirtConn := conn.GetLibvirtConnection()
+
+	// Get the pool
+	pool, err := m.poolManager.Get(ctx, poolName)
+	if err != nil {
+		return "", fmt.Errorf("getting storage pool: %w", err)
+	}
+
+	// Look up the volume
+	vol, err := libvirtConn.StorageVolLookupByName(*pool, volName)
+	if err != nil {
+		return "", fmt.Errorf("volume %s in pool %s: %w", volName, poolName, ErrVolumeNotFound)
+	}
+
+	// Get XML
+	xml, err := libvirtConn.StorageVolGetXMLDesc(vol, 0)
+	if err != nil {
+		return "", fmt.Errorf("getting volume XML: %w", err)
+	}
+
+	return xml, nil
+}
+
+// Wipe implements VolumeManager.Wipe
+func (m *LibvirtVolumeManager) Wipe(ctx context.Context, poolName string, volName string) error {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	libvirtConn := conn.GetLibvirtConnection()
+
+	// Get the pool
+	pool, err := m.poolManager.Get(ctx, poolName)
+	if err != nil {
+		return fmt.Errorf("getting storage pool: %w", err)
+	}
+
+	// Look up the volume
+	vol, err := libvirtConn.StorageVolLookupByName(*pool, volName)
+	if err != nil {
+		return fmt.Errorf("volume %s in pool %s: %w", volName, poolName, ErrVolumeNotFound)
+	}
+
+	// Wipe the volume
+	if err := libvirtConn.StorageVolWipe(vol, 0); err != nil {
+		return fmt.Errorf("wiping volume: %w", err)
+	}
+
+	m.logger.Info("Wiped storage volume",
+		logger.String("pool", poolName),
+		logger.String("volume", volName))
+
+	return nil
+}
+
+// Upload implements VolumeManager.Upload
+func (m *LibvirtVolumeManager) Upload(ctx context.Context, poolName string, volName string, reader io.Reader) error {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	// Stream upload is not supported by digitalocean/go-libvirt
+	// Return an error indicating the feature is not implemented
+	return fmt.Errorf("volume upload is not currently supported")
+
+}
+
+// Download implements VolumeManager.Download
+func (m *LibvirtVolumeManager) Download(ctx context.Context, poolName string, volName string, writer io.Writer) error {
+	// Get libvirt connection
+	conn, err := m.connManager.Connect(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to connect to libvirt: %w", err)
+	}
+	defer m.connManager.Release(conn)
+
+	// Stream download is not supported by digitalocean/go-libvirt
+	// Return an error indicating the feature is not implemented
+	return fmt.Errorf("volume download is not currently supported")
+
+}
+
+// getVolumeInfo is a helper method to get volume information
+func (m *LibvirtVolumeManager) getVolumeInfo(libvirtConn *libvirt.Libvirt, vol *libvirt.StorageVol, poolName string) (*StorageVolumeInfo, error) {
+	// Get volume info
+	_, capacity, allocation, err := libvirtConn.StorageVolGetInfo(*vol)
+	if err != nil {
+		return nil, fmt.Errorf("getting volume info: %w", err)
+	}
+
+	// Get volume path
+	path, err := libvirtConn.StorageVolGetPath(*vol)
+	if err != nil {
+		return nil, fmt.Errorf("getting volume path: %w", err)
+	}
+
+	// Get volume key
+	key := vol.Key
+
+	// Get XML to extract format and other details
+	xml, err := libvirtConn.StorageVolGetXMLDesc(*vol, 0)
+	if err != nil {
+		return nil, fmt.Errorf("getting volume XML: %w", err)
+	}
+
+	// Extract format from XML (simple regex for now)
+	// TODO: Proper XML parsing
+	format := "raw" // Default
+	if formatStart := strings.Index(xml, `<format type="`); formatStart != -1 {
+		formatEnd := strings.Index(xml[formatStart+14:], `"`)
+		if formatEnd != -1 {
+			format = xml[formatStart+14 : formatStart+14+formatEnd]
+		}
+	}
+
+	volumeInfo := &StorageVolumeInfo{
+		Name:       vol.Name,
+		Key:        key,
+		Path:       path,
+		Type:       "file", // Default, should be parsed from XML
+		Capacity:   capacity,
+		Allocation: allocation,
+		Format:     format,
+		Pool:       poolName,
+	}
+
+	return volumeInfo, nil
 }

@@ -22,6 +22,9 @@ import { ExportsPage } from '@/pages/exports';
 import { NetworkList } from '@/pages/network-list';
 import { NetworkCreate } from '@/pages/network-create';
 import { NetworkDetail } from '@/pages/network-detail';
+import { StorageList } from '@/pages/storage-list';
+import { StorageCreate } from '@/pages/storage-create';
+import { StorageDetail } from '@/pages/storage-detail';
 import '@/styles/globals.css';
 
 // Create a query client
@@ -140,6 +143,27 @@ const networkDetailRoute = createRoute({
   component: NetworkDetail,
 });
 
+// Storage list route
+const storageListRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/storage',
+  component: StorageList,
+});
+
+// Storage create route
+const storageCreateRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/storage/create',
+  component: StorageCreate,
+});
+
+// Storage detail route
+const storageDetailRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '/storage/pools/$poolName',
+  component: StorageDetail,
+});
+
 // Create the router
 const router = new Router({
   routeTree: rootRoute.addChildren([
@@ -154,6 +178,9 @@ const router = new Router({
       networkListRoute,
       networkCreateRoute,
       networkDetailRoute,
+      storageListRoute,
+      storageCreateRoute,
+      storageDetailRoute,
     ]),
   ]),
   defaultPreload: 'intent',

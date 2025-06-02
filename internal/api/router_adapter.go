@@ -118,6 +118,7 @@ func ConfigureRoutes(
 	healthHandler *handlers.HealthHandler,
 	metricsHandler *handlers.MetricsHandler,
 	networkHandlers *NetworkHandlers,
+	storageHandlers *StorageHandlers,
 	config *config.Config, // Add config parameter
 ) {
 	// Register health check endpoints
@@ -185,6 +186,27 @@ func ConfigureRoutes(
 			networks.DELETE("/:name", networkHandlers.Delete.Handle)
 			networks.PUT("/:name/start", networkHandlers.Start.Handle)
 			networks.PUT("/:name/stop", networkHandlers.Stop.Handle)
+		}
+	}
+
+	// Storage management
+	if storageHandlers != nil {
+		// Storage pool routes
+		storage := protected.Group("/storage")
+		{
+			// Pool management
+			storage.GET("/pools", storageHandlers.ListPools.Handle)
+			storage.POST("/pools", storageHandlers.CreatePool.Handle)
+			storage.GET("/pools/:name", storageHandlers.GetPool.Handle)
+			storage.DELETE("/pools/:name", storageHandlers.DeletePool.Handle)
+			storage.PUT("/pools/:name/start", storageHandlers.StartPool.Handle)
+			storage.PUT("/pools/:name/stop", storageHandlers.StopPool.Handle)
+
+			// Volume management
+			storage.GET("/pools/:poolName/volumes", storageHandlers.ListVolumes.Handle)
+			storage.POST("/pools/:poolName/volumes", storageHandlers.CreateVolume.Handle)
+			storage.DELETE("/pools/:poolName/volumes/:volumeName", storageHandlers.DeleteVolume.Handle)
+			storage.POST("/pools/:poolName/volumes/:volumeName/upload", storageHandlers.UploadVolume.Handle)
 		}
 	}
 

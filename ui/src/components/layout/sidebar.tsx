@@ -11,6 +11,7 @@ import {
   LuServer, 
   LuDownload, 
   LuNetwork,
+  LuHardDrive,
   LuSettings, 
   LuLogOut,
   LuChevronLeft,
@@ -35,6 +36,11 @@ const navItems = [
     name: 'Networks', 
     path: '/networks', 
     icon: <LuNetwork className="h-5 w-5" /> 
+  },
+  { 
+    name: 'Storage', 
+    path: '/storage', 
+    icon: <LuHardDrive className="h-5 w-5" /> 
   },
   { 
     name: 'Exports', 
