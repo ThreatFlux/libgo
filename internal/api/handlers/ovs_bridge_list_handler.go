@@ -36,6 +36,11 @@ func (h *OVSBridgeListHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	// Ensure bridges is not nil
+	if bridges == nil {
+		bridges = []ovs.BridgeInfo{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"bridges": bridges,
 		"count":   len(bridges),

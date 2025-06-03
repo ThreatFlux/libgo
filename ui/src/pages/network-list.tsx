@@ -18,7 +18,7 @@ export function NetworkList() {
       setLoading(true);
       setError(null);
       const response = await networkAPI.list();
-      setNetworks(response.networks);
+      setNetworks(response.networks || []);
     } catch (err) {
       setError('Failed to load networks');
       console.error('Error loading networks:', err);

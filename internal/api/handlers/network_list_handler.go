@@ -36,6 +36,11 @@ func (h *NetworkListHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	// Ensure networks is not nil
+	if networks == nil {
+		networks = []*network.NetworkInfo{}
+	}
+
 	// Return the list
 	c.JSON(http.StatusOK, gin.H{
 		"networks": networks,
