@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { Button } from '../components/ui/button';
 import { getBridgeNetwork, deleteBridgeNetwork, BridgeNetwork } from '../api/bridge-network';

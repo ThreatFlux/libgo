@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24.3-alpine AS builder
+FROM golang:1.24.3-alpine3.21 AS builder
 
 # Set necessary environment variables
 ENV CGO_ENABLED=0 \
@@ -28,7 +28,7 @@ ARG BUILD_DATE=unknown
 RUN go build -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildDate=${BUILD_DATE}" -o /go/bin/libgo-server ./cmd/server
 
 # Final stage
-FROM alpine:3.22
+FROM alpine:3.21
 
 # Set label according to OCI image spec
 LABEL org.opencontainers.image.title="KVM VM Management API"
