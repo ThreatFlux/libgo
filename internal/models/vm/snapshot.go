@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-// SnapshotState represents the state of a snapshot
+// SnapshotState represents the state of a snapshot.
 type SnapshotState string
 
 const (
-	// SnapshotStateRunning - the domain is running
+	// SnapshotStateRunning - the domain is running.
 	SnapshotStateRunning SnapshotState = "running"
 	// SnapshotStateBlocked - the domain is blocked on resource
 	SnapshotStateBlocked SnapshotState = "blocked"

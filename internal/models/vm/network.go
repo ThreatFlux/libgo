@@ -6,35 +6,35 @@ import (
 	"net"
 )
 
-// NetworkType represents the type of VM network
+// NetworkType represents the type of VM network.
 type NetworkType string
 
-// Network type constants
+// Network type constants.
 const (
 	NetworkTypeBridge  NetworkType = "bridge"
 	NetworkTypeNetwork NetworkType = "network"
 	NetworkTypeDirect  NetworkType = "direct"
 )
 
-// Valid network types
+// Valid network types.
 var validNetworkTypes = map[NetworkType]bool{
 	NetworkTypeBridge:  true,
 	NetworkTypeNetwork: true,
 	NetworkTypeDirect:  true,
 }
 
-// IsValid checks if the network type is valid
+// IsValid checks if the network type is valid.
 func (t NetworkType) IsValid() bool {
 	_, valid := validNetworkTypes[t]
 	return valid
 }
 
-// String returns the string representation of the network type
+// String returns the string representation of the network type.
 func (t NetworkType) String() string {
 	return string(t)
 }
 
-// NetParams contains network parameters for VM creation
+// NetParams contains network parameters for VM creation.
 type NetParams struct {
 	Type       NetworkType `json:"type" validate:"required,oneof=bridge network direct"`
 	Source     string      `json:"source" validate:"required"`
@@ -42,7 +42,7 @@ type NetParams struct {
 	MacAddress string      `json:"macAddress,omitempty" validate:"omitempty,mac"`
 }
 
-// NetInfo contains information about a VM's network interface
+// NetInfo contains information about a VM's network interface.
 type NetInfo struct {
 	Type        NetworkType `json:"type"`
 	Source      string      `json:"source"`
@@ -52,10 +52,10 @@ type NetInfo struct {
 	IPAddressV6 string      `json:"ipAddressV6,omitempty"`
 }
 
-// Validate validates the network parameters
+// Validate validates the network parameters.
 func (p *NetParams) Validate() error {
 	// Check network type
-	if !NetworkType(p.Type).IsValid() {
+	if !p.Type.IsValid() {
 		return fmt.Errorf("invalid network type: %s", p.Type)
 	}
 
@@ -75,7 +75,7 @@ func (p *NetParams) Validate() error {
 	return nil
 }
 
-// GenerateRandomMAC generates a random MAC address within KVM's private range
+// GenerateRandomMAC generates a random MAC address within KVM's private range.
 func GenerateRandomMAC() (string, error) {
 	mac := make(net.HardwareAddr, 6)
 
@@ -97,7 +97,7 @@ func GenerateRandomMAC() (string, error) {
 	return mac.String(), nil
 }
 
-// randomByte generates a random byte (0-255)
+// randomByte generates a random byte (0-255).
 func randomByte() (byte, error) {
 	// For simplicity using crypto/rand
 	var b [1]byte
@@ -108,7 +108,7 @@ func randomByte() (byte, error) {
 	return b[0], nil
 }
 
-// NetworkDefinition represents a libvirt network definition
+// NetworkDefinition represents a libvirt network definition.
 type NetworkDefinition struct {
 	Name        string `json:"name" validate:"required"`
 	Bridge      string `json:"bridge" validate:"required"`
@@ -116,7 +116,7 @@ type NetworkDefinition struct {
 	DHCPEnabled bool   `json:"dhcpEnabled"`
 }
 
-// ParseCIDR parses the CIDR notation and returns the network address and mask
+// ParseCIDR parses the CIDR notation and returns the network address and mask.
 func (d *NetworkDefinition) ParseCIDR() (net.IP, *net.IPNet, error) {
 	return net.ParseCIDR(d.CIDR)
 }

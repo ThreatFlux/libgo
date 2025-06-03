@@ -5,45 +5,45 @@ import (
 	"path/filepath"
 )
 
-// DiskFormat represents the format of a VM disk
+// DiskFormat represents the format of a VM disk.
 type DiskFormat string
 
-// Disk format constants
+// Disk format constants.
 const (
 	DiskFormatQCOW2 DiskFormat = "qcow2"
 	DiskFormatRAW   DiskFormat = "raw"
 )
 
-// Valid disk formats
+// Valid disk formats.
 var validDiskFormats = map[DiskFormat]bool{
 	DiskFormatQCOW2: true,
 	DiskFormatRAW:   true,
 }
 
-// IsValid checks if the disk format is valid
+// IsValid checks if the disk format is valid.
 func (f DiskFormat) IsValid() bool {
 	_, valid := validDiskFormats[f]
 	return valid
 }
 
-// String returns the string representation of the disk format
+// String returns the string representation of the disk format.
 func (f DiskFormat) String() string {
 	return string(f)
 }
 
-// DiskType represents the type of disk
+// DiskType represents the type of disk.
 type DiskType string
 
-// Disk type constants
+// Disk type constants.
 const (
 	DiskTypeFile  DiskType = "file"
 	DiskTypeBlock DiskType = "block"
 )
 
-// DiskBus represents the bus type for a disk
+// DiskBus represents the bus type for a disk.
 type DiskBus string
 
-// Disk bus constants
+// Disk bus constants.
 const (
 	DiskBusVirtio DiskBus = "virtio"
 	DiskBusIDE    DiskBus = "ide"
@@ -51,15 +51,15 @@ const (
 	DiskBusSCSI   DiskBus = "scsi"
 )
 
-// DiskDriver represents the disk driver
+// DiskDriver represents the disk driver.
 type DiskDriver string
 
-// Disk driver constants
+// Disk driver constants.
 const (
 	DiskDriverQEMU DiskDriver = "qemu"
 )
 
-// DiskParams contains disk parameters for VM creation
+// DiskParams contains disk parameters for VM creation.
 type DiskParams struct {
 	SizeBytes   uint64     `json:"sizeBytes" validate:"required,min=1073741824"` // Minimum 1GB
 	SizeMB      uint64     `json:"sizeMB,omitempty"`                             // Size in MB (optional, calculated from SizeBytes if not provided)
@@ -72,7 +72,7 @@ type DiskParams struct {
 	ReadOnly    bool       `json:"readOnly,omitempty"`
 }
 
-// DiskInfo contains information about a VM's disk
+// DiskInfo contains information about a VM's disk.
 type DiskInfo struct {
 	Path        string     `json:"path"`
 	Format      DiskFormat `json:"format"`
@@ -88,10 +88,10 @@ type DiskInfo struct {
 	VolumeName  string     `json:"volumeName,omitempty"`
 }
 
-// Validate validates the disk parameters
+// Validate validates the disk parameters.
 func (p *DiskParams) Validate() error {
 	// Check disk format
-	if !DiskFormat(p.Format).IsValid() {
+	if !p.Format.IsValid() {
 		return fmt.Errorf("invalid disk format: %s", p.Format)
 	}
 
@@ -131,7 +131,7 @@ func (p *DiskParams) Validate() error {
 	return nil
 }
 
-// GetBus returns the disk bus, defaulting to virtio if not specified
+// GetBus returns the disk bus, defaulting to virtio if not specified.
 func (p *DiskParams) GetBus() DiskBus {
 	if p.Bus == "" {
 		return DiskBusVirtio
@@ -139,7 +139,7 @@ func (p *DiskParams) GetBus() DiskBus {
 	return p.Bus
 }
 
-// GetCacheMode returns the disk cache mode, defaulting to "none" if not specified
+// GetCacheMode returns the disk cache mode, defaulting to "none" if not specified.
 func (p *DiskParams) GetCacheMode() string {
 	if p.CacheMode == "" {
 		return "none"
@@ -147,12 +147,12 @@ func (p *DiskParams) GetCacheMode() string {
 	return p.CacheMode
 }
 
-// GenerateVolumeName generates a volume name for a VM disk
+// GenerateVolumeName generates a volume name for a VM disk.
 func GenerateVolumeName(vmName string, diskIndex int) string {
 	return fmt.Sprintf("%s-disk-%d", vmName, diskIndex)
 }
 
-// GetDefaultStoragePool returns the default storage pool name
+// GetDefaultStoragePool returns the default storage pool name.
 func GetDefaultStoragePool() string {
 	return "default"
 }

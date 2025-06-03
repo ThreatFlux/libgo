@@ -44,10 +44,9 @@ func (h *VMHandler) StopVM(c *gin.Context) {
 	}
 
 	// Stop VM
-	var err error
 	// Note: Force option and timeout are not currently implemented in the interface
 	// but we keep it in the handler for future implementation
-	err = h.vmManager.Stop(c.Request.Context(), name)
+	err := h.vmManager.Stop(c.Request.Context(), name)
 
 	if err != nil {
 		contextLogger.Error("Failed to stop VM",

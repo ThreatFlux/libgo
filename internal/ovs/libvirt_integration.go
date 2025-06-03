@@ -278,18 +278,18 @@ func (l *LibvirtIntegration) extractMACFromXML(xml string, bridgeName string) st
 	// In production, use proper XML parsing
 	lines := strings.Split(xml, "\n")
 	inInterface := false
-	
+
 	for i, line := range lines {
 		if l.isInterfaceStart(line) {
 			inInterface = true
 			continue
 		}
-		
+
 		if inInterface && strings.Contains(line, "</interface>") {
 			inInterface = false
 			continue
 		}
-		
+
 		if inInterface && strings.Contains(line, bridgeName) {
 			if mac := l.findMACInLines(lines, i); mac != "" {
 				return mac
@@ -323,11 +323,11 @@ func (l *LibvirtIntegration) extractMACFromLine(line string) string {
 		return ""
 	}
 	start += len(addressPrefix)
-	
+
 	end := strings.Index(line[start:], "'")
 	if end <= 0 {
 		return ""
 	}
-	
+
 	return line[start : start+end]
 }

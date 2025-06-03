@@ -18,7 +18,7 @@ type RouterConfig struct {
 
 	// RecoveryConfig is the configuration for panic recovery
 	RecoveryConfig recovery.Config
-	
+
 	// BasePath is the base path for all API routes (e.g., "/api/v1")
 	BasePath string
 

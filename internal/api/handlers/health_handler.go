@@ -10,14 +10,14 @@ import (
 
 // HealthHandler handles health check endpoints
 type HealthHandler struct {
-	checker health.Checker
+	checker *health.Checker
 	logger  logger.Logger
 }
 
 // NewHealthHandler creates a new health handler
 func NewHealthHandler(checker *health.Checker, logger logger.Logger) *HealthHandler {
 	return &HealthHandler{
-		checker: *checker,
+		checker: checker,
 		logger:  logger,
 	}
 }

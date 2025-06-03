@@ -12,7 +12,7 @@ import (
 type Config struct {
 	// RecoveryHandler is a custom handler function to be called during recovery
 	RecoveryHandler func(*gin.Context, interface{})
-	
+
 	// DisableStackTrace determines whether to disable stack trace output
 	DisableStackTrace bool
 

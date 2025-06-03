@@ -33,10 +33,9 @@ func (h *VMHandler) DeleteVM(c *gin.Context) {
 	}
 
 	// Delete VM
-	var err error
 	// Force parameter is currently not used in the interface
 	// but we keep it in the handler for future implementation
-	err = h.vmManager.Delete(c.Request.Context(), name)
+	err := h.vmManager.Delete(c.Request.Context(), name)
 
 	if err != nil {
 		contextLogger.Error("Failed to delete VM",
