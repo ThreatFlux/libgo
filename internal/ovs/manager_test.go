@@ -2,6 +2,7 @@ package ovs
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,7 @@ func TestOVSManager_CreateBridge(t *testing.T) {
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-test").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("exit status 2"))
 
 				// Mock bridge creation
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-br", "br-test").
@@ -77,11 +78,11 @@ func TestOVSManager_CreateBridge(t *testing.T) {
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-fail").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("exit status 2"))
 
 				// Mock bridge creation failure
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-br", "br-fail").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("failed to create bridge"))
 			},
 			expectedError: true,
 			errorContains: "creating bridge",
@@ -149,7 +150,7 @@ func TestOVSManager_DeleteBridge(t *testing.T) {
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-nonexistent").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("exit status 2"))
 			},
 			expectedError: false, // Should not error if bridge doesn't exist
 		},
@@ -222,7 +223,7 @@ func TestOVSManager_AddPort(t *testing.T) {
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-nonexistent").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("exit status 2"))
 			},
 			expectedError: true,
 			errorContains: "not found",
@@ -242,6 +243,10 @@ func TestOVSManager_AddPort(t *testing.T) {
 				// Mock port addition
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-port", "br-test", "eth1").
 					Return([]byte{}, nil)
+
+				// Mock port exists check for VLAN setting
+				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "list-ports", "br-test").
+					Return([]byte("eth1\n"), nil)
 
 				// Mock VLAN tag setting
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "set", "Port", "eth1", "tag=100").
@@ -354,7 +359,7 @@ func TestOVSManager_ListBridges(t *testing.T) {
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock list bridges command failure
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "list-br").
-					Return([]byte{}, assert.AnError)
+					Return([]byte{}, fmt.Errorf("failed to list bridges"))
 			},
 			expectedCount: 0,
 			expectedError: true,
