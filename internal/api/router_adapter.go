@@ -14,12 +14,12 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// vmManagerWebSocketAdapter adapts any VM manager to the websocket.VMManager interface
+// vmManagerWebSocketAdapter adapts any VM manager to the websocket.VMManager interface.
 type vmManagerWebSocketAdapter struct {
 	manager interface{}
 }
 
-// Get implements the Get method of websocket.VMManager
+// Get implements the Get method of websocket.VMManager.
 func (a *vmManagerWebSocketAdapter) Get(ctx context.Context, name string) (*vmmodels.VM, error) {
 	// Use reflection to call the Get method on the underlying manager
 	if getter, ok := a.manager.(interface {
@@ -30,7 +30,7 @@ func (a *vmManagerWebSocketAdapter) Get(ctx context.Context, name string) (*vmmo
 	return nil, fmt.Errorf("VM manager does not support Get method")
 }
 
-// GetMetrics implements the GetMetrics method of websocket.VMManager
+// GetMetrics implements the GetMetrics method of websocket.VMManager.
 func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string) (*websocket.VMMetrics, error) {
 	// First try the exact signature
 	if getter, ok := a.manager.(interface {
@@ -105,8 +105,8 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 	return nil, fmt.Errorf("VM manager does not support GetMetrics method")
 }
 
-// ConfigureRoutes configures the API router with all handlers
-// This is an adapter for the main router setup function to handle all the API handlers
+// ConfigureRoutes configures the API router with all handlers.
+// This is an adapter for the main router setup function to handle all the API handlers.
 func ConfigureRoutes(
 	router *gin.Engine,
 	log logger.Logger,

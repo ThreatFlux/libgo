@@ -26,8 +26,7 @@ linters:
     - unconvert
     - whitespace
     - predeclared
-  disable:
-    - copyloopvar  # This linter doesn't exist in current golangci-lint version
+  disable: []
 
 linters-settings:
   errcheck:
