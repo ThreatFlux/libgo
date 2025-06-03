@@ -247,15 +247,26 @@ func ConfigureRoutes(
 			manager: manager,
 		}
 
-		// WebSocket routes are under /ws prefix
-		websocket.SetupRoutes(
-			router,
-			"/ws",
-			vmAdapter, // Use the adapter instead of direct cast
-			log,
-			jwtMiddleware,
-			roleMiddleware,
-		)
+		// Setup WebSocket routes - pass config to determine auth requirements
+		if config != nil && config.Auth.Enabled {
+			// WebSocket routes with authentication
+			websocket.SetupRoutes(
+				router,
+				"/ws",
+				vmAdapter,
+				log,
+				jwtMiddleware,
+				roleMiddleware,
+			)
+		} else {
+			// WebSocket routes without authentication
+			websocket.SetupRoutesWithoutAuth(
+				router,
+				"/ws",
+				vmAdapter,
+				log,
+			)
+		}
 		log.Info("WebSocket routes configured")
 	} else {
 		log.Warn("Could not get VM manager from handler, WebSocket functionality disabled")
