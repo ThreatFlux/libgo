@@ -7,7 +7,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Collector provides an interface for metrics collection
+// Collector provides an interface for metrics collection.
 type Collector interface {
 	// RecordRequest records a HTTP request
 	RecordRequest(method, path string, status int, duration time.Duration)
@@ -25,7 +25,7 @@ type Collector interface {
 	RecordLibvirtOperation(operation string, duration time.Duration)
 }
 
-// NewCollector creates a new metrics collector
+// NewCollector creates a new metrics collector.
 func NewCollector(impl string, ctx context.Context, deps map[string]interface{}, logger logger.Logger) (Collector, error) {
 	switch impl {
 	case "prometheus":
@@ -52,20 +52,20 @@ func NewCollector(impl string, ctx context.Context, deps map[string]interface{},
 	}
 }
 
-// NoopCollector is a no-operation metrics collector for testing or when metrics are disabled
+// NoopCollector is a no-operation metrics collector for testing or when metrics are disabled.
 type NoopCollector struct{}
 
-// RecordRequest is a no-op implementation
+// RecordRequest is a no-op implementation.
 func (n *NoopCollector) RecordRequest(method, path string, status int, duration time.Duration) {}
 
-// RecordVMOperation is a no-op implementation
+// RecordVMOperation is a no-op implementation.
 func (n *NoopCollector) RecordVMOperation(operation string, vmName string, success bool) {}
 
-// RecordExportDuration is a no-op implementation
+// RecordExportDuration is a no-op implementation.
 func (n *NoopCollector) RecordExportDuration(format string, status string, duration time.Duration) {}
 
-// RecordLibvirtError is a no-op implementation
+// RecordLibvirtError is a no-op implementation.
 func (n *NoopCollector) RecordLibvirtError(operation string, errorType string) {}
 
-// RecordLibvirtOperation is a no-op implementation
+// RecordLibvirtOperation is a no-op implementation.
 func (n *NoopCollector) RecordLibvirtOperation(operation string, duration time.Duration) {}

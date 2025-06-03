@@ -11,22 +11,22 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// RouterConfig holds the configuration for the router
+// RouterConfig holds the configuration for the router.
 type RouterConfig struct {
-	// BasePath is the base path for all API routes (e.g., "/api/v1")
-	BasePath string
-
-	// EnableCORS determines if CORS support is enabled
-	EnableCORS bool
-
 	// LoggingConfig is the configuration for request logging
 	LoggingConfig logging.Config
 
 	// RecoveryConfig is the configuration for panic recovery
 	RecoveryConfig recovery.Config
+	
+	// BasePath is the base path for all API routes (e.g., "/api/v1")
+	BasePath string
+
+	// EnableCORS determines if CORS support is enabled
+	EnableCORS bool
 }
 
-// DefaultRouterConfig returns the default router configuration
+// DefaultRouterConfig returns the default router configuration.
 func DefaultRouterConfig() RouterConfig {
 	return RouterConfig{
 		BasePath:   "/api/v1",
@@ -44,7 +44,7 @@ func DefaultRouterConfig() RouterConfig {
 
 // vmManagerWebSocketAdapter is defined in router_adapter.go
 
-// SetupRouter configures the API router with standard middleware and routes
+// SetupRouter configures the API router with standard middleware and routes.
 func SetupRouter(
 	engine *gin.Engine,
 	log logger.Logger,
@@ -89,7 +89,7 @@ func SetupRouter(
 	return engine
 }
 
-// setupPublicRoutes configures routes that don't require authentication
+// setupPublicRoutes configures routes that don't require authentication.
 func setupPublicRoutes(router *gin.RouterGroup) {
 	// Authentication endpoints
 	auth := router.Group("/auth")
@@ -105,7 +105,7 @@ func setupPublicRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// setupProtectedRoutes configures routes that require authentication
+// setupProtectedRoutes configures routes that require authentication.
 func setupProtectedRoutes(
 	router *gin.RouterGroup,
 	authMiddleware *auth.JWTMiddleware,
@@ -170,7 +170,7 @@ func setupProtectedRoutes(
 	}
 }
 
-// setupAdminRoutes configures routes that require admin role
+// setupAdminRoutes configures routes that require admin role.
 func setupAdminRoutes(router *gin.RouterGroup) {
 	// User management (admin only)
 	users := router.Group("/users")
@@ -216,7 +216,7 @@ func setupAdminRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// healthCheckHandler handles health check requests
+// healthCheckHandler handles health check requests.
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "up",
@@ -224,7 +224,7 @@ func healthCheckHandler(c *gin.Context) {
 	})
 }
 
-// noRouteHandler handles requests to non-existent routes
+// noRouteHandler handles requests to non-existent routes.
 func noRouteHandler(c *gin.Context) {
 	c.JSON(http.StatusNotFound, gin.H{
 		"status":  http.StatusNotFound,
@@ -233,7 +233,7 @@ func noRouteHandler(c *gin.Context) {
 	})
 }
 
-// corsMiddleware adds CORS headers to responses
+// corsMiddleware adds CORS headers to responses.
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

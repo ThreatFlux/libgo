@@ -9,38 +9,38 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// VMMonitorInterval is the interval between VM metric collections
+// VMMonitorInterval is the interval between VM metric collections.
 const VMMonitorInterval = 5 * time.Second
 
-// VMMonitor monitors VM metrics and broadcasts updates
+// VMMonitor monitors VM metrics and broadcasts updates.
 type VMMonitor struct {
+	monitoredVMs     map[string]*monitoredVM
 	handler          *Handler
 	logger           logger.Logger
 	vmManager        VMManager
-	monitoredVMs     map[string]*monitoredVM
-	monitoredVMsLock sync.RWMutex
 	shutdown         chan struct{}
+	monitoredVMsLock sync.RWMutex
 }
 
-// monitoredVM holds monitoring state for a VM
+// monitoredVM holds monitoring state for a VM.
 type monitoredVM struct {
-	name          string
-	lastStatus    vmmodels.VMStatus
+	cancelContext context.CancelFunc
 	lastChecked   time.Time
 	stateChanged  time.Time
 	startTime     time.Time
+	name          string
+	lastStatus    vmmodels.VMStatus
 	clientCount   int
 	isMonitoring  bool
-	cancelContext context.CancelFunc
 }
 
-// VMManager is the interface for VM operations
+// VMManager is the interface for VM operations.
 type VMManager interface {
 	Get(ctx context.Context, name string) (*vmmodels.VM, error)
 	GetMetrics(ctx context.Context, name string) (*VMMetrics, error)
 }
 
-// VMMetrics contains VM metrics data
+// VMMetrics contains VM metrics data.
 type VMMetrics struct {
 	CPU struct {
 		Utilization float64
@@ -59,7 +59,7 @@ type VMMetrics struct {
 	}
 }
 
-// NewVMMonitor creates a new VM monitor
+// NewVMMonitor creates a new VM monitor.
 func NewVMMonitor(handler *Handler, vmManager VMManager, logger logger.Logger) *VMMonitor {
 	return &VMMonitor{
 		handler:      handler,
@@ -70,13 +70,13 @@ func NewVMMonitor(handler *Handler, vmManager VMManager, logger logger.Logger) *
 	}
 }
 
-// Start starts the VM monitor
+// Start starts the VM monitor.
 func (m *VMMonitor) Start() {
 	m.logger.Info("Starting VM monitor")
 	go m.cleanupRoutine()
 }
 
-// Stop stops the VM monitor
+// Stop stops the VM monitor.
 func (m *VMMonitor) Stop() {
 	m.logger.Info("Stopping VM monitor")
 	close(m.shutdown)
@@ -92,7 +92,7 @@ func (m *VMMonitor) Stop() {
 	}
 }
 
-// RegisterVM starts monitoring a VM when clients connect
+// RegisterVM starts monitoring a VM when clients connect.
 func (m *VMMonitor) RegisterVM(vmName string) {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
@@ -139,7 +139,7 @@ func (m *VMMonitor) RegisterVM(vmName string) {
 		logger.String("status", string(vm.lastStatus)))
 }
 
-// UnregisterVM stops monitoring a VM when all clients disconnect
+// UnregisterVM stops monitoring a VM when all clients disconnect.
 func (m *VMMonitor) UnregisterVM(vmName string) {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()
@@ -174,7 +174,7 @@ func (m *VMMonitor) UnregisterVM(vmName string) {
 		logger.String("vmName", vmName))
 }
 
-// startMonitoring starts the monitoring goroutine for a VM
+// startMonitoring starts the monitoring goroutine for a VM.
 func (m *VMMonitor) startMonitoring(vmName string) {
 	m.monitoredVMsLock.Lock()
 	vm := m.monitoredVMs[vmName]
@@ -205,7 +205,7 @@ func (m *VMMonitor) startMonitoring(vmName string) {
 	}()
 }
 
-// collectAndBroadcastMetrics collects VM metrics and broadcasts them
+// collectAndBroadcastMetrics collects VM metrics and broadcasts them.
 func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName string) {
 	// Get VM status
 	vmInfo, err := m.vmManager.Get(ctx, vmName)
@@ -275,7 +275,7 @@ func (m *VMMonitor) collectAndBroadcastMetrics(ctx context.Context, vmName strin
 	}
 }
 
-// cleanupRoutine periodically cleans up stale VM monitoring
+// cleanupRoutine periodically cleans up stale VM monitoring.
 func (m *VMMonitor) cleanupRoutine() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
@@ -290,7 +290,7 @@ func (m *VMMonitor) cleanupRoutine() {
 	}
 }
 
-// cleanupStaleMonitoring removes monitoring for VMs that haven't been checked recently
+// cleanupStaleMonitoring removes monitoring for VMs that haven't been checked recently.
 func (m *VMMonitor) cleanupStaleMonitoring() {
 	m.monitoredVMsLock.Lock()
 	defer m.monitoredVMsLock.Unlock()

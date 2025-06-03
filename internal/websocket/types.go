@@ -7,11 +7,11 @@ import (
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 )
 
-// MessageType defines the type of WebSocket message
+// MessageType defines the type of WebSocket message.
 type MessageType string
 
 const (
-	// Message types
+	// Message types.
 	MessageTypeStatus     MessageType = "status"
 	MessageTypeMetrics    MessageType = "metrics"
 	MessageTypeCommand    MessageType = "command"
@@ -23,14 +23,14 @@ const (
 	MessageTypeConnection MessageType = "connection"
 )
 
-// Message represents a WebSocket message
+// Message represents a WebSocket message.
 type Message struct {
-	Type      MessageType            `json:"type"`
-	Timestamp time.Time              `json:"timestamp"`
 	Data      map[string]interface{} `json:"data"`
+	Timestamp time.Time              `json:"timestamp"`
+	Type      MessageType            `json:"type"`
 }
 
-// NewMessage creates a new message with the current timestamp
+// NewMessage creates a new message with the current timestamp.
 func NewMessage(msgType MessageType, data map[string]interface{}) *Message {
 	return &Message{
 		Type:      msgType,
@@ -39,7 +39,7 @@ func NewMessage(msgType MessageType, data map[string]interface{}) *Message {
 	}
 }
 
-// StatusMessage creates a new status message
+// StatusMessage creates a new status message.
 func StatusMessage(status vmmodels.VMStatus, lastChange time.Time, uptime int64) *Message {
 	return NewMessage(MessageTypeStatus, map[string]interface{}{
 		"status":          status,
@@ -48,7 +48,7 @@ func StatusMessage(status vmmodels.VMStatus, lastChange time.Time, uptime int64)
 	})
 }
 
-// MetricsMessage creates a new metrics message
+// MetricsMessage creates a new metrics message.
 func MetricsMessage(cpu float64, memory uint64, memoryTotal uint64,
 	rxBytes, txBytes, readBytes, writeBytes uint64) *Message {
 	return NewMessage(MessageTypeMetrics, map[string]interface{}{
@@ -70,7 +70,7 @@ func MetricsMessage(cpu float64, memory uint64, memoryTotal uint64,
 	})
 }
 
-// ErrorMessage creates a new error message
+// ErrorMessage creates a new error message.
 func ErrorMessage(code string, message string) *Message {
 	return NewMessage(MessageTypeError, map[string]interface{}{
 		"code":    code,
@@ -78,7 +78,7 @@ func ErrorMessage(code string, message string) *Message {
 	})
 }
 
-// ConsoleMessage creates a new console message
+// ConsoleMessage creates a new console message.
 func ConsoleMessage(content string, eof bool) *Message {
 	return NewMessage(MessageTypeConsole, map[string]interface{}{
 		"content": content,
@@ -86,7 +86,7 @@ func ConsoleMessage(content string, eof bool) *Message {
 	})
 }
 
-// ResponseMessage creates a new response message
+// ResponseMessage creates a new response message.
 func ResponseMessage(requestID string, success bool, message string) *Message {
 	return NewMessage(MessageTypeResponse, map[string]interface{}{
 		"requestId": requestID,
@@ -95,18 +95,18 @@ func ResponseMessage(requestID string, success bool, message string) *Message {
 	})
 }
 
-// Client represents a WebSocket client connection
+// Client represents a WebSocket client connection.
 type Client struct {
 	Conn       *websocket.Conn
 	Send       chan *Message
+	CreatedAt  time.Time
+	LastActive time.Time
 	UserID     string
 	VMName     string
 	IsConsole  bool
-	CreatedAt  time.Time
-	LastActive time.Time
 }
 
-// Hub maintains the set of active clients and broadcasts messages
+// Hub maintains the set of active clients and broadcasts messages.
 type Hub struct {
 	// Registered clients
 	clients map[*Client]bool
@@ -124,7 +124,7 @@ type Hub struct {
 	vmClients map[string][]*Client
 }
 
-// NewHub creates a new hub instance
+// NewHub creates a new hub instance.
 func NewHub() *Hub {
 	return &Hub{
 		broadcast:  make(chan *Message),
@@ -135,7 +135,7 @@ func NewHub() *Hub {
 	}
 }
 
-// Run starts the hub to handle client connections and messages
+// Run starts the hub to handle client connections and messages.
 func (h *Hub) Run() {
 	for {
 		select {
@@ -177,7 +177,7 @@ func (h *Hub) Run() {
 	}
 }
 
-// SendToVM sends a message to all clients connected to a specific VM
+// SendToVM sends a message to all clients connected to a specific VM.
 func (h *Hub) SendToVM(vmName string, message *Message) {
 	clients := h.vmClients[vmName]
 	for _, client := range clients {

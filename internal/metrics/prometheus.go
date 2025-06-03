@@ -9,7 +9,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// PrometheusMetrics implements metrics collection
+// PrometheusMetrics implements metrics collection.
 type PrometheusMetrics struct {
 	// HTTP request metrics
 	requestDuration *prometheus.HistogramVec
@@ -33,7 +33,7 @@ type PrometheusMetrics struct {
 	logger        logger.Logger
 }
 
-// NewPrometheusMetrics creates a new PrometheusMetrics
+// NewPrometheusMetrics creates a new PrometheusMetrics.
 func NewPrometheusMetrics(vmManager interface{}, exportManager interface{}, logger logger.Logger) *PrometheusMetrics {
 	m := &PrometheusMetrics{
 		vmManager:     vmManager,
@@ -125,14 +125,14 @@ func NewPrometheusMetrics(vmManager interface{}, exportManager interface{}, logg
 	return m
 }
 
-// RecordRequest records an API request
+// RecordRequest records an API request.
 func (m *PrometheusMetrics) RecordRequest(method, path string, status int, duration time.Duration) {
 	statusStr := prometheus.Labels{"method": method, "path": path, "status": fmt.Sprintf("%d", status)}
 	m.requests.With(statusStr).Inc()
 	m.requestDuration.With(statusStr).Observe(duration.Seconds())
 }
 
-// RecordVMOperation records a VM operation
+// RecordVMOperation records a VM operation.
 func (m *PrometheusMetrics) RecordVMOperation(operation string, vmName string, success bool) {
 	status := "success"
 	if !success {
@@ -146,7 +146,7 @@ func (m *PrometheusMetrics) RecordVMOperation(operation string, vmName string, s
 	}).Inc()
 }
 
-// RecordExportDuration records the duration of an export operation
+// RecordExportDuration records the duration of an export operation.
 func (m *PrometheusMetrics) RecordExportDuration(format string, status string, duration time.Duration) {
 	m.exportDuration.With(prometheus.Labels{
 		"format": format,
@@ -154,7 +154,7 @@ func (m *PrometheusMetrics) RecordExportDuration(format string, status string, d
 	}).Observe(duration.Seconds())
 }
 
-// RecordLibvirtError records a libvirt error
+// RecordLibvirtError records a libvirt error.
 func (m *PrometheusMetrics) RecordLibvirtError(operation string, errorType string) {
 	m.libvirtErrors.With(prometheus.Labels{
 		"operation":  operation,
@@ -162,7 +162,7 @@ func (m *PrometheusMetrics) RecordLibvirtError(operation string, errorType strin
 	}).Inc()
 }
 
-// RecordLibvirtOperation records a libvirt operation latency
+// RecordLibvirtOperation records a libvirt operation latency.
 func (m *PrometheusMetrics) RecordLibvirtOperation(operation string, duration time.Duration) {
 	m.libvirtLatency.With(prometheus.Labels{
 		"operation": operation,

@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// Manager defines interface for managing Open vSwitch operations
+// Manager defines interface for managing Open vSwitch operations.
 type Manager interface {
 	// Bridge operations
 	CreateBridge(ctx context.Context, name string) error
@@ -36,7 +36,7 @@ type Manager interface {
 	GetPortStats(ctx context.Context, bridge string, port string) (*PortStats, error)
 }
 
-// BridgeInfo represents information about an OVS bridge
+// BridgeInfo represents information about an OVS bridge.
 type BridgeInfo struct {
 	Name         string            `json:"name"`
 	UUID         string            `json:"uuid"`
@@ -48,7 +48,7 @@ type BridgeInfo struct {
 	Statistics   *BridgeStats      `json:"statistics,omitempty"`
 }
 
-// PortInfo represents information about an OVS port
+// PortInfo represents information about an OVS port.
 type PortInfo struct {
 	Name        string            `json:"name"`
 	UUID        string            `json:"uuid"`
@@ -62,7 +62,7 @@ type PortInfo struct {
 	Statistics  *PortStats        `json:"statistics,omitempty"`
 }
 
-// PortOptions represents options for creating a port
+// PortOptions represents options for creating a port.
 type PortOptions struct {
 	Type        string            `json:"type,omitempty"` // internal, patch, tunnel, etc.
 	Tag         *int              `json:"tag,omitempty"`
@@ -74,7 +74,7 @@ type PortOptions struct {
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 }
 
-// FlowRule represents an OpenFlow rule
+// FlowRule represents an OpenFlow rule.
 type FlowRule struct {
 	ID       string `json:"id"`
 	Table    int    `json:"table"`
@@ -84,7 +84,7 @@ type FlowRule struct {
 	Cookie   string `json:"cookie,omitempty"`
 }
 
-// BridgeStats represents statistics for a bridge
+// BridgeStats represents statistics for a bridge.
 type BridgeStats struct {
 	FlowCount    int64 `json:"flow_count"`
 	PortCount    int64 `json:"port_count"`
@@ -92,7 +92,7 @@ type BridgeStats struct {
 	MatchedCount int64 `json:"matched_count"`
 }
 
-// PortStats represents statistics for a port
+// PortStats represents statistics for a port.
 type PortStats struct {
 	RxPackets int64 `json:"rx_packets"`
 	RxBytes   int64 `json:"rx_bytes"`
@@ -104,7 +104,7 @@ type PortStats struct {
 	TxErrors  int64 `json:"tx_errors"`
 }
 
-// CreateBridgeParams represents parameters for creating an OVS bridge
+// CreateBridgeParams represents parameters for creating an OVS bridge.
 type CreateBridgeParams struct {
 	Name         string            `json:"name" binding:"required"`
 	DatapathType string            `json:"datapath_type,omitempty"` // system or netdev
@@ -113,7 +113,7 @@ type CreateBridgeParams struct {
 	OtherConfig  map[string]string `json:"other_config,omitempty"`
 }
 
-// CreatePortParams represents parameters for creating an OVS port
+// CreatePortParams represents parameters for creating an OVS port.
 type CreatePortParams struct {
 	Name        string            `json:"name" binding:"required"`
 	Bridge      string            `json:"bridge" binding:"required"`
@@ -127,7 +127,7 @@ type CreatePortParams struct {
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 }
 
-// UpdatePortParams represents parameters for updating an OVS port
+// UpdatePortParams represents parameters for updating an OVS port.
 type UpdatePortParams struct {
 	Tag         *int              `json:"tag,omitempty"`
 	Trunks      []int             `json:"trunks,omitempty"`
@@ -135,7 +135,7 @@ type UpdatePortParams struct {
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 }
 
-// CreateFlowParams represents parameters for creating a flow rule
+// CreateFlowParams represents parameters for creating a flow rule.
 type CreateFlowParams struct {
 	Bridge   string `json:"bridge" binding:"required"`
 	Table    int    `json:"table"`

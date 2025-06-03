@@ -23,11 +23,12 @@ type Server struct {
 // NewServer creates a new API server
 func NewServer(config config.ServerConfig, logger logger.Logger) *Server {
 	// Set Gin mode
-	if config.Mode == "release" {
+	switch config.Mode {
+	case "release":
 		gin.SetMode(gin.ReleaseMode)
-	} else if config.Mode == "test" {
+	case "test":
 		gin.SetMode(gin.TestMode)
-	} else {
+	default:
 		gin.SetMode(gin.DebugMode)
 	}
 

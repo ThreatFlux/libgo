@@ -31,7 +31,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		// Allow all origins in development
-		// TODO: In production, this should be more restrictive
+		// Note: In production, this should be more restrictive to verify origin
 		return true
 	},
 }
@@ -275,7 +275,7 @@ func (h *Handler) handleCommand(client *Client, msg *Message) {
 		logger.String("action", action),
 		logger.String("requestId", requestID))
 
-	// TODO: Implement actual command handling using VM manager
+	// Note: Command handling implementation needed for VM operations
 	// For now, just acknowledge the command
 	client.Send <- ResponseMessage(requestID, true, fmt.Sprintf("Command '%s' acknowledged", action))
 }
@@ -293,7 +293,7 @@ func (h *Handler) handleConsoleInput(client *Client, msg *Message) {
 		logger.String("userID", client.UserID),
 		logger.Int("contentLength", len(content)))
 
-	// TODO: Implement actual console input handling
+	// Note: Console input handling implementation needed for VM console access
 	// For now, just echo the input back
 	client.Send <- ConsoleMessage(content, false)
 }

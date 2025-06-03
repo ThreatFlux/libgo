@@ -10,14 +10,14 @@ import (
 
 // Config holds the configuration for the recovery middleware.
 type Config struct {
+	// RecoveryHandler is a custom handler function to be called during recovery
+	RecoveryHandler func(*gin.Context, interface{})
+	
 	// DisableStackTrace determines whether to disable stack trace output
 	DisableStackTrace bool
 
 	// DisableRecovery determines whether to disable recovery (useful for testing)
 	DisableRecovery bool
-
-	// RecoveryHandler is a custom handler function to be called during recovery
-	RecoveryHandler func(*gin.Context, interface{})
 }
 
 // Handler returns a gin middleware for recovering from panics.

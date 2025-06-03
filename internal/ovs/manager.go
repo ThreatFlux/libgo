@@ -9,6 +9,10 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
+const (
+	emptyListString = "[]\n"
+)
+
 // OVSManager implements Manager for Open vSwitch operations
 type OVSManager struct {
 	executor exec.CommandExecutor
@@ -123,8 +127,8 @@ func (m *OVSManager) GetBridge(ctx context.Context, name string) (*BridgeInfo, e
 	// Get controller
 	cmd = []string{"ovs-vsctl", "get", "Bridge", name, "controller"}
 	output, err = m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...)
-	if err == nil && string(output) != "[]\n" {
-		info.Controller = strings.Trim(string(output), "[]\n")
+	if err == nil && string(output) != emptyListString {
+		info.Controller = strings.Trim(string(output), emptyListString)
 	}
 
 	// Get datapath type
@@ -330,7 +334,7 @@ func (m *OVSManager) GetPort(ctx context.Context, bridge string, port string) (*
 	// Get VLAN tag
 	cmd = []string{"ovs-vsctl", "get", "Port", port, "tag"}
 	output, err = m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...)
-	if err == nil && string(output) != "[]\n" {
+	if err == nil && string(output) != emptyListString {
 		var tag int
 		if _, err := fmt.Sscanf(string(output), "%d", &tag); err == nil {
 			info.Tag = &tag
@@ -340,7 +344,7 @@ func (m *OVSManager) GetPort(ctx context.Context, bridge string, port string) (*
 	// Get trunk VLANs
 	cmd = []string{"ovs-vsctl", "get", "Port", port, "trunks"}
 	output, err = m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...)
-	if err == nil && string(output) != "[]\n" {
+	if err == nil && string(output) != emptyListString {
 		info.Trunks = m.parseOVSIntArray(string(output))
 	}
 
@@ -648,7 +652,7 @@ func (m *OVSManager) parseOVSMap(input string) map[string]string {
 
 func (m *OVSManager) parseOVSIntArray(input string) []int {
 	result := []int{}
-	input = strings.Trim(input, "[]\n")
+	input = strings.Trim(input, emptyListString)
 	if input == "" {
 		return result
 	}

@@ -38,7 +38,11 @@ func (l *LibvirtIntegration) CreateNetworkForBridge(ctx context.Context, network
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer l.connManager.Release(conn)
+	defer func() {
+		if releaseErr := l.connManager.Release(conn); releaseErr != nil {
+			l.logger.Error("Failed to release libvirt connection", logger.Error(releaseErr))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -66,7 +70,9 @@ func (l *LibvirtIntegration) CreateNetworkForBridge(ctx context.Context, network
 	// Start the network
 	if err := libvirtConn.NetworkCreate(network); err != nil {
 		// Clean up on failure
-		_ = libvirtConn.NetworkUndefine(network)
+		if undefineErr := libvirtConn.NetworkUndefine(network); undefineErr != nil {
+			l.logger.Warn("Failed to undefine network during cleanup", logger.Error(undefineErr))
+		}
 		return fmt.Errorf("starting network: %w", err)
 	}
 
@@ -115,7 +121,11 @@ func (l *LibvirtIntegration) AttachVMToOVSBridge(ctx context.Context, vmName str
 	if err != nil {
 		return "", fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer l.connManager.Release(conn)
+	defer func() {
+		if releaseErr := l.connManager.Release(conn); releaseErr != nil {
+			l.logger.Error("Failed to release libvirt connection", logger.Error(releaseErr))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -192,7 +202,9 @@ func (l *LibvirtIntegration) CreatePatchPort(ctx context.Context, bridge1 string
 	}
 	if err := l.ovsManager.AddPort(ctx, bridge2, patch2, options2); err != nil {
 		// Clean up the first port on failure
-		_ = l.ovsManager.DeletePort(ctx, bridge1, patch1)
+		if deleteErr := l.ovsManager.DeletePort(ctx, bridge1, patch1); deleteErr != nil {
+			l.logger.Warn("Failed to delete patch port during cleanup", logger.Error(deleteErr))
+		}
 		return fmt.Errorf("adding patch port to %s: %w", bridge2, err)
 	}
 
@@ -215,7 +227,7 @@ func (l *LibvirtIntegration) SetupQoSForVM(ctx context.Context, vmMAC string, br
 	for _, port := range ports {
 		// In a real implementation, we'd check the port's MAC address
 		// For now, we'll assume the port name contains part of the MAC
-		if strings.Contains(port.Name, strings.Replace(vmMAC, ":", "", -1)) {
+		if strings.Contains(port.Name, strings.ReplaceAll(vmMAC, ":", "")) {
 			vmPort = port.Name
 			break
 		}
@@ -266,25 +278,56 @@ func (l *LibvirtIntegration) extractMACFromXML(xml string, bridgeName string) st
 	// In production, use proper XML parsing
 	lines := strings.Split(xml, "\n")
 	inInterface := false
+	
 	for i, line := range lines {
-		if strings.Contains(line, "<interface") && strings.Contains(line, "bridge") {
+		if l.isInterfaceStart(line) {
 			inInterface = true
+			continue
 		}
-		if inInterface && strings.Contains(line, bridgeName) {
-			// Look for MAC address in next few lines
-			for j := i; j < len(lines) && j < i+5; j++ {
-				if strings.Contains(lines[j], "mac address=") {
-					start := strings.Index(lines[j], "address='") + 9
-					end := strings.Index(lines[j][start:], "'")
-					if end > 0 {
-						return lines[j][start : start+end]
-					}
-				}
-			}
-		}
+		
 		if inInterface && strings.Contains(line, "</interface>") {
 			inInterface = false
+			continue
+		}
+		
+		if inInterface && strings.Contains(line, bridgeName) {
+			if mac := l.findMACInLines(lines, i); mac != "" {
+				return mac
+			}
 		}
 	}
 	return ""
+}
+
+// isInterfaceStart checks if line is the start of a bridge interface
+func (l *LibvirtIntegration) isInterfaceStart(line string) bool {
+	return strings.Contains(line, "<interface") && strings.Contains(line, "bridge")
+}
+
+// findMACInLines searches for MAC address in the next few lines
+func (l *LibvirtIntegration) findMACInLines(lines []string, startIndex int) string {
+	maxLines := 5
+	for j := startIndex; j < len(lines) && j < startIndex+maxLines; j++ {
+		if strings.Contains(lines[j], "mac address=") {
+			return l.extractMACFromLine(lines[j])
+		}
+	}
+	return ""
+}
+
+// extractMACFromLine extracts MAC address from a line containing "address="
+func (l *LibvirtIntegration) extractMACFromLine(line string) string {
+	addressPrefix := "address='"
+	start := strings.Index(line, addressPrefix)
+	if start == -1 {
+		return ""
+	}
+	start += len(addressPrefix)
+	
+	end := strings.Index(line[start:], "'")
+	if end <= 0 {
+		return ""
+	}
+	
+	return line[start : start+end]
 }

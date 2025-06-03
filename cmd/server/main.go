@@ -39,7 +39,7 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
-// Build information
+// Build information.
 var (
 	version   string = "dev"
 	commit    string = "none"
@@ -91,11 +91,13 @@ func main() {
 	// Initialize components
 	components, err := initComponents(ctx, cfg, connManager, log)
 	if err != nil {
+		connManager.Close()
 		log.Fatal("Failed to initialize components", logger.Error(err))
 	}
 
 	// Ensure storage pool exists
 	if poolErr := ensureStoragePool(ctx, components.PoolManager, cfg, log); poolErr != nil {
+		connManager.Close()
 		log.Fatal("Failed to ensure storage pool", logger.Error(poolErr))
 	}
 
@@ -148,7 +150,7 @@ func main() {
 	log.Info("Shutting down gracefully")
 }
 
-// initConfig initializes configuration
+// initConfig initializes configuration.
 func initConfig(configPath string) (*config.Config, error) {
 	// Create config loader
 	loader := config.NewYAMLLoader(configPath)
@@ -172,7 +174,7 @@ func initConfig(configPath string) (*config.Config, error) {
 	return cfg, nil
 }
 
-// initLogger initializes logger
+// initLogger initializes logger.
 func initLogger(config config.LoggingConfig) (logger.Logger, error) {
 	// Create zap logger based on configuration
 	log, err := logger.NewZapLogger(config)
@@ -183,7 +185,7 @@ func initLogger(config config.LoggingConfig) (logger.Logger, error) {
 	return log, nil
 }
 
-// initLibvirt initializes libvirt connections
+// initLibvirt initializes libvirt connections.
 func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.Manager, error) {
 	// Create connection manager
 	connManager, err := connection.NewConnectionManager(config, logger)
@@ -204,7 +206,7 @@ func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.
 	return connManager, nil
 }
 
-// ComponentDependencies holds all the component dependencies
+// ComponentDependencies holds all the component dependencies.
 type ComponentDependencies struct {
 	// Connection managers
 	ConnManager    connection.Manager
@@ -237,7 +239,7 @@ type ComponentDependencies struct {
 	MetricsCollector metrics.Collector
 }
 
-// initComponents initializes all application components
+// initComponents initializes all application components.
 func initComponents(ctx context.Context, cfg *config.Config, connManager connection.Manager, log logger.Logger) (*ComponentDependencies, error) {
 	components := &ComponentDependencies{
 		ConnManager: connManager,
@@ -360,7 +362,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	return components, nil
 }
 
-// initHealthChecker initializes the health checker
+// initHealthChecker initializes the health checker.
 func initHealthChecker(components *ComponentDependencies, version, buildDate string, log logger.Logger) *health.Checker {
 	// Create health checker
 	checker := health.NewChecker(version, buildDate)
@@ -377,7 +379,7 @@ func initHealthChecker(components *ComponentDependencies, version, buildDate str
 	return checker
 }
 
-// setupRoutes configures API routes
+// setupRoutes configures API routes.
 func setupRoutes(server *api.Server, components *ComponentDependencies, healthChecker *health.Checker, cfg *config.Config, log logger.Logger) {
 	// Create API handlers
 	vmHandler := handlers.NewVMHandler(components.VMManager, log)
@@ -455,7 +457,7 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 	)
 }
 
-// initDefaultUsers initializes default users from configuration
+// initDefaultUsers initializes default users from configuration.
 func initDefaultUsers(ctx context.Context, userService user.Service, defaultUsers []config.DefaultUser, log logger.Logger) error {
 	log.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
 
@@ -475,7 +477,7 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 	return userService.InitializeDefaultUsers(ctx, userConfigs)
 }
 
-// setupSignalHandler sets up signal handling for graceful shutdown
+// setupSignalHandler sets up signal handling for graceful shutdown.
 func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 	stopCh := make(chan os.Signal, 1)
 	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -500,7 +502,7 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 	return stopCh
 }
 
-// ensureStoragePool ensures the required storage pool exists and is active
+// ensureStoragePool ensures the required storage pool exists and is active.
 func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log logger.Logger) error {
 	// Get the configured pool name and path
 	poolName := cfg.Storage.DefaultPool
