@@ -80,6 +80,25 @@ issues:
         - gosec
         - gocognit
         - typecheck
+        - errcheck
+        - bodyclose
+        - unused
+        - goconst
+        - godot
+        - fieldalignment
+    - path: test/integration/.*\.go
+      linters:
+        - gocyclo
+        - dupl
+        - gosec
+        - gocognit
+        - typecheck
+        - errcheck
+        - bodyclose
+        - unused
+        - goconst
+        - godot
+        - fieldalignment
     - path: test/integration/config/loader\.go
       linters:
         - typecheck

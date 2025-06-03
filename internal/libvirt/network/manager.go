@@ -213,7 +213,7 @@ func (m *LibvirtNetworkManager) List(ctx context.Context) ([]*NetworkInfo, error
 		return nil, fmt.Errorf("listing networks: %w", err)
 	}
 
-	var result []*NetworkInfo
+	result := make([]*NetworkInfo, 0, len(networks))
 	for _, net := range networks {
 		info, err := m.getNetworkInfo(libvirtConn, &net)
 		if err != nil {

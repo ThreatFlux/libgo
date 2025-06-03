@@ -81,7 +81,7 @@ func TestDomainManager_Create(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -132,7 +132,7 @@ func TestDomainManager_Get(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -165,7 +165,7 @@ func TestDomainManager_List(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -198,7 +198,7 @@ func TestDomainManager_Start(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -229,7 +229,7 @@ func TestDomainManager_Stop(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -260,7 +260,7 @@ func TestDomainManager_ForceStop(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -291,7 +291,7 @@ func TestDomainManager_Delete(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
@@ -322,7 +322,7 @@ func TestDomainManager_GetXML(t *testing.T) {
 	domainMgr := NewDomainManager(mockConnMgr, xmlBuilder, mockLog)
 
 	// Mock expectations
-	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}, t: t}
+	mockLibvirt := &mockLibvirtWithDomain{Libvirt: &libvirt.Libvirt{}}
 	mockConn.EXPECT().GetLibvirtConnection().Return(mockLibvirt.Libvirt).AnyTimes()
 	mockConn.EXPECT().IsActive().Return(true).AnyTimes()
 	mockConnMgr.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)

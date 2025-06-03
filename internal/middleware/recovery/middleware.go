@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// RecoveryMiddleware returns a middleware function that recovers from panics
+// RecoveryMiddleware returns a middleware function that recovers from panics.
 func RecoveryMiddleware(log logger.Logger) func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request)) {
 	return func(w http.ResponseWriter, r *http.Request, next func(http.ResponseWriter, *http.Request)) {
 		defer func() {
@@ -20,7 +20,9 @@ func RecoveryMiddleware(log logger.Logger) func(http.ResponseWriter, *http.Reque
 				// Return 500 error
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"status": 500, "code": "INTERNAL_SERVER_ERROR", "message": "Internal server error"}`))
+				if _, writeErr := w.Write([]byte(`{"status": 500, "code": "INTERNAL_SERVER_ERROR", "message": "Internal server error"}`)); writeErr != nil {
+					log.Error("Failed to write error response", logger.Error(writeErr))
+				}
 			}
 		}()
 

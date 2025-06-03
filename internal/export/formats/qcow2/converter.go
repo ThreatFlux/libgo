@@ -12,18 +12,18 @@ import (
 )
 
 const (
-	// DefaultCompression is the default compression level for qcow2
+	// DefaultCompression is the default compression level for qcow2.
 	DefaultCompression = "1"
-	// MaxCompression is the maximum compression level
+	// MaxCompression is the maximum compression level.
 	MaxCompression = 9
 )
 
-// QCOW2Converter implements Converter for QCOW2 format
+// QCOW2Converter implements Converter for QCOW2 format.
 type QCOW2Converter struct {
 	logger logger.Logger
 }
 
-// NewQCOW2Converter creates a new QCOW2Converter
+// NewQCOW2Converter creates a new QCOW2Converter.
 func NewQCOW2Converter(logger logger.Logger) *QCOW2Converter {
 	return &QCOW2Converter{
 		logger: logger,

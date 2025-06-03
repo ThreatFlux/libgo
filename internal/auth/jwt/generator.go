@@ -38,12 +38,12 @@ type Generator interface {
 // JWTGenerator implements Generator.
 type JWTGenerator struct {
 	secretKey     []byte
+	audience      []string
 	privateKey    *rsa.PrivateKey
 	publicKey     *rsa.PublicKey
 	algorithm     jwt.SigningMethod
-	issuer        string
-	audience      []string
 	expiresIn     time.Duration
+	issuer        string
 	signingMethod string
 }
 
