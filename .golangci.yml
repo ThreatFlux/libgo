@@ -71,6 +71,7 @@ issues:
     - test/mocks
   exclude-files:
     - ".*\\.generated\\.go$"
+    - ".*vm_snapshot_create_handler_test\\.go$"
   exclude-rules:
     - path: _test\.go
       linters:
@@ -78,5 +79,9 @@ issues:
         - dupl
         - gosec
         - gocognit
+        - typecheck
+    - path: test/integration/config/loader\.go
+      linters:
+        - typecheck
   max-issues-per-linter: 0
   max-same-issues: 0

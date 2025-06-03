@@ -6,7 +6,7 @@ import (
 	"time"
 
 	vmmodels "github.com/threatflux/libgo/internal/models/vm"
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // TestConfig represents the structure of a test configuration file
