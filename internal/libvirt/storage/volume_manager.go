@@ -579,7 +579,6 @@ func (m *LibvirtVolumeManager) Upload(ctx context.Context, poolName string, volN
 	// Stream upload is not supported by digitalocean/go-libvirt
 	// Return an error indicating the feature is not implemented
 	return fmt.Errorf("volume upload is not currently supported")
-
 }
 
 // Download implements VolumeManager.Download
@@ -594,7 +593,6 @@ func (m *LibvirtVolumeManager) Download(ctx context.Context, poolName string, vo
 	// Stream download is not supported by digitalocean/go-libvirt
 	// Return an error indicating the feature is not implemented
 	return fmt.Errorf("volume download is not currently supported")
-
 }
 
 // getVolumeInfo is a helper method to get volume information

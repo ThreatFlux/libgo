@@ -134,18 +134,18 @@ func getVMFilterFromQuery(c *gin.Context) map[string]string {
 }
 
 // parseInt parses a string to an integer with min/max bounds
-func parseInt(value string, min, max int) (int, error) {
+func parseInt(value string, minVal, maxVal int) (int, error) {
 	var result int
 	if _, err := fmt.Sscanf(value, "%d", &result); err != nil {
 		return 0, ErrInvalidInput
 	}
 
-	if result < min {
-		return min, nil
+	if result < minVal {
+		return minVal, nil
 	}
 
-	if result > max {
-		return max, nil
+	if result > maxVal {
+		return maxVal, nil
 	}
 
 	return result, nil

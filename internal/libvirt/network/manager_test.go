@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	mocks_connection "github.com/threatflux/libgo/test/mocks/libvirt/connection"
-	mocks_network "github.com/threatflux/libgo/test/mocks/libvirt/network"
 	mocks_logger "github.com/threatflux/libgo/test/mocks/logger"
 	"go.uber.org/mock/gomock"
 )
@@ -26,6 +25,18 @@ func (m *MockConnection) GetLibvirtConnection() *libvirt.Libvirt {
 
 func (m *MockConnection) Close() error {
 	return nil
+}
+
+// MockXMLBuilder is a mock for XMLBuilder
+type MockXMLBuilder struct {
+	BuildNetworkXMLFn func(name string, bridgeName string, cidr string, dhcp bool) (string, error)
+}
+
+func (m *MockXMLBuilder) BuildNetworkXML(name string, bridgeName string, cidr string, dhcp bool) (string, error) {
+	if m.BuildNetworkXMLFn != nil {
+		return m.BuildNetworkXMLFn(name, bridgeName, cidr, dhcp)
+	}
+	return "", nil
 }
 
 func (m *MockConnection) IsActive() bool {
@@ -52,7 +63,7 @@ func TestLibvirtNetworkManager_EnsureExists_AlreadyExists(t *testing.T) {
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := mocks_connection.NewMockManager(ctrl)
-	mockXMLBuilder := mocks_network.NewMockXMLBuilder(ctrl)
+	mockXMLBuilder := &MockXMLBuilder{}
 
 	mockConn := &MockConnection{
 		LibvirtConn: &MockLibvirtConnection{
@@ -83,7 +94,7 @@ func TestLibvirtNetworkManager_EnsureExists_CreateNew(t *testing.T) {
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := mocks_connection.NewMockManager(ctrl)
-	mockXMLBuilder := mocks_network.NewMockXMLBuilder(ctrl)
+	mockXMLBuilder := &MockXMLBuilder{}
 
 	testNetwork := libvirt.Network{}
 
@@ -112,10 +123,13 @@ func TestLibvirtNetworkManager_EnsureExists_CreateNew(t *testing.T) {
 	mockConnManager.EXPECT().Connect(gomock.Any()).Return(mockConn, nil)
 	mockConnManager.EXPECT().Release(mockConn).Return(nil)
 
-	// Expect BuildNetworkXML to be called
-	mockXMLBuilder.EXPECT().
-		BuildNetworkXML("test-network", "virbr0", "192.168.100.0/24", true).
-		Return("<network>...</network>", nil)
+	// Setup mockXMLBuilder function
+	mockXMLBuilder.BuildNetworkXMLFn = func(name string, bridgeName string, cidr string, dhcp bool) (string, error) {
+		if name == "test-network" && bridgeName == "virbr0" && cidr == "192.168.100.0/24" && dhcp {
+			return "<network>...</network>", nil
+		}
+		return "", errors.New("unexpected call")
+	}
 
 	// Debug log for creating network
 	mockLogger.EXPECT().Debug(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
@@ -134,7 +148,7 @@ func TestLibvirtNetworkManager_Delete_Exists(t *testing.T) {
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := mocks_connection.NewMockManager(ctrl)
-	mockXMLBuilder := mocks_network.NewMockXMLBuilder(ctrl)
+	mockXMLBuilder := &MockXMLBuilder{}
 
 	testNetwork := libvirt.Network{}
 
@@ -180,7 +194,7 @@ func TestLibvirtNetworkManager_GetDHCPLeases(t *testing.T) {
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := mocks_connection.NewMockManager(ctrl)
-	mockXMLBuilder := mocks_network.NewMockXMLBuilder(ctrl)
+	mockXMLBuilder := &MockXMLBuilder{}
 
 	testNetwork := libvirt.Network{}
 	testLeases := []libvirt.NetworkDhcpLease{
@@ -222,7 +236,7 @@ func TestLibvirtNetworkManager_FindIPByMAC(t *testing.T) {
 
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	mockConnManager := mocks_connection.NewMockManager(ctrl)
-	mockXMLBuilder := mocks_network.NewMockXMLBuilder(ctrl)
+	mockXMLBuilder := &MockXMLBuilder{}
 
 	testNetwork := libvirt.Network{}
 	testLeases := []libvirt.NetworkDhcpLease{

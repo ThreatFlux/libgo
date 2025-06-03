@@ -16,18 +16,99 @@ type MockPoolManager struct {
 	GetFn          func(ctx context.Context, name string) (*libvirt.StoragePool, error)
 	EnsureExistsFn func(ctx context.Context, name string, path string) error
 	DeleteFn       func(ctx context.Context, name string) error
+	ListFn         func(ctx context.Context) ([]*StoragePoolInfo, error)
+	GetInfoFn      func(ctx context.Context, name string) (*StoragePoolInfo, error)
+	CreateFn       func(ctx context.Context, params *CreatePoolParams) (*StoragePoolInfo, error)
+	StartFn        func(ctx context.Context, name string) error
+	StopFn         func(ctx context.Context, name string) error
+	RefreshFn      func(ctx context.Context, name string) error
+	SetAutostartFn func(ctx context.Context, name string, autostart bool) error
+	IsActiveFn     func(ctx context.Context, name string) (bool, error)
+	GetXMLFn       func(ctx context.Context, name string) (string, error)
 }
 
 func (m *MockPoolManager) Get(ctx context.Context, name string) (*libvirt.StoragePool, error) {
-	return m.GetFn(ctx, name)
+	if m.GetFn != nil {
+		return m.GetFn(ctx, name)
+	}
+	return nil, nil
 }
 
 func (m *MockPoolManager) EnsureExists(ctx context.Context, name string, path string) error {
-	return m.EnsureExistsFn(ctx, name, path)
+	if m.EnsureExistsFn != nil {
+		return m.EnsureExistsFn(ctx, name, path)
+	}
+	return nil
 }
 
 func (m *MockPoolManager) Delete(ctx context.Context, name string) error {
-	return m.DeleteFn(ctx, name)
+	if m.DeleteFn != nil {
+		return m.DeleteFn(ctx, name)
+	}
+	return nil
+}
+
+func (m *MockPoolManager) List(ctx context.Context) ([]*StoragePoolInfo, error) {
+	if m.ListFn != nil {
+		return m.ListFn(ctx)
+	}
+	return nil, nil
+}
+
+func (m *MockPoolManager) GetInfo(ctx context.Context, name string) (*StoragePoolInfo, error) {
+	if m.GetInfoFn != nil {
+		return m.GetInfoFn(ctx, name)
+	}
+	return nil, nil
+}
+
+func (m *MockPoolManager) Create(ctx context.Context, params *CreatePoolParams) (*StoragePoolInfo, error) {
+	if m.CreateFn != nil {
+		return m.CreateFn(ctx, params)
+	}
+	return nil, nil
+}
+
+func (m *MockPoolManager) Start(ctx context.Context, name string) error {
+	if m.StartFn != nil {
+		return m.StartFn(ctx, name)
+	}
+	return nil
+}
+
+func (m *MockPoolManager) Stop(ctx context.Context, name string) error {
+	if m.StopFn != nil {
+		return m.StopFn(ctx, name)
+	}
+	return nil
+}
+
+func (m *MockPoolManager) Refresh(ctx context.Context, name string) error {
+	if m.RefreshFn != nil {
+		return m.RefreshFn(ctx, name)
+	}
+	return nil
+}
+
+func (m *MockPoolManager) SetAutostart(ctx context.Context, name string, autostart bool) error {
+	if m.SetAutostartFn != nil {
+		return m.SetAutostartFn(ctx, name, autostart)
+	}
+	return nil
+}
+
+func (m *MockPoolManager) IsActive(ctx context.Context, name string) (bool, error) {
+	if m.IsActiveFn != nil {
+		return m.IsActiveFn(ctx, name)
+	}
+	return false, nil
+}
+
+func (m *MockPoolManager) GetXML(ctx context.Context, name string) (string, error) {
+	if m.GetXMLFn != nil {
+		return m.GetXMLFn(ctx, name)
+	}
+	return "", nil
 }
 
 // MockLibvirtWithVolumes is a mock of libvirt with storage volume operations

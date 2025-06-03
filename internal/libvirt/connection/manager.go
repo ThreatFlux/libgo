@@ -70,9 +70,7 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 	// Set context timeout if specified
 	var cancel context.CancelFunc
 	if m.timeout > 0 {
-		var timeoutCtx context.Context
-		timeoutCtx, cancel = context.WithTimeout(ctx, m.timeout)
-		ctx = timeoutCtx
+		ctx, cancel = context.WithTimeout(ctx, m.timeout)
 		defer cancel()
 	}
 
@@ -105,7 +103,8 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 		}()
 
 		c := clientConn
-		l := libvirt.New(c)
+		dialer := &connDialer{conn: c}
+		l := libvirt.NewWithDialer(dialer)
 
 		// Create a mock connection
 		libvirtConn := &libvirtConnection{
@@ -136,7 +135,8 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 		return nil, fmt.Errorf("failed to connect to libvirt at %s: %w", socketPath, err)
 	}
 
-	l := libvirt.New(c)
+	dialer := &connDialer{conn: c}
+	l := libvirt.NewWithDialer(dialer)
 	if err := l.Connect(); err != nil {
 		c.Close()
 		return nil, fmt.Errorf("failed to establish libvirt connection: %w", err)
@@ -238,4 +238,14 @@ func (c *libvirtConnection) IsActive() bool {
 // IsConnected implements Connection.IsConnected
 func (c *libvirtConnection) IsConnected() bool {
 	return c.active
+}
+
+// connDialer implements socket.Dialer interface for libvirt connections
+type connDialer struct {
+	conn net.Conn
+}
+
+// Dial implements socket.Dialer
+func (d *connDialer) Dial() (net.Conn, error) {
+	return d.conn, nil
 }

@@ -237,20 +237,22 @@ stop-backend: ## Stop the backend server
 	@if [ -f .backend.pid ]; then \
 		kill $$(cat .backend.pid) 2>/dev/null || true; \
 		rm -f .backend.pid; \
-		echo "Backend stopped"; \
-	else \
-		echo "Backend is not running"; \
 	fi
+	@# Also kill any remaining libgo-server processes
+	@pkill -f "libgo-server" 2>/dev/null || true
+	@# Kill any sudo processes running libgo-server
+	@sudo pkill -f "libgo-server" 2>/dev/null || true
+	@echo "Backend stopped"
 
 start-frontend: ## Start the frontend development server
 	@echo "Starting frontend development server..."
 	@if [ -f .frontend.pid ]; then \
 		echo "Frontend is already running with PID $$(cat .frontend.pid)"; \
 	else \
-		cd ui && npm run dev > ../frontend.log 2>&1 & \
-		echo $$! > ../.frontend.pid; \
+		(cd ui && npm run dev > ../frontend.log 2>&1 &) & \
+		echo $$! > .frontend.pid; \
 		echo "Frontend started with PID $$(cat .frontend.pid)"; \
-		echo "Frontend available at http://localhost:3700"; \
+		echo "Frontend will be available at http://localhost:3700 (or next available port)"; \
 	fi
 
 stop-frontend: ## Stop the frontend development server
@@ -258,10 +260,12 @@ stop-frontend: ## Stop the frontend development server
 	@if [ -f .frontend.pid ]; then \
 		kill $$(cat .frontend.pid) 2>/dev/null || true; \
 		rm -f .frontend.pid; \
-		echo "Frontend stopped"; \
-	else \
-		echo "Frontend is not running"; \
 	fi
+	@# Kill any vite processes running in the ui directory
+	@pkill -f "vite.*libgo/ui" 2>/dev/null || true
+	@# Kill any npm processes in the ui directory
+	@pkill -f "npm.*libgo/ui" 2>/dev/null || true
+	@echo "Frontend stopped"
 
 start: start-backend start-frontend ## Start both backend and frontend servers
 	@echo "All services started"
