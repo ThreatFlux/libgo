@@ -272,9 +272,10 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 
 	components.NetworkManager = network.NewLibvirtNetworkManager(connManager, networkXMLBuilder, log)
 
-	// Initialize OVS manager
+	// Initialize OVS manager with sudo wrapper
 	commandExecutor := &exec.DefaultCommandExecutor{}
-	components.OVSManager = ovs.NewOVSManager(commandExecutor, log)
+	sudoExecutor := ovs.NewSudoExecutor(commandExecutor)
+	components.OVSManager = ovs.NewOVSManager(sudoExecutor, log)
 
 	// Initialize cloud-init components
 	cloudInitTemplateLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
