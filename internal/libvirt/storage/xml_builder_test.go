@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/threatflux/libgo/pkg/logger"
-	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
 // Mock logger for testing

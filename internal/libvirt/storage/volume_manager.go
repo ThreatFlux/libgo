@@ -14,7 +14,7 @@ import (
 	"github.com/threatflux/libgo/internal/libvirt/connection"
 	"github.com/threatflux/libgo/pkg/logger"
 	executil "github.com/threatflux/libgo/pkg/utils/exec"
-	"github.com/threatflux/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
 // Error types
@@ -222,8 +222,13 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	return nil
 }
 
-// Delete implements VolumeManager.Delete
-func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volName string) error {
+// withVolumeConnection is a helper that handles the common pattern of:
+// 1. Getting a libvirt connection
+// 2. Getting the storage pool
+// 3. Looking up the volume
+// 4. Executing the provided operation
+// 5. Cleaning up the connection
+func (m *LibvirtVolumeManager) withVolumeConnection(ctx context.Context, poolName string, volName string, operation func(*libvirt.Libvirt, libvirt.StorageVol) error) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
@@ -249,9 +254,22 @@ func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volN
 		return fmt.Errorf("volume %s in pool %s: %w", volName, poolName, ErrVolumeNotFound)
 	}
 
-	// Delete the volume
-	if err := libvirtConn.StorageVolDelete(vol, 0); err != nil {
-		return fmt.Errorf("deleting volume: %w", err)
+	// Execute the operation
+	return operation(libvirtConn, vol)
+}
+
+// Delete implements VolumeManager.Delete
+func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volName string) error {
+	err := m.withVolumeConnection(ctx, poolName, volName, func(libvirtConn *libvirt.Libvirt, vol libvirt.StorageVol) error {
+		// Delete the volume
+		if err := libvirtConn.StorageVolDelete(vol, 0); err != nil {
+			return fmt.Errorf("deleting volume: %w", err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
 	m.logger.Info("Deleted storage volume",
@@ -378,20 +396,20 @@ func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourc
 	}
 
 	// Parse XML to modify it for the destination
-	doc, err := xml.LoadXMLDocumentFromString(sourceXML)
+	doc, err := xmlutils.LoadXMLDocumentFromString(sourceXML)
 	if err != nil {
 		return fmt.Errorf("parsing source volume XML: %w", err)
 	}
 
 	// Set the name in the XML
-	nameElement := xml.FindElement(doc, "/volume/name")
+	nameElement := xmlutils.FindElement(doc, "/volume/name")
 	if nameElement == nil {
 		return fmt.Errorf("volume name element not found in XML")
 	}
 	nameElement.SetText(destVolName)
 
 	// Generate the new XML
-	newXML := xml.XMLToString(doc)
+	newXML := xmlutils.XMLToString(doc)
 
 	// Create the cloned volume
 	_, err = libvirtConn.StorageVolCreateXMLFrom(*pool, newXML, sourceVol, 0)
@@ -574,34 +592,16 @@ func (m *LibvirtVolumeManager) GetXML(ctx context.Context, poolName string, volN
 
 // Wipe implements VolumeManager.Wipe
 func (m *LibvirtVolumeManager) Wipe(ctx context.Context, poolName string, volName string) error {
-	// Get libvirt connection
-	conn, err := m.connManager.Connect(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to connect to libvirt: %w", err)
-	}
-	defer func() {
-		if err := m.connManager.Release(conn); err != nil {
-			m.logger.Error("Failed to release connection", logger.Error(err))
+	err := m.withVolumeConnection(ctx, poolName, volName, func(libvirtConn *libvirt.Libvirt, vol libvirt.StorageVol) error {
+		// Wipe the volume
+		if err := libvirtConn.StorageVolWipe(vol, 0); err != nil {
+			return fmt.Errorf("wiping volume: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	libvirtConn := conn.GetLibvirtConnection()
-
-	// Get the pool
-	pool, err := m.poolManager.Get(ctx, poolName)
 	if err != nil {
-		return fmt.Errorf("getting storage pool: %w", err)
-	}
-
-	// Look up the volume
-	vol, err := libvirtConn.StorageVolLookupByName(*pool, volName)
-	if err != nil {
-		return fmt.Errorf("volume %s in pool %s: %w", volName, poolName, ErrVolumeNotFound)
-	}
-
-	// Wipe the volume
-	if err := libvirtConn.StorageVolWipe(vol, 0); err != nil {
-		return fmt.Errorf("wiping volume: %w", err)
+		return err
 	}
 
 	m.logger.Info("Wiped storage volume",

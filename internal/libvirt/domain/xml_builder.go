@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/pkg/logger"
-	xmlutils "github.com/threatflux/libgo/pkg/utils/xml"
+	xmlutils "github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
 // TemplateXMLBuilder implements XMLBuilder using templates

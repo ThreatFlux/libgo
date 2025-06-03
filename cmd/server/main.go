@@ -36,7 +36,7 @@ import (
 	"github.com/threatflux/libgo/internal/vm/template"
 	"github.com/threatflux/libgo/pkg/logger"
 	"github.com/threatflux/libgo/pkg/utils/exec"
-	"github.com/threatflux/libgo/pkg/utils/xml"
+	"github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
 // Build information
@@ -244,7 +244,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	}
 
 	// Initialize XML builder for domain
-	domainXMLLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "domain"))
+	domainXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "domain"))
 	if err != nil {
 		return nil, fmt.Errorf("creating domain template loader: %w", err)
 	}
@@ -254,7 +254,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	components.DomainManager = domain.NewDomainManager(connManager, domainXMLBuilder, log)
 
 	// Initialize storage components
-	storageXMLLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "storage"))
+	storageXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "storage"))
 	if err != nil {
 		return nil, fmt.Errorf("creating storage template loader: %w", err)
 	}
@@ -264,7 +264,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	components.StorageManager = storage.NewLibvirtVolumeManager(connManager, components.PoolManager, storageXMLBuilder, log)
 
 	// Initialize network components
-	networkXMLLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "network"))
+	networkXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "network"))
 	if err != nil {
 		return nil, fmt.Errorf("creating network template loader: %w", err)
 	}
@@ -278,7 +278,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	components.OVSManager = ovs.NewOVSManager(sudoExecutor, log)
 
 	// Initialize cloud-init components
-	cloudInitTemplateLoader, err := xml.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
+	cloudInitTemplateLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
 	if err != nil {
 		return nil, fmt.Errorf("creating cloud-init template loader: %w", err)
 	}
