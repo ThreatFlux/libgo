@@ -10,7 +10,8 @@ import { createPort, type CreatePortRequest } from '@/api/ovs';
 
 const OVSPortCreatePage: React.FC = () => {
   const navigate = useNavigate();
-  const { bridgeName } = useParams({ from: '/ovs/bridges/$bridgeName/ports/create' });
+  const params = useParams({ strict: false });
+  const bridgeName = params?.bridgeName as string;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreatePortRequest>({
     name: '',

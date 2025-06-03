@@ -22,7 +22,8 @@ import {
 } from '@/api/ovs';
 
 const OVSBridgeDetailPage: React.FC = () => {
-  const { name } = useParams({ from: '/ovs/bridges/$name' });
+  const params = useParams({ strict: false });
+  const name = params?.name as string;
   const navigate = useNavigate();
   const [bridge, setBridge] = useState<OVSBridge | null>(null);
   const [ports, setPorts] = useState<OVSPort[]>([]);
