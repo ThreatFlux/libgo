@@ -49,7 +49,11 @@ func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volN
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -110,7 +114,11 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -174,7 +182,9 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	volPath, err := libvirtConn.StorageVolGetPath(vol)
 	if err != nil {
 		// Try to clean up
-		_ = libvirtConn.StorageVolDelete(vol, 0)
+		if deleteErr := libvirtConn.StorageVolDelete(vol, 0); deleteErr != nil {
+			m.logger.Error("Failed to delete volume during cleanup", logger.Error(deleteErr))
+		}
 		return fmt.Errorf("getting volume path: %w", err)
 	}
 
@@ -197,7 +207,9 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	output, err := executil.ExecuteCommand(cmdCtx, "qemu-img", args, cmdOpts)
 	if err != nil {
 		// Clean up the volume
-		_ = libvirtConn.StorageVolDelete(vol, 0)
+		if deleteErr := libvirtConn.StorageVolDelete(vol, 0); deleteErr != nil {
+			m.logger.Error("Failed to delete volume during cleanup", logger.Error(deleteErr))
+		}
 		return fmt.Errorf("converting image: %w: %s", err, string(output))
 	}
 
@@ -217,7 +229,11 @@ func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volN
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -252,7 +268,11 @@ func (m *LibvirtVolumeManager) Resize(ctx context.Context, poolName string, volN
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -289,7 +309,11 @@ func (m *LibvirtVolumeManager) GetPath(ctx context.Context, poolName string, vol
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -321,7 +345,11 @@ func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourc
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -443,7 +471,11 @@ func (m *LibvirtVolumeManager) List(ctx context.Context, poolName string) ([]*St
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -481,7 +513,11 @@ func (m *LibvirtVolumeManager) GetInfo(ctx context.Context, poolName string, vol
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -507,7 +543,11 @@ func (m *LibvirtVolumeManager) GetXML(ctx context.Context, poolName string, volN
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -539,7 +579,11 @@ func (m *LibvirtVolumeManager) Wipe(ctx context.Context, poolName string, volNam
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -574,7 +618,11 @@ func (m *LibvirtVolumeManager) Upload(ctx context.Context, poolName string, volN
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	// Stream upload is not supported by digitalocean/go-libvirt
 	// Return an error indicating the feature is not implemented
@@ -588,7 +636,11 @@ func (m *LibvirtVolumeManager) Download(ctx context.Context, poolName string, vo
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	// Stream download is not supported by digitalocean/go-libvirt
 	// Return an error indicating the feature is not implemented

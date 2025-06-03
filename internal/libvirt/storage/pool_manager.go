@@ -40,7 +40,11 @@ func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -88,7 +92,9 @@ func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path
 	// Start pool
 	if err := libvirtConn.StoragePoolCreate(pool, 0); err != nil {
 		// Clean up if starting fails
-		_ = libvirtConn.StoragePoolUndefine(pool)
+		if undefineErr := libvirtConn.StoragePoolUndefine(pool); undefineErr != nil {
+			m.logger.Error("Failed to undefine storage pool during cleanup", logger.Error(undefineErr))
+		}
 		return fmt.Errorf("failed to start storage pool: %w", err)
 	}
 
@@ -113,7 +119,11 @@ func (m *LibvirtPoolManager) Delete(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -152,7 +162,11 @@ func (m *LibvirtPoolManager) Get(ctx context.Context, name string) (*libvirt.Sto
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -187,7 +201,11 @@ func (m *LibvirtPoolManager) List(ctx context.Context) ([]*StoragePoolInfo, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -219,7 +237,11 @@ func (m *LibvirtPoolManager) GetInfo(ctx context.Context, name string) (*Storage
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -248,7 +270,11 @@ func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParam
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -289,7 +315,9 @@ func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParam
 	// Start pool
 	if err := libvirtConn.StoragePoolCreate(pool, 0); err != nil {
 		// Clean up if starting fails
-		_ = libvirtConn.StoragePoolUndefine(pool)
+		if undefineErr := libvirtConn.StoragePoolUndefine(pool); undefineErr != nil {
+			m.logger.Error("Failed to undefine storage pool during cleanup", logger.Error(undefineErr))
+		}
 		return nil, fmt.Errorf("failed to start storage pool: %w", err)
 	}
 
@@ -316,7 +344,11 @@ func (m *LibvirtPoolManager) Start(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -352,7 +384,11 @@ func (m *LibvirtPoolManager) Stop(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -388,7 +424,11 @@ func (m *LibvirtPoolManager) Refresh(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -414,7 +454,11 @@ func (m *LibvirtPoolManager) SetAutostart(ctx context.Context, name string, auto
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -447,7 +491,11 @@ func (m *LibvirtPoolManager) IsActive(ctx context.Context, name string) (bool, e
 	if err != nil {
 		return false, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -473,7 +521,11 @@ func (m *LibvirtPoolManager) GetXML(ctx context.Context, name string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer func() {
+		if err := m.connManager.Release(conn); err != nil {
+			m.logger.Error("Failed to release connection", logger.Error(err))
+		}
+	}()
 
 	libvirtConn := conn.GetLibvirtConnection()
 

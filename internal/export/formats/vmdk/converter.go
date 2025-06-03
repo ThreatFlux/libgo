@@ -8,19 +8,19 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
-// VMDKConverter implements Converter for VMDK format
+// VMDKConverter implements Converter for VMDK format.
 type VMDKConverter struct {
 	logger logger.Logger
 }
 
-// NewVMDKConverter creates a new VMDKConverter
+// NewVMDKConverter creates a new VMDKConverter.
 func NewVMDKConverter(logger logger.Logger) *VMDKConverter {
 	return &VMDKConverter{
 		logger: logger,
 	}
 }
 
-// Convert implements Converter.Convert
+// Convert implements Converter.Convert.
 func (c *VMDKConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
 	// Get adapter type from options
 	adapterType := "lsilogic"
@@ -68,12 +68,12 @@ func (c *VMDKConverter) Convert(ctx context.Context, sourcePath string, destPath
 	return nil
 }
 
-// GetFormatName implements Converter.GetFormatName
+// GetFormatName implements Converter.GetFormatName.
 func (c *VMDKConverter) GetFormatName() string {
 	return "vmdk"
 }
 
-// ValidateOptions implements Converter.ValidateOptions
+// ValidateOptions implements Converter.ValidateOptions.
 func (c *VMDKConverter) ValidateOptions(options map[string]string) error {
 	// Valid adapter types
 	validAdapters := map[string]bool{
