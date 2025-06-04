@@ -64,7 +64,7 @@ type libvirtDomain struct {
 
 // libvirtDisk represents a disk in libvirt domain XML.
 type libvirtDisk struct {
-	// Anonymous struct fields (largest first)
+	// Anonymous struct fields (largest first - Source is largest with 5 strings)
 	Source struct {
 		File    string `xml:"file,attr"`
 		Pool    string `xml:"pool,attr"`
@@ -72,6 +72,10 @@ type libvirtDisk struct {
 		Bridge  string `xml:"bridge,attr"`
 		Network string `xml:"network,attr"`
 	} `xml:"source"`
+	// String fields (16 bytes each) - group together for better alignment
+	Type   string `xml:"type,attr"`
+	Device string `xml:"device,attr"`
+	// Smaller struct fields
 	Driver struct {
 		Name string `xml:"name,attr"`
 		Type string `xml:"type,attr"`
@@ -80,15 +84,13 @@ type libvirtDisk struct {
 		Dev string `xml:"dev,attr"`
 		Bus string `xml:"bus,attr"`
 	} `xml:"target"`
-	Boot struct {
-		Order int `xml:"order,attr"`
-	} `xml:"boot"`
-	// String fields (16 bytes each)
-	Type   string `xml:"type,attr"`
-	Device string `xml:"device,attr"`
 	// Pointer fields (8 bytes each)
 	ReadOnly  *struct{} `xml:"readonly"`
 	Shareable *struct{} `xml:"shareable"`
+	// Smallest struct field (contains only int, 8 bytes)
+	Boot struct {
+		Order int `xml:"order,attr"`
+	} `xml:"boot"`
 }
 
 // libvirtInterface represents an interface in libvirt domain XML.
@@ -795,13 +797,13 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 
 // snapshotXML represents libvirt snapshot XML structure.
 type snapshotXML struct {
-	// Slice fields (24 bytes)
+	// Slice fields (24 bytes) - largest first
 	Disks []struct {
 		Name string `xml:"name,attr"`
 	} `xml:"disks>disk,omitempty"`
-	// XMLName field (24 bytes)
+	// XMLName field (24 bytes) - two strings = 16 + 8 for struct overhead
 	XMLName xml.Name `xml:"domainsnapshot"`
-	// String fields (16 bytes each)
+	// String fields (16 bytes each) - group together
 	Name        string `xml:"name"`
 	Description string `xml:"description,omitempty"`
 	State       string `xml:"state,omitempty"`
