@@ -2,13 +2,13 @@ package vm
 
 // VMParams contains parameters for VM creation.
 type VMParams struct {
-	// Group structs together for better alignment
+	// Structs (need to be first for alignment)
 	CPU       CPUParams       `json:"cpu" validate:"required"`
 	Memory    MemoryParams    `json:"memory" validate:"required"`
 	Disk      DiskParams      `json:"disk" validate:"required"`
 	Network   NetParams       `json:"network"`
 	CloudInit CloudInitConfig `json:"cloudInit,omitempty"`
-	// Group strings together (8 bytes each on 64-bit)
+	// String fields (8 bytes each)
 	Name        string `json:"name" validate:"required,hostname_rfc1123"`
 	Description string `json:"description,omitempty"`
 	Template    string `json:"template,omitempty"` // Name of template to use
@@ -35,9 +35,11 @@ type MemoryParams struct {
 
 // CloudInitConfig contains cloud-init configuration.
 type CloudInitConfig struct {
-	SSHKeys       []string `json:"sshKeys,omitempty"`
-	UserData      string   `json:"userData,omitempty"`
-	MetaData      string   `json:"metaData,omitempty"`
-	NetworkConfig string   `json:"networkConfig,omitempty"`
-	ISODir        string   `json:"-"` // Internal use only - not exposed via API
+	// Slice fields (24 bytes)
+	SSHKeys []string `json:"sshKeys,omitempty"`
+	// String fields (8 bytes each)
+	UserData      string `json:"userData,omitempty"`
+	MetaData      string `json:"metaData,omitempty"`
+	NetworkConfig string `json:"networkConfig,omitempty"`
+	ISODir        string `json:"-"` // Internal use only - not exposed via API
 }

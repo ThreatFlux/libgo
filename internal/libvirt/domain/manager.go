@@ -34,15 +34,12 @@ type DomainManager struct {
 
 // libvirtDomain is a struct to parse libvirt domain XML.
 type libvirtDomain struct {
-	Name   string `xml:"name"`
-	UUID   string `xml:"uuid"`
+	// Anonymous struct fields (need to be first for alignment)
 	Memory struct {
 		Value uint64 `xml:",chardata"`
 		Unit  string `xml:"unit,attr"`
 	} `xml:"memory"`
-	VCPUs  int    `xml:"vcpu"`
-	Status string `xml:"state,attr"`
-	CPU    struct {
+	CPU struct {
 		Mode  string `xml:"mode,attr"`
 		Model struct {
 			Value string `xml:",chardata"`
@@ -57,12 +54,17 @@ type libvirtDomain struct {
 		Disks      []libvirtDisk      `xml:"disk"`
 		Interfaces []libvirtInterface `xml:"interface"`
 	} `xml:"devices"`
+	// String fields (8 bytes each)
+	Name   string `xml:"name"`
+	UUID   string `xml:"uuid"`
+	Status string `xml:"state,attr"`
+	// Int fields (4 bytes)
+	VCPUs int `xml:"vcpu"`
 }
 
 // libvirtDisk represents a disk in libvirt domain XML.
 type libvirtDisk struct {
-	Type   string `xml:"type,attr"`
-	Device string `xml:"device,attr"`
+	// Anonymous struct fields (need to be first for alignment)
 	Driver struct {
 		Name string `xml:"name,attr"`
 		Type string `xml:"type,attr"`
@@ -81,8 +83,12 @@ type libvirtDisk struct {
 	Boot struct {
 		Order int `xml:"order,attr"`
 	} `xml:"boot"`
+	// Pointer fields (8 bytes each)
 	ReadOnly  *struct{} `xml:"readonly"`
 	Shareable *struct{} `xml:"shareable"`
+	// String fields (8 bytes each)
+	Type   string `xml:"type,attr"`
+	Device string `xml:"device,attr"`
 }
 
 // libvirtInterface represents an interface in libvirt domain XML.
@@ -789,16 +795,21 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 
 // snapshotXML represents libvirt snapshot XML structure.
 type snapshotXML struct {
-	XMLName      xml.Name  `xml:"domainsnapshot"`
-	Name         string    `xml:"name"`
-	Description  string    `xml:"description,omitempty"`
-	State        string    `xml:"state,omitempty"`
-	Parent       string    `xml:"parent>name,omitempty"`
-	CreationTime int64     `xml:"creationTime"`
-	Memory       *struct{} `xml:"memory,omitempty"`
-	Disks        []struct {
+	// XMLName field (typically 24 bytes)
+	XMLName xml.Name `xml:"domainsnapshot"`
+	// Slice fields (24 bytes)
+	Disks []struct {
 		Name string `xml:"name,attr"`
 	} `xml:"disks>disk,omitempty"`
+	// Pointer fields (8 bytes)
+	Memory *struct{} `xml:"memory,omitempty"`
+	// String fields (8 bytes each)
+	Name        string `xml:"name"`
+	Description string `xml:"description,omitempty"`
+	State       string `xml:"state,omitempty"`
+	Parent      string `xml:"parent>name,omitempty"`
+	// Int64 fields (8 bytes)
+	CreationTime int64 `xml:"creationTime"`
 }
 
 // buildSnapshotXML builds XML for snapshot creation.
