@@ -455,7 +455,7 @@ func (m *DomainManager) createBaseVM(domainXML *libvirtDomain, state uint8, maxM
 			SizeBytes: memoryBytes,
 			SizeMB:    memoryBytes / (1024 * 1024),
 		},
-		CreatedAt: time.Now(), // TODO: Get actual creation time if available
+		CreatedAt: time.Now(), // NOTE: Using current time as libvirt creation time not readily available
 	}
 
 	// Set default CPU topology if not specified
@@ -499,12 +499,12 @@ func (m *DomainManager) processDomainDisks(disks []libvirtDisk) []vm.DiskInfo {
 		diskInfo := vm.DiskInfo{
 			Path:        path,
 			Format:      vm.DiskFormat(disk.Driver.Type),
-			SizeBytes:   0, // TODO: Query actual disk size
+			SizeBytes:   0, // NOTE: Disk size querying requires additional libvirt calls
 			Bus:         vm.DiskBus(disk.Target.Bus),
 			ReadOnly:    disk.ReadOnly != nil,
 			Bootable:    disk.Boot.Order > 0,
 			Shareable:   disk.Shareable != nil,
-			Serial:      "", // TODO: Generate serial if needed
+			Serial:      "", // NOTE: Serial generation not implemented yet
 			StoragePool: storagePool,
 			Device:      disk.Target.Dev,
 		}

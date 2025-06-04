@@ -93,7 +93,7 @@ func (g *OVFTemplateGenerator) GenerateOVF(vm *vm.VM, diskPath string, diskSize 
 
 // WriteOVFToFile writes OVF to a file.
 func (g *OVFTemplateGenerator) WriteOVFToFile(ovfContent string, outPath string) error {
-	return os.WriteFile(outPath, []byte(ovfContent), 0644)
+	return os.WriteFile(outPath, []byte(ovfContent), 0600)
 }
 
 // ovfTemplateContent contains the OVF template.

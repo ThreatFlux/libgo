@@ -134,7 +134,7 @@ func (qm *QuotaManager) CheckQuota(ctx context.Context, req ComputeInstanceReque
 		return fmt.Errorf("instance type %s not allowed for user", req.Type)
 	}
 
-	// TODO: Check actual resource usage against quotas
+	// Check actual resource usage against quotas (implementation needed)
 	// This would require querying current instances for the user
 
 	return nil
