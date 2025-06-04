@@ -97,7 +97,11 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 			if unixTime < 0 {
 				return 0
 			}
-			return uint64(unixTime%3) * 1024 * 1024 * 1024
+			modResult := unixTime % 3
+			if modResult < 0 {
+				modResult = -modResult // Ensure positive
+			}
+			return uint64(modResult) * 1024 * 1024 * 1024
 		}() // 1-4GB
 		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024 // 8GB
 		wsMetrics.Network.RxBytes = func() uint64 {
@@ -105,28 +109,44 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 			if unixTime < 0 {
 				return 0
 			}
-			return uint64(unixTime%10) * 1024 * 1024
+			modResult := unixTime % 10
+			if modResult < 0 {
+				modResult = -modResult
+			}
+			return uint64(modResult) * 1024 * 1024
 		}() // 0-10MB
 		wsMetrics.Network.TxBytes = func() uint64 {
 			unixTime := time.Now().Unix()
 			if unixTime < 0 {
 				return 0
 			}
-			return uint64(unixTime%5) * 1024 * 1024
+			modResult := unixTime % 5
+			if modResult < 0 {
+				modResult = -modResult
+			}
+			return uint64(modResult) * 1024 * 1024
 		}() // 0-5MB
 		wsMetrics.Disk.ReadBytes = func() uint64 {
 			unixTime := time.Now().Unix()
 			if unixTime < 0 {
 				return 0
 			}
-			return uint64(unixTime%20) * 1024 * 1024
+			modResult := unixTime % 20
+			if modResult < 0 {
+				modResult = -modResult
+			}
+			return uint64(modResult) * 1024 * 1024
 		}() // 0-20MB
 		wsMetrics.Disk.WriteBytes = func() uint64 {
 			unixTime := time.Now().Unix()
 			if unixTime < 0 {
 				return 0
 			}
-			return uint64(unixTime%10) * 1024 * 1024
+			modResult := unixTime % 10
+			if modResult < 0 {
+				modResult = -modResult
+			}
+			return uint64(modResult) * 1024 * 1024
 		}() // 0-10MB
 
 		return wsMetrics, nil

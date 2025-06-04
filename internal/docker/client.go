@@ -493,8 +493,14 @@ func (m *ClientManager) configureTLSForTransport(transport *http.Transport) {
 
 // createTLSConfig creates the base TLS configuration.
 func (m *ClientManager) createTLSConfig() *tls.Config {
+	minVersion := m.config.TLSMinVersion
+	// Ensure minimum TLS version is at least 1.2 for security
+	if minVersion < tls.VersionTLS12 {
+		minVersion = tls.VersionTLS12
+	}
+	
 	return &tls.Config{
-		MinVersion:               m.config.TLSMinVersion,
+		MinVersion:               minVersion,
 		MaxVersion:               m.config.TLSMaxVersion,
 		CipherSuites:             m.config.TLSCipherSuites,
 		PreferServerCipherSuites: true, // Always prefer server cipher suites for security
