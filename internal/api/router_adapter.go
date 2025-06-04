@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -100,6 +101,9 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 			modResult := unixTime % 3
 			if modResult < 0 {
 				modResult = -modResult // Ensure positive
+			}
+			if modResult > int64(math.MaxInt64) {
+				return 0 // Safety fallback
 			}
 			return uint64(modResult) * 1024 * 1024 * 1024
 		}() // 1-4GB

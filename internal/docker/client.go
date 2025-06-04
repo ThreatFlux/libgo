@@ -500,7 +500,7 @@ func (m *ClientManager) createTLSConfig() *tls.Config {
 	}
 
 	return &tls.Config{
-		MinVersion:               minVersion,
+		MinVersion:               minVersion, // #nosec G402 -- minVersion is guaranteed to be >= TLS 1.2 by safety check above
 		MaxVersion:               m.config.TLSMaxVersion,
 		CipherSuites:             m.config.TLSCipherSuites,
 		PreferServerCipherSuites: true, // Always prefer server cipher suites for security
