@@ -14,10 +14,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Ensure the docker package is used (this prevents import errors)
+// Ensure the docker package is used (this prevents import errors).
 var _ docker.Manager
 
-// Create creates a new container
+// Create creates a new container.
 func (s *serviceImpl) Create(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, name string) (string, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *serviceImpl) Create(ctx context.Context, config *container.Config, host
 	return resp.ID, nil
 }
 
-// Start starts a container
+// Start starts a container.
 func (s *serviceImpl) Start(ctx context.Context, containerID string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -66,7 +66,7 @@ func (s *serviceImpl) Start(ctx context.Context, containerID string) error {
 	return nil
 }
 
-// Stop stops a container
+// Stop stops a container.
 func (s *serviceImpl) Stop(ctx context.Context, containerID string, timeout *int) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *serviceImpl) Stop(ctx context.Context, containerID string, timeout *int
 	return nil
 }
 
-// Restart restarts a container
+// Restart restarts a container.
 func (s *serviceImpl) Restart(ctx context.Context, containerID string, timeout *int) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -114,7 +114,7 @@ func (s *serviceImpl) Restart(ctx context.Context, containerID string, timeout *
 	return nil
 }
 
-// Kill sends a signal to a container
+// Kill sends a signal to a container.
 func (s *serviceImpl) Kill(ctx context.Context, containerID string, signal string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *serviceImpl) Kill(ctx context.Context, containerID string, signal strin
 	return nil
 }
 
-// Remove removes a container
+// Remove removes a container.
 func (s *serviceImpl) Remove(ctx context.Context, containerID string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *serviceImpl) Remove(ctx context.Context, containerID string, force bool
 	return nil
 }
 
-// Pause pauses a container
+// Pause pauses a container.
 func (s *serviceImpl) Pause(ctx context.Context, containerID string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -179,7 +179,7 @@ func (s *serviceImpl) Pause(ctx context.Context, containerID string) error {
 	return nil
 }
 
-// Unpause unpauses a container
+// Unpause unpauses a container.
 func (s *serviceImpl) Unpause(ctx context.Context, containerID string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -198,7 +198,7 @@ func (s *serviceImpl) Unpause(ctx context.Context, containerID string) error {
 	return nil
 }
 
-// Inspect inspects a container
+// Inspect inspects a container.
 func (s *serviceImpl) Inspect(ctx context.Context, containerID string) (*container.InspectResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -216,7 +216,7 @@ func (s *serviceImpl) Inspect(ctx context.Context, containerID string) (*contain
 	return &containerJSON, nil
 }
 
-// List lists containers
+// List lists containers.
 func (s *serviceImpl) List(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -232,7 +232,7 @@ func (s *serviceImpl) List(ctx context.Context, options container.ListOptions) (
 	return containers, nil
 }
 
-// Exists checks if a container exists
+// Exists checks if a container exists.
 func (s *serviceImpl) Exists(ctx context.Context, containerID string) (bool, error) {
 	_, err := s.Inspect(ctx, containerID)
 	if err != nil {
@@ -244,7 +244,7 @@ func (s *serviceImpl) Exists(ctx context.Context, containerID string) (bool, err
 	return true, nil
 }
 
-// Logs gets container logs
+// Logs gets container logs.
 func (s *serviceImpl) Logs(ctx context.Context, containerID string, options container.LogsOptions) (io.ReadCloser, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -262,7 +262,7 @@ func (s *serviceImpl) Logs(ctx context.Context, containerID string, options cont
 	return logs, nil
 }
 
-// Stats gets container stats
+// Stats gets container stats.
 func (s *serviceImpl) Stats(ctx context.Context, containerID string, stream bool) (container.StatsResponseReader, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -281,7 +281,7 @@ func (s *serviceImpl) Stats(ctx context.Context, containerID string, stream bool
 	return stats, nil
 }
 
-// ExecCreate creates an exec instance
+// ExecCreate creates an exec instance.
 func (s *serviceImpl) ExecCreate(ctx context.Context, containerID string, config container.ExecOptions) (container.ExecCreateResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -299,7 +299,7 @@ func (s *serviceImpl) ExecCreate(ctx context.Context, containerID string, config
 	return exec, nil
 }
 
-// ExecStart starts an exec instance
+// ExecStart starts an exec instance.
 func (s *serviceImpl) ExecStart(ctx context.Context, execID string, config container.ExecStartOptions) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -316,7 +316,7 @@ func (s *serviceImpl) ExecStart(ctx context.Context, execID string, config conta
 	return nil
 }
 
-// ExecInspect inspects an exec instance
+// ExecInspect inspects an exec instance.
 func (s *serviceImpl) ExecInspect(ctx context.Context, execID string) (container.ExecInspect, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *serviceImpl) ExecInspect(ctx context.Context, execID string) (container
 	return inspect, nil
 }
 
-// CopyToContainer copies content to a container
+// CopyToContainer copies content to a container.
 func (s *serviceImpl) CopyToContainer(ctx context.Context, containerID, dstPath string, content io.Reader, options container.CopyToContainerOptions) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -352,7 +352,7 @@ func (s *serviceImpl) CopyToContainer(ctx context.Context, containerID, dstPath 
 	return nil
 }
 
-// CopyFromContainer copies content from a container
+// CopyFromContainer copies content from a container.
 func (s *serviceImpl) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, container.PathStat, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -371,7 +371,7 @@ func (s *serviceImpl) CopyFromContainer(ctx context.Context, containerID, srcPat
 	return reader, stat, nil
 }
 
-// Wait waits for a container
+// Wait waits for a container.
 func (s *serviceImpl) Wait(ctx context.Context, containerID string, condition container.WaitCondition) (<-chan container.WaitResponse, <-chan error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -384,7 +384,7 @@ func (s *serviceImpl) Wait(ctx context.Context, containerID string, condition co
 	return client.ContainerWait(ctx, containerID, condition)
 }
 
-// Attach attaches to a container
+// Attach attaches to a container.
 func (s *serviceImpl) Attach(ctx context.Context, containerID string, options container.AttachOptions) (types.HijackedResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -402,7 +402,7 @@ func (s *serviceImpl) Attach(ctx context.Context, containerID string, options co
 	return resp, nil
 }
 
-// Update updates a container configuration
+// Update updates a container configuration.
 func (s *serviceImpl) Update(ctx context.Context, containerID string, updateConfig container.UpdateConfig) (container.UpdateResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -420,7 +420,7 @@ func (s *serviceImpl) Update(ctx context.Context, containerID string, updateConf
 	return resp, nil
 }
 
-// Rename renames a container
+// Rename renames a container.
 func (s *serviceImpl) Rename(ctx context.Context, containerID string, newName string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -441,7 +441,7 @@ func (s *serviceImpl) Rename(ctx context.Context, containerID string, newName st
 	return nil
 }
 
-// Resize resizes a container TTY
+// Resize resizes a container TTY.
 func (s *serviceImpl) Resize(ctx context.Context, containerID string, options container.ResizeOptions) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -458,7 +458,7 @@ func (s *serviceImpl) Resize(ctx context.Context, containerID string, options co
 	return nil
 }
 
-// Prune removes unused containers
+// Prune removes unused containers.
 func (s *serviceImpl) Prune(ctx context.Context, pruneFilters container.ListOptions) (container.PruneReport, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {

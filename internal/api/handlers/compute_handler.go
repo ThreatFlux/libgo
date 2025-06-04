@@ -11,13 +11,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ComputeHandler handles unified compute instance requests
+// ComputeHandler handles unified compute instance requests.
 type ComputeHandler struct {
 	computeManager compute.Manager
 	logger         logger.Logger
 }
 
-// NewComputeHandler creates a new compute handler
+// NewComputeHandler creates a new compute handler.
 func NewComputeHandler(computeManager compute.Manager, logger logger.Logger) *ComputeHandler {
 	return &ComputeHandler{
 		computeManager: computeManager,
@@ -25,7 +25,7 @@ func NewComputeHandler(computeManager compute.Manager, logger logger.Logger) *Co
 	}
 }
 
-// CreateInstance handles requests to create a new compute instance
+// CreateInstance handles requests to create a new compute instance.
 func (h *ComputeHandler) CreateInstance(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 
@@ -77,7 +77,7 @@ func (h *ComputeHandler) CreateInstance(c *gin.Context) {
 	})
 }
 
-// GetInstance handles requests to get a compute instance by ID
+// GetInstance handles requests to get a compute instance by ID.
 func (h *ComputeHandler) GetInstance(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -102,7 +102,7 @@ func (h *ComputeHandler) GetInstance(c *gin.Context) {
 	})
 }
 
-// GetInstanceByName handles requests to get a compute instance by name
+// GetInstanceByName handles requests to get a compute instance by name.
 func (h *ComputeHandler) GetInstanceByName(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	name := c.Param("name")
@@ -127,7 +127,7 @@ func (h *ComputeHandler) GetInstanceByName(c *gin.Context) {
 	})
 }
 
-// ListInstances handles requests to list compute instances
+// ListInstances handles requests to list compute instances.
 func (h *ComputeHandler) ListInstances(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 
@@ -180,7 +180,7 @@ func (h *ComputeHandler) ListInstances(c *gin.Context) {
 	})
 }
 
-// UpdateInstance handles requests to update a compute instance
+// UpdateInstance handles requests to update a compute instance.
 func (h *ComputeHandler) UpdateInstance(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -217,7 +217,7 @@ func (h *ComputeHandler) UpdateInstance(c *gin.Context) {
 	})
 }
 
-// DeleteInstance handles requests to delete a compute instance
+// DeleteInstance handles requests to delete a compute instance.
 func (h *ComputeHandler) DeleteInstance(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -250,16 +250,16 @@ func (h *ComputeHandler) DeleteInstance(c *gin.Context) {
 	})
 }
 
-// Lifecycle operations
+// Lifecycle operations.
 
-// StartInstance handles requests to start a compute instance
+// StartInstance handles requests to start a compute instance.
 func (h *ComputeHandler) StartInstance(c *gin.Context) {
 	h.performLifecycleAction(c, "start", func(id string) error {
 		return h.computeManager.StartInstance(c.Request.Context(), id)
 	})
 }
 
-// StopInstance handles requests to stop a compute instance
+// StopInstance handles requests to stop a compute instance.
 func (h *ComputeHandler) StopInstance(c *gin.Context) {
 	force := c.Query("force") == "true"
 	h.performLifecycleAction(c, "stop", func(id string) error {
@@ -267,7 +267,7 @@ func (h *ComputeHandler) StopInstance(c *gin.Context) {
 	})
 }
 
-// RestartInstance handles requests to restart a compute instance
+// RestartInstance handles requests to restart a compute instance.
 func (h *ComputeHandler) RestartInstance(c *gin.Context) {
 	force := c.Query("force") == "true"
 	h.performLifecycleAction(c, "restart", func(id string) error {
@@ -275,23 +275,23 @@ func (h *ComputeHandler) RestartInstance(c *gin.Context) {
 	})
 }
 
-// PauseInstance handles requests to pause a compute instance
+// PauseInstance handles requests to pause a compute instance.
 func (h *ComputeHandler) PauseInstance(c *gin.Context) {
 	h.performLifecycleAction(c, "pause", func(id string) error {
 		return h.computeManager.PauseInstance(c.Request.Context(), id)
 	})
 }
 
-// UnpauseInstance handles requests to unpause a compute instance
+// UnpauseInstance handles requests to unpause a compute instance.
 func (h *ComputeHandler) UnpauseInstance(c *gin.Context) {
 	h.performLifecycleAction(c, "unpause", func(id string) error {
 		return h.computeManager.UnpauseInstance(c.Request.Context(), id)
 	})
 }
 
-// Resource operations
+// Resource operations.
 
-// GetResourceUsage handles requests to get instance resource usage
+// GetResourceUsage handles requests to get instance resource usage.
 func (h *ComputeHandler) GetResourceUsage(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -316,7 +316,7 @@ func (h *ComputeHandler) GetResourceUsage(c *gin.Context) {
 	})
 }
 
-// UpdateResourceLimits handles requests to update instance resource limits
+// UpdateResourceLimits handles requests to update instance resource limits.
 func (h *ComputeHandler) UpdateResourceLimits(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -352,9 +352,9 @@ func (h *ComputeHandler) UpdateResourceLimits(c *gin.Context) {
 	})
 }
 
-// Cluster and backend operations
+// Cluster and backend operations.
 
-// GetClusterStatus handles requests to get overall cluster status
+// GetClusterStatus handles requests to get overall cluster status.
 func (h *ComputeHandler) GetClusterStatus(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 
@@ -370,7 +370,7 @@ func (h *ComputeHandler) GetClusterStatus(c *gin.Context) {
 	})
 }
 
-// GetBackendInfo handles requests to get backend information
+// GetBackendInfo handles requests to get backend information.
 func (h *ComputeHandler) GetBackendInfo(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	backendStr := c.Param("backend")
@@ -396,7 +396,7 @@ func (h *ComputeHandler) GetBackendInfo(c *gin.Context) {
 	})
 }
 
-// GetInstanceEvents handles requests to get instance events
+// GetInstanceEvents handles requests to get instance events.
 func (h *ComputeHandler) GetInstanceEvents(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 	id := c.Param("id")
@@ -425,7 +425,7 @@ func (h *ComputeHandler) GetInstanceEvents(c *gin.Context) {
 	})
 }
 
-// HealthCheck handles requests to check compute manager health
+// HealthCheck handles requests to check compute manager health.
 func (h *ComputeHandler) HealthCheck(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 
@@ -446,7 +446,7 @@ func (h *ComputeHandler) HealthCheck(c *gin.Context) {
 	})
 }
 
-// Helper methods
+// Helper methods.
 
 func (h *ComputeHandler) validateCreateRequest(req compute.ComputeInstanceRequest) error {
 	if req.Name == "" {
