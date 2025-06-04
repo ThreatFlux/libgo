@@ -203,31 +203,8 @@ func (eb *EventBus) GetEvents(instanceID string, opts EventOptions) []*InstanceE
 	for i := len(eb.events) - 1; i >= 0; i-- {
 		event := eb.events[i]
 
-		// Filter by instance ID
-		if instanceID != "*" && event.InstanceID != instanceID {
+		if !eb.matchesEventFilters(&event, instanceID, opts) {
 			continue
-		}
-
-		// Filter by time range
-		if opts.Since != nil && event.Timestamp.Before(opts.Since.Time) {
-			continue
-		}
-		if opts.Until != nil && event.Timestamp.After(opts.Until.Time) {
-			continue
-		}
-
-		// Filter by event types
-		if len(opts.Types) > 0 {
-			typeMatch := false
-			for _, t := range opts.Types {
-				if event.Type == t {
-					typeMatch = true
-					break
-				}
-			}
-			if !typeMatch {
-				continue
-			}
 		}
 
 		eventCopy := event
@@ -240,6 +217,39 @@ func (eb *EventBus) GetEvents(instanceID string, opts EventOptions) []*InstanceE
 	}
 
 	return filtered
+}
+
+// matchesEventFilters checks if an event matches the given filters.
+func (eb *EventBus) matchesEventFilters(event *InstanceEvent, instanceID string, opts EventOptions) bool {
+	// Filter by instance ID
+	if instanceID != "*" && event.InstanceID != instanceID {
+		return false
+	}
+
+	// Filter by time range
+	if opts.Since != nil && event.Timestamp.Before(opts.Since.Time) {
+		return false
+	}
+	if opts.Until != nil && event.Timestamp.After(opts.Until.Time) {
+		return false
+	}
+
+	// Filter by event types
+	if len(opts.Types) > 0 {
+		return eb.matchesEventType(event.Type, opts.Types)
+	}
+
+	return true
+}
+
+// matchesEventType checks if an event type matches any of the filter types.
+func (eb *EventBus) matchesEventType(eventType string, filterTypes []string) bool {
+	for _, t := range filterTypes {
+		if eventType == t {
+			return true
+		}
+	}
+	return false
 }
 
 // StreamEvents streams events for an instance.

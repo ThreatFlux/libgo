@@ -134,38 +134,11 @@ func (h *ComputeHandler) ListInstances(c *gin.Context) {
 	// Parse query parameters
 	opts := h.parseListOptions(c)
 
-	// Set user ID filter from context if not admin
-	if userID, exists := c.Get("user_id"); exists {
-		if uid, ok := userID.(uint); ok {
-			// Check if user is admin
-			if roles, exists := c.Get("user_roles"); exists {
-				if rolesSlice, ok := roles.([]string); ok {
-					isAdmin := false
-					for _, role := range rolesSlice {
-						if role == "admin" {
-							isAdmin = true
-							break
-						}
-					}
-					// If not admin, filter by user ID
-					if !isAdmin {
-						opts.UserID = uid
-					}
-				}
-			}
-		}
-	}
+	// Apply user access control
+	h.applyUserAccessControl(c, &opts)
 
-	var instances []*compute.ComputeInstance
-	var err error
-
-	// List from all backends or specific backend
-	if opts.Backend == "" {
-		instances, err = h.computeManager.ListAllInstances(c.Request.Context(), opts)
-	} else {
-		instances, err = h.computeManager.ListInstances(c.Request.Context(), opts)
-	}
-
+	// Get instances from appropriate backend(s)
+	instances, err := h.getInstancesFromBackend(c, opts)
 	if err != nil {
 		contextLogger.Error("Failed to list compute instances",
 			logger.String("backend", string(opts.Backend)),
@@ -178,6 +151,58 @@ func (h *ComputeHandler) ListInstances(c *gin.Context) {
 		"instances": instances,
 		"count":     len(instances),
 	})
+}
+
+// applyUserAccessControl applies user-based filtering to list options.
+func (h *ComputeHandler) applyUserAccessControl(c *gin.Context, opts *compute.ComputeInstanceListOptions) {
+	userID, uid := h.getUserIDFromContext(c)
+	if !userID {
+		return
+	}
+
+	// If user is not admin, filter by user ID
+	if !h.isUserAdmin(c) {
+		opts.UserID = uid
+	}
+}
+
+// getUserIDFromContext extracts user ID from context.
+func (h *ComputeHandler) getUserIDFromContext(c *gin.Context) (bool, uint) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return false, 0
+	}
+	
+	uid, ok := userID.(uint)
+	return ok, uid
+}
+
+// isUserAdmin checks if the current user has admin role.
+func (h *ComputeHandler) isUserAdmin(c *gin.Context) bool {
+	roles, exists := c.Get("user_roles")
+	if !exists {
+		return false
+	}
+	
+	rolesSlice, ok := roles.([]string)
+	if !ok {
+		return false
+	}
+	
+	for _, role := range rolesSlice {
+		if role == "admin" {
+			return true
+		}
+	}
+	return false
+}
+
+// getInstancesFromBackend retrieves instances from the appropriate backend.
+func (h *ComputeHandler) getInstancesFromBackend(c *gin.Context, opts compute.ComputeInstanceListOptions) ([]*compute.ComputeInstance, error) {
+	if opts.Backend == "" {
+		return h.computeManager.ListAllInstances(c.Request.Context(), opts)
+	}
+	return h.computeManager.ListInstances(c.Request.Context(), opts)
 }
 
 // UpdateInstance handles requests to update a compute instance.
