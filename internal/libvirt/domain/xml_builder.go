@@ -18,12 +18,15 @@ type TemplateXMLBuilder struct {
 
 // DomainTemplate contains data for domain XML template.
 type DomainTemplate struct {
+	// Struct fields (need to be first for alignment)
+	Memory MemoryTemplate
+	CPU    CPUTemplate
+	// Slice fields (24 bytes each)
+	Disks    []DiskTemplate
+	Networks []NetworkTemplate
+	// String fields (16 bytes each)
 	Name         string
 	UUID         string
-	Memory       MemoryTemplate
-	CPU          CPUTemplate
-	Disks        []DiskTemplate
-	Networks     []NetworkTemplate
 	CloudInitISO string
 }
 
@@ -34,8 +37,10 @@ type MemoryTemplate struct {
 
 // CPUTemplate contains CPU data for the template.
 type CPUTemplate struct {
+	// String fields (16 bytes)
+	Model string
+	// Int fields (8 bytes each on 64-bit)
 	Count   int
-	Model   string
 	Cores   int
 	Threads int
 	Sockets int

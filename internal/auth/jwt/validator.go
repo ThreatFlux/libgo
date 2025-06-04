@@ -26,10 +26,14 @@ type Validator interface {
 
 // JWTValidator implements Validator.
 type JWTValidator struct {
-	secretKey     []byte
-	audience      []string
-	publicKey     *rsa.PublicKey
-	algorithm     jwt.SigningMethod
+	// Slice fields (24 bytes each)
+	secretKey []byte
+	audience  []string
+	// Interface fields (16 bytes)
+	algorithm jwt.SigningMethod
+	// Pointer fields (8 bytes)
+	publicKey *rsa.PublicKey
+	// String fields (16 bytes each)
 	issuer        string
 	signingMethod string
 }

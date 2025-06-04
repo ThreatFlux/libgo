@@ -37,14 +37,19 @@ type Generator interface {
 
 // JWTGenerator implements Generator.
 type JWTGenerator struct {
-	secretKey     []byte
-	audience      []string
-	privateKey    *rsa.PrivateKey
-	publicKey     *rsa.PublicKey
-	algorithm     jwt.SigningMethod
+	// Slice fields (24 bytes each)
+	secretKey []byte
+	audience  []string
+	// Interface fields (16 bytes)
+	algorithm jwt.SigningMethod
+	// Pointer fields (8 bytes each)
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+	// Duration (8 bytes)
+	expiresIn time.Duration
+	// String fields (16 bytes each)
 	issuer        string
 	signingMethod string
-	expiresIn     time.Duration
 }
 
 // NewJWTGenerator creates a new JWTGenerator.

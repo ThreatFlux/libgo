@@ -28,28 +28,36 @@ func NewDockerContainerHandler(containerService containerSvc.Service, logger log
 
 // CreateContainerRequest represents the request to create a container
 type CreateContainerRequest struct {
-	Cmd        []string             `json:"cmd,omitempty"`
-	Entrypoint []string             `json:"entrypoint,omitempty"`
-	Env        []string             `json:"env,omitempty"`
-	Labels     map[string]string    `json:"labels,omitempty"`
-	Volumes    map[string]struct{}  `json:"volumes,omitempty"`
-	Name       string               `json:"name" binding:"required"`
-	Image      string               `json:"image" binding:"required"`
-	WorkingDir string               `json:"working_dir,omitempty"`
-	User       string               `json:"user,omitempty"`
+	// Struct fields (need to be first for alignment)
 	HostConfig container.HostConfig `json:"host_config,omitempty"`
+	// Slice fields (24 bytes each)
+	Cmd        []string `json:"cmd,omitempty"`
+	Entrypoint []string `json:"entrypoint,omitempty"`
+	Env        []string `json:"env,omitempty"`
+	// Map fields (24 bytes each)
+	Labels  map[string]string   `json:"labels,omitempty"`
+	Volumes map[string]struct{} `json:"volumes,omitempty"`
+	// String fields (16 bytes each)
+	Name       string `json:"name" binding:"required"`
+	Image      string `json:"image" binding:"required"`
+	WorkingDir string `json:"working_dir,omitempty"`
+	User       string `json:"user,omitempty"`
 }
 
 // ContainerResponse represents a container in responses
 type ContainerResponse struct {
-	Ports   []PortMapping     `json:"ports,omitempty"`
-	Labels  map[string]string `json:"labels,omitempty"`
-	ID      string            `json:"id"`
-	Name    string            `json:"name"`
-	Image   string            `json:"image"`
-	State   string            `json:"state"`
-	Status  string            `json:"status"`
-	Created int64             `json:"created"`
+	// Slice fields (24 bytes)
+	Ports []PortMapping `json:"ports,omitempty"`
+	// Map fields (24 bytes)
+	Labels map[string]string `json:"labels,omitempty"`
+	// Int64 fields (8 bytes)
+	Created int64 `json:"created"`
+	// String fields (16 bytes each)
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Image  string `json:"image"`
+	State  string `json:"state"`
+	Status string `json:"status"`
 }
 
 // PortMapping represents a port mapping

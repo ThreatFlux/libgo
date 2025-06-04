@@ -42,9 +42,12 @@ type LoginRequest struct {
 
 // LoginResponse represents a login response
 type LoginResponse struct {
-	User      *usermodels.User `json:"user"`
-	Token     string           `json:"token"`
-	ExpiresAt time.Time        `json:"expiresAt"`
+	// Time fields (24 bytes, must be first for alignment)
+	ExpiresAt time.Time `json:"expiresAt"`
+	// Pointer fields (8 bytes)
+	User *usermodels.User `json:"user"`
+	// String fields (16 bytes)
+	Token string `json:"token"`
 }
 
 // Login handles user login
