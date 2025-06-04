@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -596,38 +597,38 @@ func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *co
 		Timestamp: stats.Read,
 		CPU: compute.CPUUsage{
 			UsageNanos: func() int64 {
-			if stats.CPUStats.CPUUsage.TotalUsage > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(stats.CPUStats.CPUUsage.TotalUsage)
-		}(),
+				if stats.CPUStats.CPUUsage.TotalUsage > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(stats.CPUStats.CPUUsage.TotalUsage)
+			}(),
 			SystemUsage: func() int64 {
-			if stats.CPUStats.SystemUsage > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(stats.CPUStats.SystemUsage)
-		}(),
-			OnlineCPUs:  int(stats.CPUStats.OnlineCPUs),
+				if stats.CPUStats.SystemUsage > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(stats.CPUStats.SystemUsage)
+			}(),
+			OnlineCPUs: int(stats.CPUStats.OnlineCPUs),
 		},
 		Memory: compute.MemoryUsage{
 			Usage: func() int64 {
-			if stats.MemoryStats.Usage > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(stats.MemoryStats.Usage)
-		}(),
+				if stats.MemoryStats.Usage > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(stats.MemoryStats.Usage)
+			}(),
 			MaxUsage: func() int64 {
-			if stats.MemoryStats.MaxUsage > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(stats.MemoryStats.MaxUsage)
-		}(),
+				if stats.MemoryStats.MaxUsage > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(stats.MemoryStats.MaxUsage)
+			}(),
 			Limit: func() int64 {
-			if stats.MemoryStats.Limit > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(stats.MemoryStats.Limit)
-		}(),
+				if stats.MemoryStats.Limit > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(stats.MemoryStats.Limit)
+			}(),
 		},
 	}
 
@@ -658,18 +659,18 @@ func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *co
 		switch strings.ToLower(bioStats.Op) {
 		case "read":
 			usage.Storage.ReadBytes += func() int64 {
-			if bioStats.Value > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(bioStats.Value)
-		}()
+				if bioStats.Value > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(bioStats.Value)
+			}()
 		case "write":
 			usage.Storage.WriteBytes += func() int64 {
-			if bioStats.Value > uint64(math.MaxInt64) {
-				return math.MaxInt64
-			}
-			return int64(bioStats.Value)
-		}()
+				if bioStats.Value > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(bioStats.Value)
+			}()
 		}
 	}
 

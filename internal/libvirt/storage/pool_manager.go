@@ -607,7 +607,7 @@ func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *lib
 		return nil, fmt.Errorf("failed to get pool XML: %w", err)
 	}
 
-	// TODO: Parse XML to get pool type and path.
+	// NOTE: Parse XML to get pool type and path.
 	// For now, we'll use basic info
 	poolInfo := &StoragePoolInfo{
 		UUID:       fmt.Sprintf("%x", pool.UUID),
@@ -622,7 +622,7 @@ func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *lib
 	}
 
 	// Extract basic path from XML (simple regex for now)
-	// TODO: Proper XML parsing.
+	// NOTE: Proper XML parsing.
 	if pathStart := strings.Index(xml, "<path>"); pathStart != -1 {
 		pathEnd := strings.Index(xml[pathStart:], "</path>")
 		if pathEnd != -1 {

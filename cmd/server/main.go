@@ -260,11 +260,11 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	}
 
 	// Initialize libvirt components
-	if err := initLibvirtComponents(components, cfg, connManager, log); err != nil {
+	if err := initLibvirtComponents(ctx, components, cfg, connManager, log); err != nil {
 		return nil, fmt.Errorf("initializing libvirt components: %w", err)
 	}
 
-	// Initialize VM components  
+	// Initialize VM components
 	if err := initVMComponents(components, cfg, log); err != nil {
 		return nil, fmt.Errorf("initializing VM components: %w", err)
 	}
@@ -293,7 +293,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 }
 
 // initLibvirtComponents initializes libvirt-related components.
-func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) error {
+func initLibvirtComponents(ctx context.Context, components *ComponentDependencies, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) error {
 	// Initialize XML builder for domain
 	domainXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "domain"))
 	if err != nil {
@@ -307,7 +307,7 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 	// Initialize storage components
 	storageXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "storage"))
 	if err != nil {
-		return nil, fmt.Errorf("creating storage template loader: %w", err)
+		return fmt.Errorf("creating storage template loader: %w", err)
 	}
 	storageXMLBuilder := storage.NewTemplateXMLBuilder(storageXMLLoader, log)
 
@@ -317,7 +317,7 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 	// Initialize network components
 	networkXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "network"))
 	if err != nil {
-		return nil, fmt.Errorf("creating network template loader: %w", err)
+		return fmt.Errorf("creating network template loader: %w", err)
 	}
 	networkXMLBuilder := network.TemplateXMLBuilderWithLoader(networkXMLLoader, log)
 
@@ -331,23 +331,23 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 	// Initialize cloud-init components
 	cloudInitTemplateLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud-init template loader: %w", err)
+		return fmt.Errorf("creating cloud-init template loader: %w", err)
 	}
 	components.CloudInitManager, err = cloudinit.NewCloudInitGenerator(cloudInitTemplateLoader.GetTemplatePath(), log)
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud-init generator: %w", err)
+		return fmt.Errorf("creating cloud-init generator: %w", err)
 	}
 
 	// Initialize VM template manager
 	components.TemplateManager, err = template.NewTemplateManager(cfg.TemplatesPath, log)
 	if err != nil {
-		return nil, fmt.Errorf("creating template manager: %w", err)
+		return fmt.Errorf("creating template manager: %w", err)
 	}
 
 	// Initialize export manager with appropriate converters
 	_, err = ova.NewOVFTemplateGenerator(log) // Initialize but we'll use it later in a separate PR
 	if err != nil {
-		return nil, fmt.Errorf("creating OVF template generator: %w", err)
+		return fmt.Errorf("creating OVF template generator: %w", err)
 	}
 
 	components.ExportManager, err = export.NewExportManager(
@@ -357,7 +357,7 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 		log,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating export manager: %w", err)
+		return fmt.Errorf("creating export manager: %w", err)
 	}
 
 	// Initialize VM manager
@@ -381,13 +381,13 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 	// Initialize database connection
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
-		return nil, fmt.Errorf("initializing database connection: %w", err)
+		return fmt.Errorf("initializing database connection: %w", err)
 	}
 
 	// Initialize authentication components
 	components.UserService, err = user.NewGormUserService(db, log)
 	if err != nil {
-		return nil, fmt.Errorf("initializing user service: %w", err)
+		return fmt.Errorf("initializing user service: %w", err)
 	}
 	components.JWTGenerator = jwt.NewJWTGenerator(cfg.Auth)
 	components.JWTValidator = jwt.NewJWTValidator(cfg.Auth)
@@ -421,7 +421,7 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 
 		components.DockerManager, err = docker.NewManager(dockerOpts...)
 		if err != nil {
-			return nil, fmt.Errorf("creating Docker manager: %w", err)
+			return fmt.Errorf("creating Docker manager: %w", err)
 		}
 
 		log.Info("Docker client manager initialized successfully")
@@ -447,10 +447,10 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 	kvmBackend := NewKVMBackendAdapter(components.VMManager, log)
 	if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
 		if kvmErr := concreteManager.RegisterBackend(compute.BackendKVM, kvmBackend); kvmErr != nil {
-			return nil, fmt.Errorf("registering KVM backend: %w", kvmErr)
+			return fmt.Errorf("registering KVM backend: %w", kvmErr)
 		}
 	} else {
-		return nil, fmt.Errorf("compute manager is not a concrete ComputeManager")
+		return fmt.Errorf("compute manager is not a concrete ComputeManager")
 	}
 
 	// Register Docker backend if enabled
@@ -458,7 +458,7 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 		dockerBackend := docker.NewBackendService(components.DockerManager, log)
 		if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
 			if dockerErr := concreteManager.RegisterBackend(compute.BackendDocker, dockerBackend); dockerErr != nil {
-				return nil, fmt.Errorf("registering Docker backend: %w", dockerErr)
+				return fmt.Errorf("registering Docker backend: %w", dockerErr)
 			}
 			log.Info("Docker backend registered with compute manager")
 		}
@@ -478,10 +478,40 @@ func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config
 
 	components.MetricsCollector, err = metrics.NewCollector("prometheus", ctx, metricsDeps, log)
 	if err != nil {
-		return nil, fmt.Errorf("creating metrics collector: %w", err)
+		return fmt.Errorf("creating metrics collector: %w", err)
 	}
 
-	return components, nil
+	return nil
+}
+
+// initVMComponents initializes VM-related components.
+func initVMComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
+	// VM components are already initialized in initLibvirtComponents
+	return nil
+}
+
+// initAuthComponents initializes authentication components.
+func initAuthComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
+	// Auth components are already initialized in initLibvirtComponents
+	return nil
+}
+
+// initDockerComponents initializes Docker components.
+func initDockerComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
+	// Docker components are already initialized in initLibvirtComponents
+	return nil
+}
+
+// initComputeManager initializes the unified compute manager.
+func initComputeManager(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
+	// Compute manager is already initialized in initLibvirtComponents
+	return nil
+}
+
+// initMetricsComponents initializes metrics components.
+func initMetricsComponents(ctx context.Context, components *ComponentDependencies, log loggerPkg.Logger) error {
+	// Metrics components are already initialized in initLibvirtComponents
+	return nil
 }
 
 // initHealthChecker initializes the health checker.
@@ -974,11 +1004,11 @@ func (a *kvmBackendAdapter) convertFromVM(vmInstance *vmmodels.VM) *compute.Comp
 			},
 			Memory: compute.MemoryResources{
 				Limit: func() int64 {
-				if vmInstance.Memory.SizeBytes > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(vmInstance.Memory.SizeBytes)
-			}(),
+					if vmInstance.Memory.SizeBytes > uint64(math.MaxInt64) {
+						return math.MaxInt64
+					}
+					return int64(vmInstance.Memory.SizeBytes)
+				}(),
 			},
 		},
 		CreatedAt: vmInstance.CreatedAt,

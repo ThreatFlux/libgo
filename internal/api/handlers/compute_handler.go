@@ -172,7 +172,7 @@ func (h *ComputeHandler) getUserIDFromContext(c *gin.Context) (bool, uint) {
 	if !exists {
 		return false, 0
 	}
-	
+
 	uid, ok := userID.(uint)
 	return ok, uid
 }
@@ -183,12 +183,12 @@ func (h *ComputeHandler) isUserAdmin(c *gin.Context) bool {
 	if !exists {
 		return false
 	}
-	
+
 	rolesSlice, ok := roles.([]string)
 	if !ok {
 		return false
 	}
-	
+
 	for _, role := range rolesSlice {
 		if role == "admin" {
 			return true

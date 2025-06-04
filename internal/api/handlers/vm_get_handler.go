@@ -8,12 +8,12 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// GetVMResponse represents the response for a VM get request
+// GetVMResponse represents the response for a VM get request.
 type GetVMResponse struct {
 	VM *vmmodels.VM `json:"vm"`
 }
 
-// GetVM handles requests to get details of a specific VM
+// GetVM handles requests to get details of a specific VM.
 func (h *VMHandler) GetVM(c *gin.Context) {
 	// Get VM name from URL path
 	name := c.Param("name")

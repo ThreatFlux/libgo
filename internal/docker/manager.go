@@ -34,9 +34,9 @@ type Manager interface {
 
 // Global default manager instance.
 var (
-	defaultManager     Manager
+	defaultManager Manager
 	// defaultManagerOnce sync.Once // Unused - reserved for future singleton pattern
-	defaultManagerMu   sync.RWMutex
+	defaultManagerMu sync.RWMutex
 )
 
 // DefaultManager returns the singleton manager instance.

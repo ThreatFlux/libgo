@@ -7,13 +7,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DeleteVMResponse represents the response for a VM deletion request
+// DeleteVMResponse represents the response for a VM deletion request.
 type DeleteVMResponse struct {
 	Message string `json:"message"`
 	Success bool   `json:"success"`
 }
 
-// DeleteVM handles requests to delete a VM
+// DeleteVM handles requests to delete a VM.
 func (h *VMHandler) DeleteVM(c *gin.Context) {
 	// Get VM name from URL path
 	name := c.Param("name")

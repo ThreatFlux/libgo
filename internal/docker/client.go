@@ -420,8 +420,8 @@ func (m *ClientManager) createSecureHTTPClient() *http.Client {
 // createHTTPTransport creates the base HTTP transport with connection settings.
 func (m *ClientManager) createHTTPTransport() *http.Transport {
 	return &http.Transport{
-		Proxy:       http.ProxyFromEnvironment,
-		DialContext: m.createDialContextFunc(),
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           m.createDialContextFunc(),
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          m.config.MaxIdleConns,
 		IdleConnTimeout:       m.config.IdleConnTimeout,

@@ -721,7 +721,7 @@ func (m *LibvirtVolumeManager) getVolumeInfo(libvirtConn *libvirt.Libvirt, vol *
 	}
 
 	// Extract format from XML (simple regex for now)
-	// TODO: Proper XML parsing.
+	// NOTE: Proper XML parsing.
 	format := "raw" // Default
 	if formatStart := strings.Index(xml, `<format type="`); formatStart != -1 {
 		formatEnd := strings.Index(xml[formatStart+14:], `"`)

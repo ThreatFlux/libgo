@@ -51,8 +51,8 @@ type libvirtDomain struct {
 		} `xml:"topology"`
 	} `xml:"cpu"`
 	Memory struct {
-		Value uint64 `xml:",chardata"`
 		Unit  string `xml:"unit,attr"`
+		Value uint64 `xml:",chardata"`
 	} `xml:"memory"`
 	// String fields (16 bytes each)
 	Name   string `xml:"name"`
