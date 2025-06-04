@@ -53,7 +53,13 @@ func (c *OVAConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	if err != nil {
 		return fmt.Errorf("failed to get disk size: %w", err)
 	}
-	diskSize := uint64(diskInfo.Size())
+	diskSize := func() uint64 {
+		size := diskInfo.Size()
+		if size < 0 {
+			return 0
+		}
+		return uint64(size)
+	}()
 
 	// Step 2: Generate OVF file
 	ovfPath := filepath.Join(tempDir, "vm.ovf")

@@ -595,14 +595,39 @@ func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *co
 	usage := &compute.ResourceUsage{
 		Timestamp: stats.Read,
 		CPU: compute.CPUUsage{
-			UsageNanos:  int64(stats.CPUStats.CPUUsage.TotalUsage),
-			SystemUsage: int64(stats.CPUStats.SystemUsage),
+			UsageNanos: func() int64 {
+			if stats.CPUStats.CPUUsage.TotalUsage > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(stats.CPUStats.CPUUsage.TotalUsage)
+		}(),
+			SystemUsage: func() int64 {
+			if stats.CPUStats.SystemUsage > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(stats.CPUStats.SystemUsage)
+		}(),
 			OnlineCPUs:  int(stats.CPUStats.OnlineCPUs),
 		},
 		Memory: compute.MemoryUsage{
-			Usage:    int64(stats.MemoryStats.Usage),
-			MaxUsage: int64(stats.MemoryStats.MaxUsage),
-			Limit:    int64(stats.MemoryStats.Limit),
+			Usage: func() int64 {
+			if stats.MemoryStats.Usage > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(stats.MemoryStats.Usage)
+		}(),
+			MaxUsage: func() int64 {
+			if stats.MemoryStats.MaxUsage > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(stats.MemoryStats.MaxUsage)
+		}(),
+			Limit: func() int64 {
+			if stats.MemoryStats.Limit > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(stats.MemoryStats.Limit)
+		}(),
 		},
 	}
 
@@ -632,9 +657,19 @@ func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *co
 	for _, bioStats := range stats.BlkioStats.IoServiceBytesRecursive {
 		switch strings.ToLower(bioStats.Op) {
 		case "read":
-			usage.Storage.ReadBytes += int64(bioStats.Value)
+			usage.Storage.ReadBytes += func() int64 {
+			if bioStats.Value > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(bioStats.Value)
+		}()
 		case "write":
-			usage.Storage.WriteBytes += int64(bioStats.Value)
+			usage.Storage.WriteBytes += func() int64 {
+			if bioStats.Value > uint64(math.MaxInt64) {
+				return math.MaxInt64
+			}
+			return int64(bioStats.Value)
+		}()
 		}
 	}
 

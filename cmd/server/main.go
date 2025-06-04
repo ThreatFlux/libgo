@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/signal"
@@ -258,10 +259,45 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 		ConnManager: connManager,
 	}
 
+	// Initialize libvirt components
+	if err := initLibvirtComponents(components, cfg, connManager, log); err != nil {
+		return nil, fmt.Errorf("initializing libvirt components: %w", err)
+	}
+
+	// Initialize VM components  
+	if err := initVMComponents(components, cfg, log); err != nil {
+		return nil, fmt.Errorf("initializing VM components: %w", err)
+	}
+
+	// Initialize authentication components
+	if err := initAuthComponents(components, cfg, log); err != nil {
+		return nil, fmt.Errorf("initializing auth components: %w", err)
+	}
+
+	// Initialize Docker components if enabled
+	if err := initDockerComponents(components, cfg, log); err != nil {
+		return nil, fmt.Errorf("initializing Docker components: %w", err)
+	}
+
+	// Initialize unified compute manager
+	if err := initComputeManager(components, cfg, log); err != nil {
+		return nil, fmt.Errorf("initializing compute manager: %w", err)
+	}
+
+	// Initialize metrics
+	if err := initMetricsComponents(ctx, components, log); err != nil {
+		return nil, fmt.Errorf("initializing metrics: %w", err)
+	}
+
+	return components, nil
+}
+
+// initLibvirtComponents initializes libvirt-related components.
+func initLibvirtComponents(components *ComponentDependencies, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) error {
 	// Initialize XML builder for domain
 	domainXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "domain"))
 	if err != nil {
-		return nil, fmt.Errorf("creating domain template loader: %w", err)
+		return fmt.Errorf("creating domain template loader: %w", err)
 	}
 	domainXMLBuilder := domain.NewTemplateXMLBuilder(domainXMLLoader, log)
 
@@ -937,7 +973,12 @@ func (a *kvmBackendAdapter) convertFromVM(vmInstance *vmmodels.VM) *compute.Comp
 				Cores: float64(vmInstance.CPU.Count),
 			},
 			Memory: compute.MemoryResources{
-				Limit: int64(vmInstance.Memory.SizeBytes),
+				Limit: func() int64 {
+				if vmInstance.Memory.SizeBytes > uint64(math.MaxInt64) {
+					return math.MaxInt64
+				}
+				return int64(vmInstance.Memory.SizeBytes)
+			}(),
 			},
 		},
 		CreatedAt: vmInstance.CreatedAt,

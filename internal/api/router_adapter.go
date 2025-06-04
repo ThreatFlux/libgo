@@ -92,7 +92,7 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 		// Create mock metrics - the real metrics conversion would be more complex
 		wsMetrics := &websocket.VMMetrics{}
 		wsMetrics.CPU.Utilization = 25.0 + float64(time.Now().Unix()%50)                    // Random-ish value between 25-75%
-		wsMetrics.Memory.Used = 1024*1024*1024 + uint64(time.Now().Unix()%3*1024*1024*1024) // 1-4GB
+		wsMetrics.Memory.Used = 1024*1024*1024 + uint64(time.Now().Unix()%3)*1024*1024*1024 // 1-4GB
 		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024                                     // 8GB
 		wsMetrics.Network.RxBytes = uint64(time.Now().Unix() % 10 * 1024 * 1024)            // 0-10MB
 		wsMetrics.Network.TxBytes = uint64(time.Now().Unix() % 5 * 1024 * 1024)             // 0-5MB
