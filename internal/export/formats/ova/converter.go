@@ -161,13 +161,17 @@ func (c *OVAConverter) getVMInfoFromOptions(options map[string]string) (*vm.VM, 
 
 	if cpuCount, ok := options["cpu_count"]; ok {
 		count := 1
-		fmt.Sscanf(cpuCount, "%d", &count)
+		if _, err := fmt.Sscanf(cpuCount, "%d", &count); err != nil {
+			count = 1 // Default to 1 CPU if parsing fails
+		}
 		vmInfo.CPU.Count = count
 	}
 
 	if memoryMB, ok := options["memory_mb"]; ok {
 		memory := uint64(1024)
-		fmt.Sscanf(memoryMB, "%d", &memory)
+		if _, err := fmt.Sscanf(memoryMB, "%d", &memory); err != nil {
+			memory = 1024 // Default to 1GB if parsing fails
+		}
 		// Convert MB to bytes (1 MB = 1024 * 1024 bytes)
 		vmInfo.Memory.SizeBytes = memory * 1024 * 1024
 	}

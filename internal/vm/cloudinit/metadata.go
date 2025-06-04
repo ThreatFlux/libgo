@@ -45,7 +45,7 @@ func (g *MetadataGenerator) GenerateHostname(vm *vm.VM) string {
 
 	// Ensure hostname ends with alphanumeric
 	if !regexp.MustCompile(`[a-zA-Z0-9]$`).MatchString(hostname) {
-		hostname = hostname + "0"
+		hostname += "0"
 	}
 
 	// Maximum length for a hostname
@@ -74,8 +74,12 @@ func (g *MetadataGenerator) GenerateNetworkConfig(params vm.VMParams) (string, e
 
 	// If network parameters have custom MAC, include that
 	if params.Network.MacAddress != "" {
-		networkConfig["ethernets"].(map[string]interface{})["ens3"].(map[string]interface{})["match"] = map[string]interface{}{
-			"macaddress": params.Network.MacAddress,
+		if ethernets, ok := networkConfig["ethernets"].(map[string]interface{}); ok {
+			if ens3, ok := ethernets["ens3"].(map[string]interface{}); ok {
+				ens3["match"] = map[string]interface{}{
+					"macaddress": params.Network.MacAddress,
+				}
+			}
 		}
 	}
 

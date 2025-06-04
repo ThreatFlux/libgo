@@ -92,7 +92,11 @@ func (m *JWTMiddleware) Authorize(permission string) gin.HandlerFunc {
 			return
 		}
 
-		jwtClaims := claims.(*jwt.Claims)
+		jwtClaims, ok := claims.(*jwt.Claims)
+		if !ok {
+			m.handleAuthError(c, ErrInvalidToken, "Invalid token claims")
+			return
+		}
 
 		// Check if user has required permission
 		hasPermission, err := m.userService.HasPermission(c.Request.Context(), jwtClaims.UserID, permission)

@@ -123,7 +123,10 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 
 	// Parse query parameters
 	all := c.DefaultQuery("all", "false") == "true"
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "0"))
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "0"))
+	if err != nil {
+		limit = 0 // Default to no limit if parsing fails
+	}
 
 	options := container.ListOptions{
 		All:   all,

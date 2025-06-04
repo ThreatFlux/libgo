@@ -122,7 +122,8 @@ func main() {
 
 		err = initDefaultUsers(ctx, components.UserService, cfg.Auth.DefaultUsers, log)
 		if err != nil {
-			log.Fatal("Failed to initialize default users", loggerPkg.Error(err))
+			log.Error("Failed to initialize default users", loggerPkg.Error(err))
+			return
 		}
 	} else {
 		log.Warn("No default users configured")
