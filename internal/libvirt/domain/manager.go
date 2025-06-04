@@ -12,20 +12,27 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Custom errors
+// Custom errors.
 var (
 	ErrDomainNotFound = fmt.Errorf("domain not found")
 	ErrDomainExists   = fmt.Errorf("domain already exists")
 )
 
-// DomainManager implements Manager for libvirt domains
+// Network type constants.
+const (
+	networkTypeBridge  = "bridge"
+	networkTypeNetwork = "network"
+	networkTypeDirect  = "direct"
+)
+
+// DomainManager implements Manager for libvirt domains.
 type DomainManager struct {
 	connManager connection.Manager
 	xmlBuilder  XMLBuilder
 	logger      logger.Logger
 }
 
-// libvirtDomain is a struct to parse libvirt domain XML
+// libvirtDomain is a struct to parse libvirt domain XML.
 type libvirtDomain struct {
 	Name   string `xml:"name"`
 	UUID   string `xml:"uuid"`
@@ -47,48 +54,54 @@ type libvirtDomain struct {
 		} `xml:"topology"`
 	} `xml:"cpu"`
 	Devices struct {
-		Disks []struct {
-			Type   string `xml:"type,attr"`
-			Device string `xml:"device,attr"`
-			Driver struct {
-				Name string `xml:"name,attr"`
-				Type string `xml:"type,attr"`
-			} `xml:"driver"`
-			Source struct {
-				File    string `xml:"file,attr"`
-				Pool    string `xml:"pool,attr"`
-				Dev     string `xml:"dev,attr"`
-				Bridge  string `xml:"bridge,attr"`
-				Network string `xml:"network,attr"`
-			} `xml:"source"`
-			Target struct {
-				Dev string `xml:"dev,attr"`
-				Bus string `xml:"bus,attr"`
-			} `xml:"target"`
-			Boot struct {
-				Order int `xml:"order,attr"`
-			} `xml:"boot"`
-			ReadOnly  *struct{} `xml:"readonly"`
-			Shareable *struct{} `xml:"shareable"`
-		} `xml:"disk"`
-		Interfaces []struct {
-			Type   string `xml:"type,attr"`
-			Source struct {
-				Bridge  string `xml:"bridge,attr"`
-				Network string `xml:"network,attr"`
-				Dev     string `xml:"dev,attr"`
-			} `xml:"source"`
-			MAC struct {
-				Address string `xml:"address,attr"`
-			} `xml:"mac"`
-			Model struct {
-				Type string `xml:"type,attr"`
-			} `xml:"model"`
-		} `xml:"interface"`
+		Disks      []libvirtDisk      `xml:"disk"`
+		Interfaces []libvirtInterface `xml:"interface"`
 	} `xml:"devices"`
 }
 
-// NewDomainManager creates a new DomainManager
+// libvirtDisk represents a disk in libvirt domain XML.
+type libvirtDisk struct {
+	Type   string `xml:"type,attr"`
+	Device string `xml:"device,attr"`
+	Driver struct {
+		Name string `xml:"name,attr"`
+		Type string `xml:"type,attr"`
+	} `xml:"driver"`
+	Source struct {
+		File    string `xml:"file,attr"`
+		Pool    string `xml:"pool,attr"`
+		Dev     string `xml:"dev,attr"`
+		Bridge  string `xml:"bridge,attr"`
+		Network string `xml:"network,attr"`
+	} `xml:"source"`
+	Target struct {
+		Dev string `xml:"dev,attr"`
+		Bus string `xml:"bus,attr"`
+	} `xml:"target"`
+	Boot struct {
+		Order int `xml:"order,attr"`
+	} `xml:"boot"`
+	ReadOnly  *struct{} `xml:"readonly"`
+	Shareable *struct{} `xml:"shareable"`
+}
+
+// libvirtInterface represents an interface in libvirt domain XML.
+type libvirtInterface struct {
+	Type   string `xml:"type,attr"`
+	Source struct {
+		Bridge  string `xml:"bridge,attr"`
+		Network string `xml:"network,attr"`
+		Dev     string `xml:"dev,attr"`
+	} `xml:"source"`
+	MAC struct {
+		Address string `xml:"address,attr"`
+	} `xml:"mac"`
+	Model struct {
+		Type string `xml:"type,attr"`
+	} `xml:"model"`
+}
+
+// NewDomainManager creates a new DomainManager.
 func NewDomainManager(connManager connection.Manager, xmlBuilder XMLBuilder, logger logger.Logger) *DomainManager {
 	return &DomainManager{
 		connManager: connManager,
@@ -97,14 +110,21 @@ func NewDomainManager(connManager connection.Manager, xmlBuilder XMLBuilder, log
 	}
 }
 
-// Create implements Manager.Create
+// handleDeferredRelease logs any error from releasing a connection.
+func (m *DomainManager) handleDeferredRelease(conn connection.Connection) {
+	if err := m.connManager.Release(conn); err != nil {
+		m.logger.Error("Failed to release connection", logger.Error(err))
+	}
+}
+
+// Create implements Manager.Create.
 func (m *DomainManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -134,7 +154,11 @@ func (m *DomainManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM,
 	// Start the domain
 	if err := libvirtConn.DomainCreate(domain); err != nil {
 		// Try to clean up if starting fails
-		_ = libvirtConn.DomainUndefine(domain)
+		if undefineErr := libvirtConn.DomainUndefine(domain); undefineErr != nil {
+			m.logger.Error("Failed to undefine domain after failed start",
+				logger.String("domain", params.Name),
+				logger.Error(undefineErr))
+		}
 		return nil, fmt.Errorf("starting domain: %w", err)
 	}
 
@@ -142,14 +166,14 @@ func (m *DomainManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM,
 	return m.domainToVM(libvirtConn, domain)
 }
 
-// Get implements Manager.Get
+// Get implements Manager.Get.
 func (m *DomainManager) Get(ctx context.Context, name string) (*vm.VM, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -163,14 +187,14 @@ func (m *DomainManager) Get(ctx context.Context, name string) (*vm.VM, error) {
 	return m.domainToVM(libvirtConn, domain)
 }
 
-// List implements Manager.List
+// List implements Manager.List.
 func (m *DomainManager) List(ctx context.Context) ([]*vm.VM, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -196,11 +220,11 @@ func (m *DomainManager) List(ctx context.Context) ([]*vm.VM, error) {
 	return vms, nil
 }
 
-// Start implements Manager.Start
+// Start implements Manager.Start.
 func (m *DomainManager) Start(ctx context.Context, name string) error {
 	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
 		// Check if domain is already running
-		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain) //nolint:dogsled
 		if err != nil {
 			return fmt.Errorf("getting domain info: %w", err)
 		}
@@ -220,11 +244,11 @@ func (m *DomainManager) Start(ctx context.Context, name string) error {
 	})
 }
 
-// Stop implements Manager.Stop
+// Stop implements Manager.Stop.
 func (m *DomainManager) Stop(ctx context.Context, name string) error {
 	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
 		// Check if domain is already stopped
-		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain) //nolint:dogsled
 		if err != nil {
 			return fmt.Errorf("getting domain info: %w", err)
 		}
@@ -244,11 +268,11 @@ func (m *DomainManager) Stop(ctx context.Context, name string) error {
 	})
 }
 
-// ForceStop implements Manager.ForceStop
+// ForceStop implements Manager.ForceStop.
 func (m *DomainManager) ForceStop(ctx context.Context, name string) error {
 	return m.performDomainOperation(ctx, name, func(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) error {
 		// Check if domain is already stopped
-		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+		state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain) //nolint:dogsled
 		if err != nil {
 			return fmt.Errorf("getting domain info: %w", err)
 		}
@@ -268,14 +292,14 @@ func (m *DomainManager) ForceStop(ctx context.Context, name string) error {
 	})
 }
 
-// Delete implements Manager.Delete
+// Delete implements Manager.Delete.
 func (m *DomainManager) Delete(ctx context.Context, name string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -286,7 +310,7 @@ func (m *DomainManager) Delete(ctx context.Context, name string) error {
 	}
 
 	// Check if domain is running
-	state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+	state, _, _, _, _, err := libvirtConn.DomainGetInfo(domain) //nolint:dogsled
 	if err != nil {
 		return fmt.Errorf("getting domain info: %w", err)
 	}
@@ -307,14 +331,14 @@ func (m *DomainManager) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// GetXML implements Manager.GetXML
+// GetXML implements Manager.GetXML.
 func (m *DomainManager) GetXML(ctx context.Context, name string) (string, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -334,14 +358,14 @@ func (m *DomainManager) GetXML(ctx context.Context, name string) (string, error)
 	return xml, nil
 }
 
-// performDomainOperation handles common domain operation pattern
+// performDomainOperation handles common domain operation pattern.
 func (m *DomainManager) performDomainOperation(ctx context.Context, name string, operation func(*libvirt.Libvirt, libvirt.Domain) error) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -354,27 +378,52 @@ func (m *DomainManager) performDomainOperation(ctx context.Context, name string,
 	return operation(libvirtConn, domain)
 }
 
-// domainToVM converts libvirt domain to VM model
+// domainToVM converts libvirt domain to VM model.
 func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) (*vm.VM, error) {
+	// Get and parse domain XML
+	domainXML, state, maxMem, err := m.getDomainInfo(libvirtConn, domain)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create base VM structure
+	result := m.createBaseVM(domainXML, state, maxMem)
+
+	// Process disks
+	result.Disks = m.processDomainDisks(domainXML.Devices.Disks)
+
+	// Process network interfaces
+	result.Networks = m.processDomainNetworks(domainXML.Devices.Interfaces)
+
+	return result, nil
+}
+
+// getDomainInfo retrieves and parses domain XML and info.
+func (m *DomainManager) getDomainInfo(libvirtConn *libvirt.Libvirt, domain libvirt.Domain) (*libvirtDomain, uint8, uint64, error) {
 	// Get domain XML
 	flags := libvirt.DomainXMLSecure
 	xmlDesc, err := libvirtConn.DomainGetXMLDesc(domain, flags)
 	if err != nil {
-		return nil, fmt.Errorf("getting domain XML: %w", err)
+		return nil, 0, 0, fmt.Errorf("getting domain XML: %w", err)
 	}
 
 	// Parse XML
 	var domainXML libvirtDomain
 	if unmarshalErr := xml.Unmarshal([]byte(xmlDesc), &domainXML); unmarshalErr != nil {
-		return nil, fmt.Errorf("parsing domain XML: %w", unmarshalErr)
+		return nil, 0, 0, fmt.Errorf("parsing domain XML: %w", unmarshalErr)
 	}
 
 	// Get domain info (state, etc.)
-	state, maxMem, _, _, _, err := libvirtConn.DomainGetInfo(domain)
+	state, maxMem, _, _, _, err := libvirtConn.DomainGetInfo(domain) //nolint:dogsled
 	if err != nil {
-		return nil, fmt.Errorf("getting domain info: %w", err)
+		return nil, 0, 0, fmt.Errorf("getting domain info: %w", err)
 	}
 
+	return &domainXML, state, maxMem, nil
+}
+
+// createBaseVM creates the base VM structure.
+func (m *DomainManager) createBaseVM(domainXML *libvirtDomain, state uint8, maxMem uint64) *vm.VM {
 	// Convert memory (KiB to bytes)
 	var memoryBytes uint64
 	if domainXML.Memory.Unit == "KiB" {
@@ -384,14 +433,11 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 		memoryBytes = maxMem * 1024
 	}
 
-	// Convert status
-	status := mapDomainState(state)
-
 	// Create VM
 	result := &vm.VM{
 		Name:   domainXML.Name,
 		UUID:   domainXML.UUID,
-		Status: status,
+		Status: mapDomainState(state),
 		CPU: vm.CPUInfo{
 			Count:   domainXML.VCPUs,
 			Model:   domainXML.CPU.Model.Value,
@@ -408,7 +454,6 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 
 	// Set default CPU topology if not specified
 	if result.CPU.Sockets == 0 && result.CPU.Cores == 0 && result.CPU.Threads == 0 {
-		// Default to single socket with all CPUs as cores
 		result.CPU.Sockets = 1
 		result.CPU.Cores = result.CPU.Count
 		result.CPU.Threads = 1
@@ -419,8 +464,14 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 		result.CPU.Model = "host-model"
 	}
 
-	// Process disks
-	for _, disk := range domainXML.Devices.Disks {
+	return result
+}
+
+// processDomainDisks processes disk information.
+func (m *DomainManager) processDomainDisks(disks []libvirtDisk) []vm.DiskInfo {
+	result := make([]vm.DiskInfo, 0, len(disks))
+
+	for _, disk := range disks {
 		if disk.Device != "disk" {
 			continue
 		}
@@ -439,31 +490,30 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 			storagePool = disk.Source.Pool
 		}
 
-		// Default to a reasonable size if we can't get it (will be updated with actual size later)
-		// In a production environment, we would query the actual disk size
-		var sizeBytes uint64 = 0
-
-		// Generate a serial if none exists
-		serial := ""
-
 		diskInfo := vm.DiskInfo{
 			Path:        path,
 			Format:      vm.DiskFormat(disk.Driver.Type),
-			SizeBytes:   sizeBytes,
+			SizeBytes:   0, // TODO: Query actual disk size
 			Bus:         vm.DiskBus(disk.Target.Bus),
 			ReadOnly:    disk.ReadOnly != nil,
 			Bootable:    disk.Boot.Order > 0,
 			Shareable:   disk.Shareable != nil,
-			Serial:      serial,
+			Serial:      "", // TODO: Generate serial if needed
 			StoragePool: storagePool,
 			Device:      disk.Target.Dev,
 		}
 
-		result.Disks = append(result.Disks, diskInfo)
+		result = append(result, diskInfo)
 	}
 
-	// Process network interfaces
-	for _, iface := range domainXML.Devices.Interfaces {
+	return result
+}
+
+// processDomainNetworks processes network interface information.
+func (m *DomainManager) processDomainNetworks(interfaces []libvirtInterface) []vm.NetInfo {
+	result := make([]vm.NetInfo, 0, len(interfaces))
+
+	for _, iface := range interfaces {
 		var source string
 		switch {
 		case iface.Source.Bridge != "":
@@ -477,11 +527,11 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 		// Convert string type to NetworkType
 		var netType vm.NetworkType
 		switch iface.Type {
-		case "bridge":
+		case networkTypeBridge:
 			netType = vm.NetworkTypeBridge
-		case "network":
+		case networkTypeNetwork:
 			netType = vm.NetworkTypeNetwork
-		case "direct":
+		case networkTypeDirect:
 			netType = vm.NetworkTypeDirect
 		default:
 			netType = vm.NetworkType(iface.Type)
@@ -494,13 +544,13 @@ func (m *DomainManager) domainToVM(libvirtConn *libvirt.Libvirt, domain libvirt.
 			Model:      iface.Model.Type,
 		}
 
-		result.Networks = append(result.Networks, netInfo)
+		result = append(result, netInfo)
 	}
 
-	return result, nil
+	return result
 }
 
-// mapDomainState maps libvirt domain state to VM status
+// mapDomainState maps libvirt domain state to VM status.
 func mapDomainState(state uint8) vm.VMStatus {
 	switch libvirt.DomainState(state) {
 	case libvirt.DomainRunning:
@@ -518,14 +568,14 @@ func mapDomainState(state uint8) vm.VMStatus {
 	}
 }
 
-// CreateSnapshot creates a new snapshot of a domain
+// CreateSnapshot creates a new snapshot of a domain.
 func (m *DomainManager) CreateSnapshot(ctx context.Context, vmName string, params vm.SnapshotParams) (*vm.Snapshot, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -548,7 +598,7 @@ func (m *DomainManager) CreateSnapshot(ctx context.Context, vmName string, param
 	}
 
 	// Create the snapshot
-	snapshot, err := libvirtConn.DomainSnapshotCreateXML(dom, snapshotXML, uint32(flags))
+	snapshot, err := libvirtConn.DomainSnapshotCreateXML(dom, snapshotXML, uint32(flags)) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snapshot: %w", err)
 	}
@@ -557,14 +607,14 @@ func (m *DomainManager) CreateSnapshot(ctx context.Context, vmName string, param
 	return m.getSnapshotInfo(libvirtConn, snapshot)
 }
 
-// ListSnapshots lists all snapshots for a domain
+// ListSnapshots lists all snapshots for a domain.
 func (m *DomainManager) ListSnapshots(ctx context.Context, vmName string, opts vm.SnapshotListOptions) ([]*vm.Snapshot, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -583,7 +633,7 @@ func (m *DomainManager) ListSnapshots(ctx context.Context, vmName string, opts v
 		flags |= libvirt.DomainSnapshotListMetadata
 	}
 
-	snapshots, _, err := libvirtConn.DomainListAllSnapshots(dom, 0, uint32(flags))
+	snapshots, _, err := libvirtConn.DomainListAllSnapshots(dom, 0, uint32(flags)) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to list snapshots: %w", err)
 	}
@@ -602,14 +652,14 @@ func (m *DomainManager) ListSnapshots(ctx context.Context, vmName string, opts v
 	return result, nil
 }
 
-// GetSnapshot retrieves information about a specific snapshot
+// GetSnapshot retrieves information about a specific snapshot.
 func (m *DomainManager) GetSnapshot(ctx context.Context, vmName string, snapshotName string) (*vm.Snapshot, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -629,14 +679,14 @@ func (m *DomainManager) GetSnapshot(ctx context.Context, vmName string, snapshot
 	return m.getSnapshotInfo(libvirtConn, snapshot)
 }
 
-// DeleteSnapshot deletes a snapshot
+// DeleteSnapshot deletes a snapshot.
 func (m *DomainManager) DeleteSnapshot(ctx context.Context, vmName string, snapshotName string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -661,14 +711,14 @@ func (m *DomainManager) DeleteSnapshot(ctx context.Context, vmName string, snaps
 	return nil
 }
 
-// RevertSnapshot reverts a domain to a snapshot
+// RevertSnapshot reverts a domain to a snapshot.
 func (m *DomainManager) RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to connect to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -693,7 +743,7 @@ func (m *DomainManager) RevertSnapshot(ctx context.Context, vmName string, snaps
 	return nil
 }
 
-// getSnapshotInfo retrieves information about a snapshot
+// getSnapshotInfo retrieves information about a snapshot.
 func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.DomainSnapshot) (*vm.Snapshot, error) {
 	// Get snapshot XML
 	xmlDesc, err := conn.DomainSnapshotGetXMLDesc(snapshot, 0)
@@ -737,7 +787,7 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 	return result, nil
 }
 
-// snapshotXML represents libvirt snapshot XML structure
+// snapshotXML represents libvirt snapshot XML structure.
 type snapshotXML struct {
 	XMLName      xml.Name  `xml:"domainsnapshot"`
 	Name         string    `xml:"name"`
@@ -751,7 +801,7 @@ type snapshotXML struct {
 	} `xml:"disks>disk,omitempty"`
 }
 
-// buildSnapshotXML builds XML for snapshot creation
+// buildSnapshotXML builds XML for snapshot creation.
 func buildSnapshotXML(params vm.SnapshotParams) string {
 	xml := fmt.Sprintf(`<domainsnapshot>
   <name>%s</name>`, params.Name)
@@ -768,7 +818,7 @@ func buildSnapshotXML(params vm.SnapshotParams) string {
 	return xml
 }
 
-// mapSnapshotState maps libvirt snapshot state to our model
+// mapSnapshotState maps libvirt snapshot state to our model.
 func mapSnapshotState(state string) vm.SnapshotState {
 	switch state {
 	case "running":

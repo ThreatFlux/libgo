@@ -8,19 +8,19 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
-// VDIConverter implements Converter for VDI format
+// VDIConverter implements Converter for VDI format.
 type VDIConverter struct {
 	logger logger.Logger
 }
 
-// NewVDIConverter creates a new VDIConverter
+// NewVDIConverter creates a new VDIConverter.
 func NewVDIConverter(logger logger.Logger) *VDIConverter {
 	return &VDIConverter{
 		logger: logger,
 	}
 }
 
-// Convert implements Converter.Convert
+// Convert implements Converter.Convert.
 func (c *VDIConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
 	// Determine if static (preallocated) or dynamic (growing)
 	static := false
@@ -66,12 +66,12 @@ func (c *VDIConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	return nil
 }
 
-// GetFormatName implements Converter.GetFormatName
+// GetFormatName implements Converter.GetFormatName.
 func (c *VDIConverter) GetFormatName() string {
 	return "vdi"
 }
 
-// ValidateOptions implements Converter.ValidateOptions
+// ValidateOptions implements Converter.ValidateOptions.
 func (c *VDIConverter) ValidateOptions(options map[string]string) error {
 	// Currently, only static/dynamic allocation option is supported
 	// All other options are ignored

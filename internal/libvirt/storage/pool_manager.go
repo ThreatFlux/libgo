@@ -11,20 +11,25 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Error types
+const (
+	// dirPoolType represents directory type storage pools.
+	dirPoolType = "dir"
+)
+
+// Error types.
 var (
 	ErrPoolNotFound = fmt.Errorf("storage pool not found")
 	ErrPoolExists   = fmt.Errorf("storage pool already exists")
 )
 
-// LibvirtPoolManager implements PoolManager for libvirt
+// LibvirtPoolManager implements PoolManager for libvirt.
 type LibvirtPoolManager struct {
 	connManager connection.Manager
 	xmlBuilder  XMLBuilder
 	logger      logger.Logger
 }
 
-// NewLibvirtPoolManager creates a new LibvirtPoolManager
+// NewLibvirtPoolManager creates a new LibvirtPoolManager.
 func NewLibvirtPoolManager(connManager connection.Manager, xmlBuilder XMLBuilder, logger logger.Logger) *LibvirtPoolManager {
 	return &LibvirtPoolManager{
 		connManager: connManager,
@@ -33,7 +38,7 @@ func NewLibvirtPoolManager(connManager connection.Manager, xmlBuilder XMLBuilder
 	}
 }
 
-// EnsureExists implements PoolManager.EnsureExists
+// EnsureExists implements PoolManager.EnsureExists.
 func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -112,7 +117,7 @@ func (m *LibvirtPoolManager) EnsureExists(ctx context.Context, name string, path
 	return nil
 }
 
-// Delete implements PoolManager.Delete
+// Delete implements PoolManager.Delete.
 func (m *LibvirtPoolManager) Delete(ctx context.Context, name string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -134,7 +139,7 @@ func (m *LibvirtPoolManager) Delete(ctx context.Context, name string) error {
 	}
 
 	// Check if pool is active
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool) //nolint:dogsled
 	if err != nil {
 		return fmt.Errorf("failed to get pool info: %w", err)
 	}
@@ -155,7 +160,7 @@ func (m *LibvirtPoolManager) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// Get implements PoolManager.Get
+// Get implements PoolManager.Get.
 func (m *LibvirtPoolManager) Get(ctx context.Context, name string) (*libvirt.StoragePool, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -194,7 +199,7 @@ func (m *LibvirtPoolManager) Get(ctx context.Context, name string) (*libvirt.Sto
 	return &pool, nil
 }
 
-// List implements PoolManager.List
+// List implements PoolManager.List.
 func (m *LibvirtPoolManager) List(ctx context.Context) ([]*StoragePoolInfo, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -230,7 +235,7 @@ func (m *LibvirtPoolManager) List(ctx context.Context) ([]*StoragePoolInfo, erro
 	return poolInfos, nil
 }
 
-// GetInfo implements PoolManager.GetInfo
+// GetInfo implements PoolManager.GetInfo.
 func (m *LibvirtPoolManager) GetInfo(ctx context.Context, name string) (*StoragePoolInfo, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -254,15 +259,10 @@ func (m *LibvirtPoolManager) GetInfo(ctx context.Context, name string) (*Storage
 	return m.getPoolInfo(libvirtConn, &pool)
 }
 
-// Create implements PoolManager.Create
+// Create implements PoolManager.Create.
 func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParams) (*StoragePoolInfo, error) {
-	if params.Type == "" {
-		params.Type = "dir"
-	}
-
-	// For directory type pools, ensure we have a path
-	if params.Type == "dir" && params.Path == "" {
-		return nil, fmt.Errorf("path is required for directory type pools")
+	if err := m.validateCreateParams(params); err != nil {
+		return nil, err
 	}
 
 	// Get libvirt connection
@@ -279,30 +279,77 @@ func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParam
 	libvirtConn := conn.GetLibvirtConnection()
 
 	// Check if pool already exists
-	_, err = libvirtConn.StoragePoolLookupByName(params.Name)
-	if err == nil {
+	if _, lookupErr := libvirtConn.StoragePoolLookupByName(params.Name); lookupErr == nil {
 		return nil, ErrPoolExists
 	}
 
-	// For directory pools, ensure the path exists
-	if params.Type == "dir" {
-		if mkdirErr := os.MkdirAll(params.Path, 0755); mkdirErr != nil {
-			return nil, fmt.Errorf("failed to create storage path %s: %w", params.Path, mkdirErr)
-		}
+	// Prepare environment (e.g., create directories)
+	if prepareErr := m.preparePoolEnvironment(params); prepareErr != nil {
+		return nil, prepareErr
 	}
 
+	// Create the pool
+	pool, err := m.createAndStartPool(libvirtConn, params)
+	if err != nil {
+		return nil, err
+	}
+
+	m.logger.Info("Created storage pool",
+		logger.String("name", params.Name),
+		logger.String("type", params.Type))
+
+	return m.getPoolInfo(libvirtConn, &pool)
+}
+
+// validateCreateParams validates the creation parameters.
+func (m *LibvirtPoolManager) validateCreateParams(params *CreatePoolParams) error {
+	if params.Type == "" {
+		params.Type = dirPoolType
+	}
+
+	// For directory type pools, ensure we have a path
+	if params.Type == dirPoolType && params.Path == "" {
+		return fmt.Errorf("path is required for directory type pools")
+	}
+
+	return nil
+}
+
+// preparePoolEnvironment prepares the environment for pool creation.
+func (m *LibvirtPoolManager) preparePoolEnvironment(params *CreatePoolParams) error {
+	// For directory pools, ensure the path exists
+	if params.Type == dirPoolType {
+		if mkdirErr := os.MkdirAll(params.Path, 0755); mkdirErr != nil {
+			return fmt.Errorf("failed to create storage path %s: %w", params.Path, mkdirErr)
+		}
+	}
+	return nil
+}
+
+// createAndStartPool creates, builds, and starts a storage pool.
+func (m *LibvirtPoolManager) createAndStartPool(libvirtConn *libvirt.Libvirt, params *CreatePoolParams) (libvirt.StoragePool, error) {
 	// Generate pool XML
 	poolXML, err := m.xmlBuilder.BuildStoragePoolXML(params.Name, params.Path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build storage pool XML: %w", err)
+		return libvirt.StoragePool{}, fmt.Errorf("failed to build storage pool XML: %w", err)
 	}
 
 	// Define pool
 	pool, err := libvirtConn.StoragePoolDefineXML(poolXML, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to define storage pool: %w", err)
+		return libvirt.StoragePool{}, fmt.Errorf("failed to define storage pool: %w", err)
 	}
 
+	// Build and start the pool
+	if err := m.buildAndStartPool(libvirtConn, pool, params); err != nil {
+		return libvirt.StoragePool{}, err
+	}
+
+	return pool, nil
+}
+
+// buildAndStartPool builds and starts a defined storage pool.
+func (m *LibvirtPoolManager) buildAndStartPool(libvirtConn *libvirt.Libvirt, pool libvirt.StoragePool, params *CreatePoolParams) error {
 	// Build the pool (for certain types)
 	if params.Type == "logical" || params.Type == "disk" {
 		if err := libvirtConn.StoragePoolBuild(pool, 0); err != nil {
@@ -318,7 +365,7 @@ func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParam
 		if undefineErr := libvirtConn.StoragePoolUndefine(pool); undefineErr != nil {
 			m.logger.Error("Failed to undefine storage pool during cleanup", logger.Error(undefineErr))
 		}
-		return nil, fmt.Errorf("failed to start storage pool: %w", err)
+		return fmt.Errorf("failed to start storage pool: %w", err)
 	}
 
 	// Set autostart if requested
@@ -330,14 +377,10 @@ func (m *LibvirtPoolManager) Create(ctx context.Context, params *CreatePoolParam
 		}
 	}
 
-	m.logger.Info("Created storage pool",
-		logger.String("name", params.Name),
-		logger.String("type", params.Type))
-
-	return m.getPoolInfo(libvirtConn, &pool)
+	return nil
 }
 
-// Start implements PoolManager.Start
+// Start implements PoolManager.Start.
 func (m *LibvirtPoolManager) Start(ctx context.Context, name string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -359,7 +402,7 @@ func (m *LibvirtPoolManager) Start(ctx context.Context, name string) error {
 	}
 
 	// Check if already running
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool) //nolint:dogsled
 	if err != nil {
 		return fmt.Errorf("failed to get pool info: %w", err)
 	}
@@ -377,7 +420,7 @@ func (m *LibvirtPoolManager) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-// Stop implements PoolManager.Stop
+// Stop implements PoolManager.Stop.
 func (m *LibvirtPoolManager) Stop(ctx context.Context, name string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -399,7 +442,7 @@ func (m *LibvirtPoolManager) Stop(ctx context.Context, name string) error {
 	}
 
 	// Check if already stopped
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool) //nolint:dogsled
 	if err != nil {
 		return fmt.Errorf("failed to get pool info: %w", err)
 	}
@@ -417,7 +460,7 @@ func (m *LibvirtPoolManager) Stop(ctx context.Context, name string) error {
 	return nil
 }
 
-// Refresh implements PoolManager.Refresh
+// Refresh implements PoolManager.Refresh.
 func (m *LibvirtPoolManager) Refresh(ctx context.Context, name string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -447,7 +490,7 @@ func (m *LibvirtPoolManager) Refresh(ctx context.Context, name string) error {
 	return nil
 }
 
-// SetAutostart implements PoolManager.SetAutostart
+// SetAutostart implements PoolManager.SetAutostart.
 func (m *LibvirtPoolManager) SetAutostart(ctx context.Context, name string, autostart bool) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -484,7 +527,7 @@ func (m *LibvirtPoolManager) SetAutostart(ctx context.Context, name string, auto
 	return nil
 }
 
-// IsActive implements PoolManager.IsActive
+// IsActive implements PoolManager.IsActive.
 func (m *LibvirtPoolManager) IsActive(ctx context.Context, name string) (bool, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -506,7 +549,7 @@ func (m *LibvirtPoolManager) IsActive(ctx context.Context, name string) (bool, e
 	}
 
 	// Get pool info
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(pool) //nolint:dogsled
 	if err != nil {
 		return false, fmt.Errorf("failed to get pool info: %w", err)
 	}
@@ -514,7 +557,7 @@ func (m *LibvirtPoolManager) IsActive(ctx context.Context, name string) (bool, e
 	return libvirt.StoragePoolState(poolInfo) == libvirt.StoragePoolRunning, nil
 }
 
-// GetXML implements PoolManager.GetXML
+// GetXML implements PoolManager.GetXML.
 func (m *LibvirtPoolManager) GetXML(ctx context.Context, name string) (string, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -544,7 +587,7 @@ func (m *LibvirtPoolManager) GetXML(ctx context.Context, name string) (string, e
 	return xml, nil
 }
 
-// getPoolInfo is a helper method to get pool information
+// getPoolInfo is a helper method to get pool information.
 func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *libvirt.StoragePool) (*StoragePoolInfo, error) {
 	// Get pool info
 	state, capacity, allocation, available, err := libvirtConn.StoragePoolGetInfo(*pool)
@@ -564,7 +607,7 @@ func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *lib
 		return nil, fmt.Errorf("failed to get pool XML: %w", err)
 	}
 
-	// TODO: Parse XML to get pool type and path
+	// TODO: Parse XML to get pool type and path.
 	// For now, we'll use basic info
 	poolInfo := &StoragePoolInfo{
 		UUID:       fmt.Sprintf("%x", pool.UUID),
@@ -579,7 +622,7 @@ func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *lib
 	}
 
 	// Extract basic path from XML (simple regex for now)
-	// TODO: Proper XML parsing
+	// TODO: Proper XML parsing.
 	if pathStart := strings.Index(xml, "<path>"); pathStart != -1 {
 		pathEnd := strings.Index(xml[pathStart:], "</path>")
 		if pathEnd != -1 {
@@ -590,7 +633,7 @@ func (m *LibvirtPoolManager) getPoolInfo(libvirtConn *libvirt.Libvirt, pool *lib
 	return poolInfo, nil
 }
 
-// mapPoolState maps libvirt pool state to our StoragePoolState
+// mapPoolState maps libvirt pool state to our StoragePoolState.
 func mapPoolState(state libvirt.StoragePoolState) StoragePoolState {
 	switch state {
 	case libvirt.StoragePoolInactive:

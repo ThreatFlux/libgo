@@ -13,21 +13,21 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ExportParams represents parameters for VM export
+// ExportParams represents parameters for VM export.
 type ExportParams struct {
 	Format   string            `json:"format" binding:"required,oneof=qcow2 vmdk vdi ova raw"`
 	Options  map[string]string `json:"options,omitempty"`
 	FileName string            `json:"fileName,omitempty"`
 }
 
-// ExportHandler handles VM export operations
+// ExportHandler handles VM export operations.
 type ExportHandler struct {
 	vmManager     vmservice.Manager
 	exportManager exportservice.Manager
 	logger        logger.Logger
 }
 
-// NewExportHandler creates a new ExportHandler
+// NewExportHandler creates a new ExportHandler.
 func NewExportHandler(vmManager vmservice.Manager, exportManager exportservice.Manager, logger logger.Logger) *ExportHandler {
 	return &ExportHandler{
 		vmManager:     vmManager,
@@ -36,7 +36,7 @@ func NewExportHandler(vmManager vmservice.Manager, exportManager exportservice.M
 	}
 }
 
-// ExportVM handles POST /vms/:name/export
+// ExportVM handles POST /vms/:name/export.
 func (h *ExportHandler) ExportVM(c *gin.Context) {
 	vmName := c.Param("name")
 	if vmName == "" {
@@ -144,7 +144,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 	})
 }
 
-// GetExportStatus handles GET /exports/:id
+// GetExportStatus handles GET /exports/:id.
 func (h *ExportHandler) GetExportStatus(c *gin.Context) {
 	jobID := c.Param("id")
 	if jobID == "" {
@@ -211,7 +211,7 @@ func (h *ExportHandler) GetExportStatus(c *gin.Context) {
 	})
 }
 
-// CancelExport handles DELETE /exports/:id
+// CancelExport handles DELETE /exports/:id.
 func (h *ExportHandler) CancelExport(c *gin.Context) {
 	jobID := c.Param("id")
 	if jobID == "" {
@@ -254,7 +254,7 @@ func (h *ExportHandler) CancelExport(c *gin.Context) {
 	})
 }
 
-// ListExports handles GET /exports
+// ListExports handles GET /exports.
 func (h *ExportHandler) ListExports(c *gin.Context) {
 	// Get all jobs
 	jobs, err := h.exportManager.ListJobs(c.Request.Context())
@@ -276,7 +276,7 @@ func (h *ExportHandler) ListExports(c *gin.Context) {
 	})
 }
 
-// validateExportParams validates export parameters
+// validateExportParams validates export parameters.
 func (h *ExportHandler) validateExportParams(params ExportParams) error {
 	// Basic validation is already done by binding
 

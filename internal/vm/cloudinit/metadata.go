@@ -10,19 +10,19 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// MetadataGenerator handles generation of cloud-init metadata
+// MetadataGenerator handles generation of cloud-init metadata.
 type MetadataGenerator struct {
 	logger logger.Logger
 }
 
-// NewMetadataGenerator creates a new MetadataGenerator
+// NewMetadataGenerator creates a new MetadataGenerator.
 func NewMetadataGenerator(logger logger.Logger) *MetadataGenerator {
 	return &MetadataGenerator{
 		logger: logger,
 	}
 }
 
-// GenerateInstanceID generates a unique instance ID for cloud-init
+// GenerateInstanceID generates a unique instance ID for cloud-init.
 func (g *MetadataGenerator) GenerateInstanceID(vm *vm.VM) string {
 	// Use VM UUID if available, otherwise use name
 	if vm.UUID != "" {
@@ -31,7 +31,7 @@ func (g *MetadataGenerator) GenerateInstanceID(vm *vm.VM) string {
 	return fmt.Sprintf("iid-%s", vm.Name)
 }
 
-// GenerateHostname generates a hostname from VM name
+// GenerateHostname generates a hostname from VM name.
 func (g *MetadataGenerator) GenerateHostname(vm *vm.VM) string {
 	// Convert VM name to a valid hostname
 	// Replace any character that's not alphanumeric or hyphen with hyphen
@@ -59,7 +59,7 @@ func (g *MetadataGenerator) GenerateHostname(vm *vm.VM) string {
 	return hostname
 }
 
-// GenerateNetworkConfig generates network configuration for cloud-init
+// GenerateNetworkConfig generates network configuration for cloud-init.
 func (g *MetadataGenerator) GenerateNetworkConfig(params vm.VMParams) (string, error) {
 	// Create a simplified representation for cloud-init network config
 	networkConfig := map[string]interface{}{
@@ -88,7 +88,7 @@ func (g *MetadataGenerator) GenerateNetworkConfig(params vm.VMParams) (string, e
 	return string(networkConfigJSON), nil
 }
 
-// MetadataToJSON converts metadata key-value pairs to JSON format
+// MetadataToJSON converts metadata key-value pairs to JSON format.
 func (g *MetadataGenerator) MetadataToJSON(metadata map[string]string) (string, error) {
 	// Convert to JSON
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
@@ -99,7 +99,7 @@ func (g *MetadataGenerator) MetadataToJSON(metadata map[string]string) (string, 
 	return string(metadataJSON), nil
 }
 
-// ParseUserDataScript parses user data script and extracts key information
+// ParseUserDataScript parses user data script and extracts key information.
 func (g *MetadataGenerator) ParseUserDataScript(userData string) map[string]interface{} {
 	result := make(map[string]interface{})
 

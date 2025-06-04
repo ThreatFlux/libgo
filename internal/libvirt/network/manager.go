@@ -12,14 +12,14 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// LibvirtNetworkManager implements Manager for libvirt networks
+// LibvirtNetworkManager implements Manager for libvirt networks.
 type LibvirtNetworkManager struct {
 	connManager connection.Manager
 	xmlBuilder  XMLBuilder
 	logger      logger.Logger
 }
 
-// NewLibvirtNetworkManager creates a new LibvirtNetworkManager
+// NewLibvirtNetworkManager creates a new LibvirtNetworkManager.
 func NewLibvirtNetworkManager(connManager connection.Manager, xmlBuilder XMLBuilder, logger logger.Logger) *LibvirtNetworkManager {
 	return &LibvirtNetworkManager{
 		connManager: connManager,
@@ -28,13 +28,20 @@ func NewLibvirtNetworkManager(connManager connection.Manager, xmlBuilder XMLBuil
 	}
 }
 
-// EnsureExists implements Manager.EnsureExists
+// handleDeferredRelease logs any error from releasing a connection.
+func (m *LibvirtNetworkManager) handleDeferredRelease(conn connection.Connection) {
+	if err := m.connManager.Release(conn); err != nil {
+		m.logger.Error("Failed to release connection", logger.Error(err))
+	}
+}
+
+// EnsureExists implements Manager.EnsureExists.
 func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, bridgeName string, cidr string, dhcp bool) error {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -65,8 +72,10 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 
 	err = libvirtConn.NetworkCreate(network)
 	if err != nil {
-		// Try to clean up the defined network
-		_ = libvirtConn.NetworkUndefine(network)
+		// Try to clean up the defined network - ignore cleanup errors
+		if undefineErr := libvirtConn.NetworkUndefine(network); undefineErr != nil {
+			m.logger.Debug("Failed to cleanup network after create failure", logger.Error(undefineErr))
+		}
 		return fmt.Errorf("starting network: %w", err)
 	}
 
@@ -81,13 +90,13 @@ func (m *LibvirtNetworkManager) EnsureExists(ctx context.Context, name string, b
 	return nil
 }
 
-// Delete implements Manager.Delete
+// Delete implements Manager.Delete.
 func (m *LibvirtNetworkManager) Delete(ctx context.Context, name string) error {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -123,13 +132,13 @@ func (m *LibvirtNetworkManager) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-// Get implements Manager.Get
+// Get implements Manager.Get.
 func (m *LibvirtNetworkManager) Get(ctx context.Context, name string) (*libvirt.Network, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -144,13 +153,13 @@ func (m *LibvirtNetworkManager) Get(ctx context.Context, name string) (*libvirt.
 	return &network, nil
 }
 
-// GetDHCPLeases implements Manager.GetDHCPLeases
+// GetDHCPLeases implements Manager.GetDHCPLeases.
 func (m *LibvirtNetworkManager) GetDHCPLeases(ctx context.Context, name string) ([]libvirt.NetworkDhcpLease, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -170,7 +179,7 @@ func (m *LibvirtNetworkManager) GetDHCPLeases(ctx context.Context, name string) 
 	return leases, nil
 }
 
-// FindIPByMAC implements Manager.FindIPByMAC
+// FindIPByMAC implements Manager.FindIPByMAC.
 func (m *LibvirtNetworkManager) FindIPByMAC(ctx context.Context, networkName string, mac string) (string, error) {
 	leases, err := m.GetDHCPLeases(ctx, networkName)
 	if err != nil {
@@ -197,13 +206,13 @@ func (m *LibvirtNetworkManager) FindIPByMAC(ctx context.Context, networkName str
 	return "", fmt.Errorf("no IP found for MAC address %s in network %s", mac, networkName)
 }
 
-// List implements Manager.List
+// List implements Manager.List.
 func (m *LibvirtNetworkManager) List(ctx context.Context) ([]*NetworkInfo, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -228,13 +237,13 @@ func (m *LibvirtNetworkManager) List(ctx context.Context) ([]*NetworkInfo, error
 	return result, nil
 }
 
-// Create implements Manager.Create
+// Create implements Manager.Create.
 func (m *LibvirtNetworkManager) Create(ctx context.Context, params *CreateNetworkParams) (*NetworkInfo, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -258,8 +267,10 @@ func (m *LibvirtNetworkManager) Create(ctx context.Context, params *CreateNetwor
 
 	// Start the network
 	if err := libvirtConn.NetworkCreate(network); err != nil {
-		// Clean up on failure
-		_ = libvirtConn.NetworkUndefine(network)
+		// Clean up on failure - ignore cleanup errors
+		if undefineErr := libvirtConn.NetworkUndefine(network); undefineErr != nil {
+			m.logger.Debug("Failed to cleanup network after create failure", logger.Error(undefineErr))
+		}
 		return nil, fmt.Errorf("starting network: %w", err)
 	}
 
@@ -276,13 +287,13 @@ func (m *LibvirtNetworkManager) Create(ctx context.Context, params *CreateNetwor
 	return m.getNetworkInfo(libvirtConn, &network)
 }
 
-// Update implements Manager.Update
+// Update implements Manager.Update.
 func (m *LibvirtNetworkManager) Update(ctx context.Context, name string, params *UpdateNetworkParams) (*NetworkInfo, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -297,7 +308,7 @@ func (m *LibvirtNetworkManager) Update(ctx context.Context, name string, params 
 		if *params.Autostart {
 			autostart = 1
 		}
-		if err := libvirtConn.NetworkSetAutostart(network, int32(autostart)); err != nil {
+		if err := libvirtConn.NetworkSetAutostart(network, int32(autostart)); err != nil { //nolint:gosec
 			return nil, fmt.Errorf("setting autostart: %w", err)
 		}
 	}
@@ -309,13 +320,13 @@ func (m *LibvirtNetworkManager) Update(ctx context.Context, name string, params 
 	return m.getNetworkInfo(libvirtConn, &network)
 }
 
-// GetInfo implements Manager.GetInfo
+// GetInfo implements Manager.GetInfo.
 func (m *LibvirtNetworkManager) GetInfo(ctx context.Context, name string) (*NetworkInfo, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -327,13 +338,13 @@ func (m *LibvirtNetworkManager) GetInfo(ctx context.Context, name string) (*Netw
 	return m.getNetworkInfo(libvirtConn, &network)
 }
 
-// GetXML implements Manager.GetXML
+// GetXML implements Manager.GetXML.
 func (m *LibvirtNetworkManager) GetXML(ctx context.Context, name string) (string, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return "", fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -350,13 +361,13 @@ func (m *LibvirtNetworkManager) GetXML(ctx context.Context, name string) (string
 	return xml, nil
 }
 
-// IsActive implements Manager.IsActive
+// IsActive implements Manager.IsActive.
 func (m *LibvirtNetworkManager) IsActive(ctx context.Context, name string) (bool, error) {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return false, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -373,13 +384,13 @@ func (m *LibvirtNetworkManager) IsActive(ctx context.Context, name string) (bool
 	return active == 1, nil
 }
 
-// Start implements Manager.Start
+// Start implements Manager.Start.
 func (m *LibvirtNetworkManager) Start(ctx context.Context, name string) error {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -405,13 +416,13 @@ func (m *LibvirtNetworkManager) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-// Stop implements Manager.Stop
+// Stop implements Manager.Stop.
 func (m *LibvirtNetworkManager) Stop(ctx context.Context, name string) error {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -437,13 +448,13 @@ func (m *LibvirtNetworkManager) Stop(ctx context.Context, name string) error {
 	return nil
 }
 
-// SetAutostart implements Manager.SetAutostart
+// SetAutostart implements Manager.SetAutostart.
 func (m *LibvirtNetworkManager) SetAutostart(ctx context.Context, name string, autostart bool) error {
 	conn, err := m.connManager.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	defer m.connManager.Release(conn)
+	defer m.handleDeferredRelease(conn)
 
 	libvirtConn := conn.GetLibvirtConnection()
 
@@ -457,7 +468,7 @@ func (m *LibvirtNetworkManager) SetAutostart(ctx context.Context, name string, a
 		autostartVal = 1
 	}
 
-	if err := libvirtConn.NetworkSetAutostart(network, int32(autostartVal)); err != nil {
+	if err := libvirtConn.NetworkSetAutostart(network, int32(autostartVal)); err != nil { //nolint:gosec
 		return fmt.Errorf("setting autostart: %w", err)
 	}
 
@@ -466,21 +477,58 @@ func (m *LibvirtNetworkManager) SetAutostart(ctx context.Context, name string, a
 
 // Helper methods
 
-// getNetworkInfo builds a NetworkInfo struct from a libvirt network
+// getNetworkInfo builds a NetworkInfo struct from a libvirt network.
 func (m *LibvirtNetworkManager) getNetworkInfo(conn *libvirt.Libvirt, network *libvirt.Network) (*NetworkInfo, error) {
-	// Get XML to parse full details
+	// Parse network definition from XML
+	netDef, err := m.parseNetworkXML(conn, network)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get status information
+	statusInfo, err := m.getNetworkStatus(conn, network)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build base network info
+	info := m.buildBaseNetworkInfo(netDef, network, statusInfo)
+
+	// Add IP configuration if present
+	m.addIPConfiguration(info, netDef)
+
+	// Add DHCP leases if network is active
+	if err := m.addDHCPLeases(conn, network, info); err != nil {
+		m.logger.Debug("Failed to get DHCP leases", logger.Error(err))
+	}
+
+	return info, nil
+}
+
+// parseNetworkXML gets and parses network XML definition.
+func (m *LibvirtNetworkManager) parseNetworkXML(conn *libvirt.Libvirt, network *libvirt.Network) (*networkXMLDef, error) {
 	xmlStr, err := conn.NetworkGetXMLDesc(*network, 0)
 	if err != nil {
 		return nil, fmt.Errorf("getting network XML: %w", err)
 	}
 
-	// Parse XML to get detailed info
 	var netDef networkXMLDef
-	if err := xml.Unmarshal([]byte(xmlStr), &netDef); err != nil {
-		return nil, fmt.Errorf("parsing network XML: %w", err)
+	if unmarshalErr := xml.Unmarshal([]byte(xmlStr), &netDef); unmarshalErr != nil {
+		return nil, fmt.Errorf("parsing network XML: %w", unmarshalErr)
 	}
 
-	// Get status info
+	return &netDef, nil
+}
+
+// networkStatusInfo holds status information about a network.
+type networkStatusInfo struct {
+	active     bool
+	persistent bool
+	autostart  bool
+}
+
+// getNetworkStatus retrieves status information for a network.
+func (m *LibvirtNetworkManager) getNetworkStatus(conn *libvirt.Libvirt, network *libvirt.Network) (*networkStatusInfo, error) {
 	active, err := conn.NetworkIsActive(*network)
 	if err != nil {
 		return nil, fmt.Errorf("checking if network is active: %w", err)
@@ -497,15 +545,23 @@ func (m *LibvirtNetworkManager) getNetworkInfo(conn *libvirt.Libvirt, network *l
 		autostart = 0
 	}
 
-	// Get UUID - format the UUID bytes to string
+	return &networkStatusInfo{
+		active:     active == 1,
+		persistent: persistent == 1,
+		autostart:  autostart == 1,
+	}, nil
+}
+
+// buildBaseNetworkInfo creates the base NetworkInfo structure.
+func (m *LibvirtNetworkManager) buildBaseNetworkInfo(netDef *networkXMLDef, network *libvirt.Network, status *networkStatusInfo) *NetworkInfo {
 	uuidStr := formatUUID(network.UUID[:])
 
 	info := &NetworkInfo{
 		UUID:       uuidStr,
 		Name:       netDef.Name,
-		Active:     active == 1,
-		Persistent: persistent == 1,
-		Autostart:  autostart == 1,
+		Active:     status.active,
+		Persistent: status.persistent,
+		Autostart:  status.autostart,
 	}
 
 	// Set bridge name if present
@@ -521,94 +577,132 @@ func (m *LibvirtNetworkManager) getNetworkInfo(conn *libvirt.Libvirt, network *l
 		}
 	}
 
-	// Parse IP configuration
-	if netDef.IP != nil {
-		info.IP = &NetworkIP{
-			Address: netDef.IP.Address,
-			Netmask: netDef.IP.Netmask,
-		}
-
-		// Parse DHCP configuration
-		if netDef.IP.DHCP != nil {
-			dhcpInfo := &NetworkDHCPInfo{
-				Enabled: true,
-			}
-
-			// Set range if present
-			if netDef.IP.DHCP.Range != nil {
-				dhcpInfo.Start = netDef.IP.DHCP.Range.Start
-				dhcpInfo.End = netDef.IP.DHCP.Range.End
-			}
-
-			// Add static hosts
-			for _, host := range netDef.IP.DHCP.Hosts {
-				dhcpInfo.Hosts = append(dhcpInfo.Hosts, NetworkDHCPStaticHost{
-					MAC:  host.MAC,
-					Name: host.Name,
-					IP:   host.IP,
-				})
-			}
-
-			info.IP.DHCP = dhcpInfo
-		}
-	}
-
-	// Get DHCP leases if network is active
-	if info.Active && info.IP != nil && info.IP.DHCP != nil {
-		leases, _, err := conn.NetworkGetDhcpLeases(*network, nil, 0, 0)
-		if err == nil {
-			for _, lease := range leases {
-				// Extract values from OptString fields ([]string)
-				// Mac, Hostname, and Clientid are OptString
-				// Ipaddr is already a string
-				macStr := ""
-				if len(lease.Mac) > 0 {
-					macStr = lease.Mac[0]
-				}
-
-				hostnameStr := ""
-				if len(lease.Hostname) > 0 {
-					hostnameStr = lease.Hostname[0]
-				}
-
-				clientIDStr := ""
-				if len(lease.Clientid) > 0 {
-					clientIDStr = lease.Clientid[0]
-				}
-
-				info.DHCPLeases = append(info.DHCPLeases, NetworkDHCPLease{
-					IPAddress:  lease.Ipaddr,
-					MACAddress: macStr,
-					Hostname:   hostnameStr,
-					ClientID:   clientIDStr,
-					ExpiryTime: lease.Expirytime,
-				})
-			}
-		}
-	}
-
-	return info, nil
+	return info
 }
 
-// buildNetworkXMLFromParams builds network XML from CreateNetworkParams
-func (m *LibvirtNetworkManager) buildNetworkXMLFromParams(params *CreateNetworkParams) (string, error) {
-	// Use simple defaults if not specified
-	if params.IP == nil || params.IP.Address == "" {
-		// Use the existing BuildNetworkXML for backward compatibility
-		dhcp := false
-		if params.IP != nil && params.IP.DHCP != nil {
-			dhcp = params.IP.DHCP.Enabled
-		}
-		return m.xmlBuilder.BuildNetworkXML(
-			params.Name,
-			params.BridgeName,
-			"192.168.100.0/24", // Default CIDR
-			dhcp,
-		)
+// addIPConfiguration adds IP configuration to NetworkInfo.
+func (m *LibvirtNetworkManager) addIPConfiguration(info *NetworkInfo, netDef *networkXMLDef) {
+	if netDef.IP == nil {
+		return
 	}
 
-	// Build more complex XML when detailed params are provided
-	netDef := networkXMLDef{
+	info.IP = &NetworkIP{
+		Address: netDef.IP.Address,
+		Netmask: netDef.IP.Netmask,
+	}
+
+	// Parse DHCP configuration
+	if netDef.IP.DHCP != nil {
+		dhcpInfo := &NetworkDHCPInfo{
+			Enabled: true,
+		}
+
+		// Set range if present
+		if netDef.IP.DHCP.Range != nil {
+			dhcpInfo.Start = netDef.IP.DHCP.Range.Start
+			dhcpInfo.End = netDef.IP.DHCP.Range.End
+		}
+
+		// Add static hosts
+		for _, host := range netDef.IP.DHCP.Hosts {
+			dhcpInfo.Hosts = append(dhcpInfo.Hosts, NetworkDHCPStaticHost(host))
+		}
+
+		info.IP.DHCP = dhcpInfo
+	}
+}
+
+// addDHCPLeases adds DHCP lease information to NetworkInfo.
+func (m *LibvirtNetworkManager) addDHCPLeases(conn *libvirt.Libvirt, network *libvirt.Network, info *NetworkInfo) error {
+	// Only get leases if network is active and has DHCP
+	if !info.Active || info.IP == nil || info.IP.DHCP == nil {
+		return nil
+	}
+
+	leases, _, err := conn.NetworkGetDhcpLeases(*network, nil, 0, 0)
+	if err != nil {
+		return fmt.Errorf("getting DHCP leases: %w", err)
+	}
+
+	for _, lease := range leases {
+		dhcpLease := m.parseLeaseInfo(lease)
+		info.DHCPLeases = append(info.DHCPLeases, dhcpLease)
+	}
+
+	return nil
+}
+
+// parseLeaseInfo extracts lease information from libvirt lease.
+func (m *LibvirtNetworkManager) parseLeaseInfo(lease libvirt.NetworkDhcpLease) NetworkDHCPLease {
+	// Extract values from OptString fields ([]string)
+	macStr := ""
+	if len(lease.Mac) > 0 {
+		macStr = lease.Mac[0]
+	}
+
+	hostnameStr := ""
+	if len(lease.Hostname) > 0 {
+		hostnameStr = lease.Hostname[0]
+	}
+
+	clientIDStr := ""
+	if len(lease.Clientid) > 0 {
+		clientIDStr = lease.Clientid[0]
+	}
+
+	return NetworkDHCPLease{
+		IPAddress:  lease.Ipaddr,
+		MACAddress: macStr,
+		Hostname:   hostnameStr,
+		ClientID:   clientIDStr,
+		ExpiryTime: lease.Expirytime,
+	}
+}
+
+// buildNetworkXMLFromParams builds network XML from CreateNetworkParams.
+func (m *LibvirtNetworkManager) buildNetworkXMLFromParams(params *CreateNetworkParams) (string, error) {
+	// Use simple builder for basic configurations
+	if m.shouldUseSimpleBuilder(params) {
+		return m.buildSimpleNetworkXML(params)
+	}
+
+	// Build complex XML with detailed configuration
+	netDef := m.buildNetworkDefinition(params)
+	if err := m.addDHCPConfiguration(netDef, params); err != nil {
+		return "", err
+	}
+
+	// Marshal to XML
+	xmlData, err := xml.MarshalIndent(netDef, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("marshaling network XML: %w", err)
+	}
+
+	return string(xmlData), nil
+}
+
+// shouldUseSimpleBuilder determines if simple XML builder should be used.
+func (m *LibvirtNetworkManager) shouldUseSimpleBuilder(params *CreateNetworkParams) bool {
+	return params.IP == nil || params.IP.Address == ""
+}
+
+// buildSimpleNetworkXML builds XML using the simple builder for backward compatibility.
+func (m *LibvirtNetworkManager) buildSimpleNetworkXML(params *CreateNetworkParams) (string, error) {
+	dhcp := false
+	if params.IP != nil && params.IP.DHCP != nil {
+		dhcp = params.IP.DHCP.Enabled
+	}
+	return m.xmlBuilder.BuildNetworkXML(
+		params.Name,
+		params.BridgeName,
+		"192.168.100.0/24", // Default CIDR
+		dhcp,
+	)
+}
+
+// buildNetworkDefinition creates the base network definition.
+func (m *LibvirtNetworkManager) buildNetworkDefinition(params *CreateNetworkParams) *networkXMLDef {
+	netDef := &networkXMLDef{
 		Name: params.Name,
 	}
 
@@ -634,56 +728,51 @@ func (m *LibvirtNetworkManager) buildNetworkXMLFromParams(params *CreateNetworkP
 			Address: params.IP.Address,
 			Netmask: params.IP.Netmask,
 		}
-
-		// Add DHCP configuration
-		if params.IP.DHCP != nil && params.IP.DHCP.Enabled {
-			dhcp := &networkDHCP{}
-
-			// Calculate DHCP range if not specified
-			if params.IP.DHCP.Start != "" && params.IP.DHCP.End != "" {
-				dhcp.Range = &dhcpRange{
-					Start: params.IP.DHCP.Start,
-					End:   params.IP.DHCP.End,
-				}
-			} else {
-				// Auto-calculate range
-				start, end, err := calculateDHCPRange(params.IP.Address, params.IP.Netmask)
-				if err != nil {
-					return "", fmt.Errorf("calculating DHCP range: %w", err)
-				}
-				dhcp.Range = &dhcpRange{Start: start, End: end}
-			}
-
-			// Add static hosts
-			for _, host := range params.IP.DHCP.Hosts {
-				dhcp.Hosts = append(dhcp.Hosts, dhcpHost{
-					MAC:  host.MAC,
-					Name: host.Name,
-					IP:   host.IP,
-				})
-			}
-
-			netDef.IP.DHCP = dhcp
-		}
 	}
 
-	// Marshal to XML
-	xmlData, err := xml.MarshalIndent(netDef, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("marshaling network XML: %w", err)
-	}
-
-	return string(xmlData), nil
+	return netDef
 }
 
-// XML structures for parsing
+// addDHCPConfiguration adds DHCP configuration to network definition.
+func (m *LibvirtNetworkManager) addDHCPConfiguration(netDef *networkXMLDef, params *CreateNetworkParams) error {
+	if params.IP == nil || params.IP.DHCP == nil || !params.IP.DHCP.Enabled {
+		return nil
+	}
+
+	dhcp := &networkDHCP{}
+
+	// Calculate or set DHCP range
+	if params.IP.DHCP.Start != "" && params.IP.DHCP.End != "" {
+		dhcp.Range = &dhcpRange{
+			Start: params.IP.DHCP.Start,
+			End:   params.IP.DHCP.End,
+		}
+	} else {
+		// Auto-calculate range
+		start, end, err := calculateDHCPRange(params.IP.Address, params.IP.Netmask)
+		if err != nil {
+			return fmt.Errorf("calculating DHCP range: %w", err)
+		}
+		dhcp.Range = &dhcpRange{Start: start, End: end}
+	}
+
+	// Add static hosts
+	for _, host := range params.IP.DHCP.Hosts {
+		dhcp.Hosts = append(dhcp.Hosts, dhcpHost(host))
+	}
+
+	netDef.IP.DHCP = dhcp
+	return nil
+}
+
+// XML structures for parsing.
 type networkXMLDef struct {
-	XMLName xml.Name        `xml:"network"`
-	Name    string          `xml:"name"`
-	UUID    string          `xml:"uuid,omitempty"`
 	Forward *networkForward `xml:"forward,omitempty"`
 	Bridge  *networkBridge  `xml:"bridge,omitempty"`
 	IP      *networkIP      `xml:"ip,omitempty"`
+	XMLName xml.Name        `xml:"network"`
+	Name    string          `xml:"name"`
+	UUID    string          `xml:"uuid,omitempty"`
 }
 
 type networkForward struct {
@@ -696,9 +785,9 @@ type networkBridge struct {
 }
 
 type networkIP struct {
+	DHCP    *networkDHCP `xml:"dhcp,omitempty"`
 	Address string       `xml:"address,attr"`
 	Netmask string       `xml:"netmask,attr"`
-	DHCP    *networkDHCP `xml:"dhcp,omitempty"`
 }
 
 type networkDHCP struct {
@@ -729,14 +818,6 @@ func formatUUID(uuid []byte) string {
 		uuid[6], uuid[7],
 		uuid[8], uuid[9],
 		uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15])
-}
-
-func formatMAC(mac libvirt.OptString) string {
-	// OptString is []string - MAC address should be in the first element
-	if len(mac) > 0 {
-		return mac[0]
-	}
-	return ""
 }
 
 func calculateDHCPRange(ipAddr, netmask string) (start, end string, err error) {

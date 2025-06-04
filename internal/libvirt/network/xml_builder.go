@@ -9,19 +9,19 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// TemplateXMLBuilder implements XMLBuilder using templates
+// TemplateXMLBuilder implements XMLBuilder using templates.
 type TemplateXMLBuilder struct {
 	logger logger.Logger
 }
 
-// NewTemplateXMLBuilder creates a new TemplateXMLBuilder
+// NewTemplateXMLBuilder creates a new TemplateXMLBuilder.
 func NewTemplateXMLBuilder(logger logger.Logger) *TemplateXMLBuilder {
 	return &TemplateXMLBuilder{
 		logger: logger,
 	}
 }
 
-// networkXMLTemplate is the template for libvirt network XML
+// networkXMLTemplate is the template for libvirt network XML.
 const networkXMLTemplate = `<network>
   <name>{{.Name}}</name>
   <bridge name="{{.Bridge}}"/>
@@ -35,18 +35,18 @@ const networkXMLTemplate = `<network>
   </ip>
 </network>`
 
-// networkTemplateData holds data for the network XML template
+// networkTemplateData holds data for the network XML template.
 type networkTemplateData struct {
 	Name       string
 	Bridge     string
 	Address    string
 	Netmask    string
-	DHCP       bool
 	RangeStart string
 	RangeEnd   string
+	DHCP       bool
 }
 
-// BuildNetworkXML implements XMLBuilder.BuildNetworkXML
+// BuildNetworkXML implements XMLBuilder.BuildNetworkXML.
 func (b *TemplateXMLBuilder) BuildNetworkXML(name string, bridgeName string, cidr string, dhcp bool) (string, error) {
 	// Parse CIDR
 	ip, ipNet, err := net.ParseCIDR(cidr)
@@ -92,7 +92,7 @@ func (b *TemplateXMLBuilder) BuildNetworkXML(name string, bridgeName string, cid
 	return xmlBuffer.String(), nil
 }
 
-// calculateDHCPRangeFromIPNet calculates DHCP range based on network address
+// calculateDHCPRangeFromIPNet calculates DHCP range based on network address.
 func calculateDHCPRangeFromIPNet(networkIP net.IP, mask net.IPMask) (string, string) {
 	// Clone the IP to avoid modifying the original
 	rangeStartIP := make(net.IP, len(networkIP))

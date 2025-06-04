@@ -23,9 +23,9 @@ func TestWindowsVMDeployment(t *testing.T) {
 	password := "admin"
 
 	// 1. Authenticate
-	authToken, err := login(context.Background(), t, apiEndpoint, username, password)
+	token, err := login(context.Background(), t, apiEndpoint, username, password)
 	require.NoError(t, err, "Failed to login")
-	assert.NotEmpty(t, authToken, "Token should not be empty")
+	assert.NotEmpty(t, token, "Token should not be empty")
 
 	// 2. Define VM parameters
 	vmParams := vmmodels.VMParams{

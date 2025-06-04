@@ -119,7 +119,7 @@ func TestVMDKConverter_ValidateOptions(t *testing.T) {
 	mockLogger := mocks_logger.NewMockLogger(ctrl)
 	converter := NewVMDKConverter(mockLogger)
 
-	testCases := []struct {
+	testCases := []struct { //nolint:govet
 		name    string
 		options map[string]string
 		wantErr bool

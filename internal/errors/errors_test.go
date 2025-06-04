@@ -68,7 +68,7 @@ func TestWrapWithCode(t *testing.T) {
 }
 
 func TestGetErrorCode(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet
 		name     string
 		err      error
 		expected error
@@ -116,7 +116,7 @@ func TestGetErrorCode(t *testing.T) {
 }
 
 func TestGetErrorCodeString(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet
 		name     string
 		err      error
 		expected string

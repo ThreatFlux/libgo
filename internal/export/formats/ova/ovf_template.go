@@ -13,13 +13,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// OVFTemplateGenerator generates OVF templates
+// OVFTemplateGenerator generates OVF templates.
 type OVFTemplateGenerator struct {
 	templateLoader *template.Template
 	logger         logger.Logger
 }
 
-// OVFTemplateData holds data for OVF template rendering
+// OVFTemplateData holds data for OVF template rendering.
 type OVFTemplateData struct {
 	FileID          string
 	VMName          string
@@ -34,7 +34,7 @@ type OVFTemplateData struct {
 	OSType          string
 }
 
-// NewOVFTemplateGenerator creates a new OVFTemplateGenerator
+// NewOVFTemplateGenerator creates a new OVFTemplateGenerator.
 func NewOVFTemplateGenerator(logger logger.Logger) (*OVFTemplateGenerator, error) {
 	// Load the OVF template
 	tmpl, err := template.New("ovf").Parse(ovfTemplateContent)
@@ -48,7 +48,7 @@ func NewOVFTemplateGenerator(logger logger.Logger) (*OVFTemplateGenerator, error
 	}, nil
 }
 
-// GenerateOVF generates an OVF descriptor
+// GenerateOVF generates an OVF descriptor.
 func (g *OVFTemplateGenerator) GenerateOVF(vm *vm.VM, diskPath string, diskSize uint64) (string, error) {
 	// Prepare template data
 	diskSizeMB := diskSize / (1024 * 1024)
@@ -91,12 +91,12 @@ func (g *OVFTemplateGenerator) GenerateOVF(vm *vm.VM, diskPath string, diskSize 
 	return buffer.String(), nil
 }
 
-// WriteOVFToFile writes OVF to a file
+// WriteOVFToFile writes OVF to a file.
 func (g *OVFTemplateGenerator) WriteOVFToFile(ovfContent string, outPath string) error {
 	return os.WriteFile(outPath, []byte(ovfContent), 0644)
 }
 
-// ovfTemplateContent contains the OVF template
+// ovfTemplateContent contains the OVF template.
 const ovfTemplateContent = `<?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.dmtf.org/ovf/envelope/1"
           xmlns:cim="http://schemas.dmtf.org/wbem/wscim/1/common"

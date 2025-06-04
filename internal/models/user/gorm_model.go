@@ -5,24 +5,24 @@ import (
 	"time"
 )
 
-// GormUser represents the database model for a user
+// GormUser represents the database model for a user.
 type GormUser struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	ID        string `gorm:"primaryKey"`
 	Username  string `gorm:"unique;not null"`
 	Password  string `gorm:"not null"`
 	Email     string `gorm:"unique;not null"`
 	RolesJSON string `gorm:"column:roles;type:text;not null;default:'[]'"`
 	Active    bool   `gorm:"default:true"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
 }
 
-// TableName specifies the table name for the GormUser model
+// TableName specifies the table name for the GormUser model.
 func (GormUser) TableName() string {
 	return "users"
 }
 
-// GetRoles returns the roles as a string slice
+// GetRoles returns the roles as a string slice.
 func (gu *GormUser) GetRoles() ([]string, error) {
 	// Handle common error cases
 	if gu.RolesJSON == "" || gu.RolesJSON == "null" {
@@ -44,7 +44,7 @@ func (gu *GormUser) GetRoles() ([]string, error) {
 	return roles, nil
 }
 
-// SetRoles sets the roles from a string slice
+// SetRoles sets the roles from a string slice.
 func (gu *GormUser) SetRoles(roles []string) error {
 	if len(roles) == 0 {
 		gu.RolesJSON = "[]"
@@ -59,7 +59,7 @@ func (gu *GormUser) SetRoles(roles []string) error {
 	return nil
 }
 
-// ToUser converts a GormUser to a domain User model
+// ToUser converts a GormUser to a domain User model.
 func (gu *GormUser) ToUser() *User {
 	roles, err := gu.GetRoles()
 	if err != nil {
@@ -78,7 +78,7 @@ func (gu *GormUser) ToUser() *User {
 	}
 }
 
-// FromUser creates a GormUser from a domain User model
+// FromUser creates a GormUser from a domain User model.
 func FromUser(u *User) *GormUser {
 	gu := &GormUser{
 		ID:        u.ID,

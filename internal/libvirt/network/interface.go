@@ -6,7 +6,7 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-// Manager defines interface for managing libvirt networks
+// Manager defines interface for managing libvirt networks.
 type Manager interface {
 	// EnsureExists ensures a network exists
 	EnsureExists(ctx context.Context, name string, bridgeName string, cidr string, dhcp bool) error
@@ -51,55 +51,55 @@ type Manager interface {
 	SetAutostart(ctx context.Context, name string, autostart bool) error
 }
 
-// XMLBuilder defines interface for building network XML
+// XMLBuilder defines interface for building network XML.
 type XMLBuilder interface {
 	// BuildNetworkXML builds XML for network creation
 	BuildNetworkXML(name string, bridgeName string, cidr string, dhcp bool) (string, error)
 }
 
-// NetworkInfo represents detailed information about a network
+// NetworkInfo represents detailed information about a network.
 type NetworkInfo struct {
 	UUID       string                 `json:"uuid"`
 	Name       string                 `json:"name"`
 	BridgeName string                 `json:"bridge_name"`
-	Active     bool                   `json:"active"`
-	Persistent bool                   `json:"persistent"`
-	Autostart  bool                   `json:"autostart"`
-	Forward    NetworkForward         `json:"forward"`
 	IP         *NetworkIP             `json:"ip,omitempty"`
 	DHCPLeases []NetworkDHCPLease     `json:"dhcp_leases,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Forward    NetworkForward         `json:"forward"`
+	Active     bool                   `json:"active"`
+	Persistent bool                   `json:"persistent"`
+	Autostart  bool                   `json:"autostart"`
 }
 
-// NetworkForward represents network forward configuration
+// NetworkForward represents network forward configuration.
 type NetworkForward struct {
 	Mode string `json:"mode"` // nat, route, bridge, private, vepa, passthrough
 	Dev  string `json:"dev,omitempty"`
 }
 
-// NetworkIP represents network IP configuration
+// NetworkIP represents network IP configuration.
 type NetworkIP struct {
 	Address string           `json:"address"`
 	Netmask string           `json:"netmask"`
 	DHCP    *NetworkDHCPInfo `json:"dhcp,omitempty"`
 }
 
-// NetworkDHCPInfo represents DHCP configuration
+// NetworkDHCPInfo represents DHCP configuration.
 type NetworkDHCPInfo struct {
-	Enabled bool                    `json:"enabled"`
 	Start   string                  `json:"start,omitempty"`
 	End     string                  `json:"end,omitempty"`
 	Hosts   []NetworkDHCPStaticHost `json:"hosts,omitempty"`
+	Enabled bool                    `json:"enabled"`
 }
 
-// NetworkDHCPStaticHost represents a static DHCP host entry
+// NetworkDHCPStaticHost represents a static DHCP host entry.
 type NetworkDHCPStaticHost struct {
 	MAC  string `json:"mac"`
 	Name string `json:"name,omitempty"`
 	IP   string `json:"ip"`
 }
 
-// NetworkDHCPLease represents an active DHCP lease
+// NetworkDHCPLease represents an active DHCP lease.
 type NetworkDHCPLease struct {
 	IPAddress  string `json:"ip_address"`
 	MACAddress string `json:"mac_address"`
@@ -108,17 +108,17 @@ type NetworkDHCPLease struct {
 	ExpiryTime int64  `json:"expiry_time"`
 }
 
-// CreateNetworkParams represents parameters for creating a network
+// CreateNetworkParams represents parameters for creating a network.
 type CreateNetworkParams struct {
 	Name       string                 `json:"name" binding:"required"`
 	BridgeName string                 `json:"bridge_name,omitempty"`
 	Forward    *NetworkForward        `json:"forward,omitempty"`
 	IP         *NetworkIP             `json:"ip,omitempty"`
-	Autostart  bool                   `json:"autostart"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Autostart  bool                   `json:"autostart"`
 }
 
-// UpdateNetworkParams represents parameters for updating a network
+// UpdateNetworkParams represents parameters for updating a network.
 type UpdateNetworkParams struct {
 	Forward   *NetworkForward        `json:"forward,omitempty"`
 	IP        *NetworkIP             `json:"ip,omitempty"`

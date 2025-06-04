@@ -9,14 +9,14 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// CloudInitGenerator implements Manager for cloud-init
+// CloudInitGenerator implements Manager for cloud-init.
 type CloudInitGenerator struct {
 	templateDir string
 	logger      logger.Logger
 	templates   map[string]*template.Template
 }
 
-// NewCloudInitGenerator creates a new CloudInitGenerator
+// NewCloudInitGenerator creates a new CloudInitGenerator.
 func NewCloudInitGenerator(templateDir string, logger logger.Logger) (*CloudInitGenerator, error) {
 	g := &CloudInitGenerator{
 		templateDir: templateDir,
@@ -33,7 +33,7 @@ func NewCloudInitGenerator(templateDir string, logger logger.Logger) (*CloudInit
 	return g, nil
 }
 
-// GenerateUserData implements Manager.GenerateUserData
+// GenerateUserData implements Manager.GenerateUserData.
 func (g *CloudInitGenerator) GenerateUserData(params vm.VMParams) (string, error) {
 	tmpl, ok := g.templates["user-data.tmpl"]
 	if !ok {
@@ -60,7 +60,7 @@ func (g *CloudInitGenerator) GenerateUserData(params vm.VMParams) (string, error
 	return result.String(), nil
 }
 
-// GenerateMetaData implements Manager.GenerateMetaData
+// GenerateMetaData implements Manager.GenerateMetaData.
 func (g *CloudInitGenerator) GenerateMetaData(params vm.VMParams) (string, error) {
 	tmpl, ok := g.templates["meta-data.tmpl"]
 	if !ok {
@@ -92,7 +92,7 @@ func (g *CloudInitGenerator) GenerateMetaData(params vm.VMParams) (string, error
 	return result.String(), nil
 }
 
-// GenerateNetworkConfig implements Manager.GenerateNetworkConfig
+// GenerateNetworkConfig implements Manager.GenerateNetworkConfig.
 func (g *CloudInitGenerator) GenerateNetworkConfig(params vm.VMParams) (string, error) {
 	tmpl, ok := g.templates["network-config.tmpl"]
 	if !ok {
@@ -119,7 +119,7 @@ func (g *CloudInitGenerator) GenerateNetworkConfig(params vm.VMParams) (string, 
 	return result.String(), nil
 }
 
-// loadTemplates loads cloud-init templates
+// loadTemplates loads cloud-init templates.
 func (g *CloudInitGenerator) loadTemplates() error {
 	// List of template files to load
 	templateFiles := []string{
@@ -150,7 +150,7 @@ func (g *CloudInitGenerator) loadTemplates() error {
 	return nil
 }
 
-// createDefaultTemplate creates a default template if the template file is not found
+// createDefaultTemplate creates a default template if the template file is not found.
 func (g *CloudInitGenerator) createDefaultTemplate(filename string) (*template.Template, error) {
 	var templateContent string
 

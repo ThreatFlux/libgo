@@ -6,7 +6,7 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-// Manager defines the interface for managing libvirt connections
+// Manager defines the interface for managing libvirt connections.
 type Manager interface {
 	// Connect establishes a connection to libvirt
 	Connect(ctx context.Context) (Connection, error)
@@ -18,7 +18,7 @@ type Manager interface {
 	Close() error
 }
 
-// Connection defines interface for a libvirt connection
+// Connection defines interface for a libvirt connection.
 type Connection interface {
 	// GetLibvirtConnection returns the underlying libvirt connection
 	GetLibvirtConnection() *libvirt.Libvirt

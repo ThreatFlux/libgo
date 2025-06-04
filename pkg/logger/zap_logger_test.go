@@ -38,8 +38,8 @@ func TestZapLogger_Levels(t *testing.T) {
 	logger.Error("error message", Error(errors.New("test error")))
 
 	// Sync to ensure logs are written
-	if err := logger.Sync(); err != nil {
-		t.Logf("Sync error (may be expected on some platforms): %v", err)
+	if syncErr := logger.Sync(); syncErr != nil {
+		t.Logf("Sync error (may be expected on some platforms): %v", syncErr)
 	}
 
 	// Read log file content
@@ -115,8 +115,8 @@ func TestZapLogger_WithFields(t *testing.T) {
 	errLogger.Error("error with context")
 
 	// Sync to ensure logs are written
-	if err := baseLogger.Sync(); err != nil {
-		t.Logf("Sync error (may be expected on some platforms): %v", err)
+	if syncErr := baseLogger.Sync(); syncErr != nil {
+		t.Logf("Sync error (may be expected on some platforms): %v", syncErr)
 	}
 
 	// Read log file content

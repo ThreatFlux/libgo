@@ -4,9 +4,9 @@ import (
 	"github.com/threatflux/libgo/internal/errors"
 )
 
-// Error mappings from internal/errors
+// Error mappings from internal/errors.
 var (
-	// VM-specific errors
+	// VM-specific errors.
 	ErrVMNotFound           = errors.ErrVMNotFound
 	ErrVMAlreadyExists      = errors.ErrVMAlreadyExists
 	ErrVMInvalidState       = errors.ErrVMInvalidState

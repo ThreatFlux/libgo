@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 )
 
-// Manager defines the interface for VM management
+// Manager defines the interface for VM management.
 type Manager interface {
 	// Create creates a new VM
 	Create(ctx context.Context, params vm.VMParams) (*vm.VM, error)

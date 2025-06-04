@@ -28,14 +28,14 @@ type ExportJob struct {
 	VMName       string            `json:"vmName"`
 	Format       string            `json:"format"`
 	Status       string            `json:"status"`
-	Progress     int               `json:"progress"`
 	FilePath     string            `json:"filePath,omitempty"`
-	FileSize     int64             `json:"fileSize,omitempty"`
 	Error        string            `json:"error,omitempty"`
+	DownloadLink string            `json:"downloadLink,omitempty"`
+	Options      map[string]string `json:"options,omitempty"`
 	StartTime    time.Time         `json:"startTime"`
 	EndTime      time.Time         `json:"endTime,omitempty"`
-	Options      map[string]string `json:"options,omitempty"`
-	DownloadLink string            `json:"downloadLink,omitempty"`
+	FileSize     int64             `json:"fileSize,omitempty"`
+	Progress     int               `json:"progress"`
 }
 
 // ExportJobResponse holds the export job response
@@ -462,21 +462,23 @@ func getVM(ctx context.Context, t *testing.T, apiURL string, vmName string) *vmm
 
 	defer func() {
 		if resp != nil && resp.Body != nil {
-			err := resp.Body.Close()
-			if err != nil {
-				t.Logf("Error closing response body: %v", err)
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				t.Logf("Error closing response body: %v", closeErr)
 			}
 		}
 	}()
 
 	// Handle response status
-	if resp.StatusCode == http.StatusNotFound {
+	switch resp.StatusCode {
+	case http.StatusNotFound:
 		t.Logf("VM '%s' not found (HTTP 404)", vmName)
 		return nil
-	} else if resp.StatusCode == http.StatusUnauthorized {
+	case http.StatusUnauthorized:
 		t.Logf("Unauthorized access to VM '%s' (HTTP 401) - token may be invalid", vmName)
 		return nil
-	} else if resp.StatusCode != http.StatusOK {
+	case http.StatusOK:
+		// Continue processing
+	default:
 		respBody, _ := io.ReadAll(resp.Body)
 		t.Logf("Unexpected status code %d getting VM '%s'. Response: %s", resp.StatusCode, vmName, string(respBody))
 		return nil
@@ -541,7 +543,7 @@ func waitForVMStatus(ctx context.Context, t *testing.T, apiURL, vmName string, t
 		}
 
 		// Calculate remaining time
-		remainingTime := deadline.Sub(time.Now())
+		remainingTime := time.Until(deadline)
 
 		// Report progress
 		t.Logf("Waiting for VM '%s' to reach status '%s', current status: '%s' (%s remaining)",
@@ -736,7 +738,7 @@ func getVMIPAddress(ctx context.Context, t *testing.T, apiURL, vmName string) st
 
 	// For libvirt VMs, we'll parse the IP address from interfaces
 	// In a real-world scenario, this would retrieve the IP from a network interface
-	if vm.Networks != nil && len(vm.Networks) > 0 {
+	if len(vm.Networks) > 0 {
 		for _, nic := range vm.Networks {
 			if nic.IPAddress != "" {
 				return nic.IPAddress

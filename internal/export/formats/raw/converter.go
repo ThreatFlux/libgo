@@ -8,19 +8,19 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
-// RAWConverter implements Converter for raw format
+// RAWConverter implements Converter for raw format.
 type RAWConverter struct {
 	logger logger.Logger
 }
 
-// NewRAWConverter creates a new RAWConverter
+// NewRAWConverter creates a new RAWConverter.
 func NewRAWConverter(logger logger.Logger) *RAWConverter {
 	return &RAWConverter{
 		logger: logger,
 	}
 }
 
-// Convert implements Converter.Convert
+// Convert implements Converter.Convert.
 func (c *RAWConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
 	// Prepare qemu-img arguments
 	args := []string{
@@ -53,12 +53,12 @@ func (c *RAWConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	return nil
 }
 
-// GetFormatName implements Converter.GetFormatName
+// GetFormatName implements Converter.GetFormatName.
 func (c *RAWConverter) GetFormatName() string {
 	return "raw"
 }
 
-// ValidateOptions implements Converter.ValidateOptions
+// ValidateOptions implements Converter.ValidateOptions.
 func (c *RAWConverter) ValidateOptions(options map[string]string) error {
 	// No specific options for RAW format
 	return nil

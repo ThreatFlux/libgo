@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -36,13 +37,13 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// Handler represents a WebSocket handler
+// Handler represents a WebSocket handler.
 type Handler struct {
 	hub    *Hub
 	logger logger.Logger
 }
 
-// NewHandler creates a new WebSocket handler
+// NewHandler creates a new WebSocket handler.
 func NewHandler(logger logger.Logger) *Handler {
 	hub := NewHub()
 	go hub.Run()
@@ -53,17 +54,17 @@ func NewHandler(logger logger.Logger) *Handler {
 	}
 }
 
-// HandleVM handles WebSocket connections for VM monitoring
+// HandleVM handles WebSocket connections for VM monitoring.
 func (h *Handler) HandleVM(c *gin.Context) {
 	h.handleConnection(c, false)
 }
 
-// HandleVMConsole handles WebSocket connections for VM console
+// HandleVMConsole handles WebSocket connections for VM console.
 func (h *Handler) HandleVMConsole(c *gin.Context) {
 	h.handleConnection(c, true)
 }
 
-// handleConnection handles the WebSocket connection
+// handleConnection handles the WebSocket connection.
 func (h *Handler) handleConnection(c *gin.Context, isConsole bool) {
 	// Get VM name from path
 	vmName := c.Param("name")
@@ -79,7 +80,10 @@ func (h *Handler) handleConnection(c *gin.Context, isConsole bool) {
 		return
 	}
 
-	userIDStr, _ := userID.(string)
+	userIDStr, ok := userID.(string)
+	if !ok {
+		userIDStr = "unknown"
+	}
 
 	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -134,9 +138,13 @@ func (h *Handler) readPump(client *Client) {
 	}()
 
 	client.Conn.SetReadLimit(maxMessageSize)
-	client.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err := client.Conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		h.logger.Debug("Failed to set read deadline", logger.Error(err))
+	}
 	client.Conn.SetPongHandler(func(string) error {
-		client.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err := client.Conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			h.logger.Debug("Failed to set read deadline in pong handler", logger.Error(err))
+		}
 		return nil
 	})
 
@@ -205,57 +213,108 @@ func (h *Handler) writePump(client *Client) {
 	for {
 		select {
 		case message, ok := <-client.Send:
-			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			// Marshal message to JSON
-			data, err := json.Marshal(message)
-			if err != nil {
-				h.logger.Error("Failed to marshal WebSocket message",
-					logger.String("vmName", client.VMName),
-					logger.String("userID", client.UserID),
-					logger.Error(err))
-				return
-			}
-
-			w, err := client.Conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(data)
-
-			// Add queued messages to the current websocket message.
-			n := len(client.Send)
-			for i := 0; i < n; i++ {
-				data, err := json.Marshal(<-client.Send)
-				if err != nil {
-					h.logger.Error("Failed to marshal WebSocket message",
-						logger.String("vmName", client.VMName),
-						logger.String("userID", client.UserID),
-						logger.Error(err))
-					continue
-				}
-				w.Write([]byte("\n"))
-				w.Write(data)
-			}
-
-			if err := w.Close(); err != nil {
+			if !h.handleMessage(client, message, ok) {
 				return
 			}
 		case <-ticker.C:
-			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if !h.handlePing(client) {
 				return
 			}
 		}
 	}
 }
 
-// handleCommand handles VM commands
+// handleMessage processes a message from the client channel.
+func (h *Handler) handleMessage(client *Client, message *Message, ok bool) bool {
+	if err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+		h.logger.Debug("Failed to set write deadline", logger.Error(err))
+	}
+
+	if !ok {
+		return h.closeConnection(client)
+	}
+
+	// Marshal and write the primary message
+	data, err := json.Marshal(message)
+	if err != nil {
+		h.logger.Error("Failed to marshal WebSocket message",
+			logger.String("vmName", client.VMName),
+			logger.String("userID", client.UserID),
+			logger.Error(err))
+		return false
+	}
+
+	w, err := client.Conn.NextWriter(websocket.TextMessage)
+	if err != nil {
+		return false
+	}
+
+	if _, err := w.Write(data); err != nil {
+		h.logger.Debug("Failed to write message data", logger.Error(err))
+		return false
+	}
+
+	// Write any queued messages
+	if !h.writeQueuedMessages(client, w) {
+		return false
+	}
+
+	if err := w.Close(); err != nil {
+		return false
+	}
+
+	return true
+}
+
+// closeConnection handles closing the WebSocket connection gracefully.
+func (h *Handler) closeConnection(client *Client) bool {
+	if err := client.Conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+		h.logger.Debug("Failed to write close message", logger.Error(err))
+	}
+	return false
+}
+
+// writeQueuedMessages writes any additional queued messages to the current writer.
+func (h *Handler) writeQueuedMessages(client *Client, w io.WriteCloser) bool {
+	n := len(client.Send)
+	for i := 0; i < n; i++ {
+		queuedMessage := <-client.Send
+		data, err := json.Marshal(queuedMessage)
+		if err != nil {
+			h.logger.Error("Failed to marshal WebSocket message",
+				logger.String("vmName", client.VMName),
+				logger.String("userID", client.UserID),
+				logger.Error(err))
+			continue
+		}
+
+		if _, err := w.Write([]byte("\n")); err != nil {
+			h.logger.Debug("Failed to write newline", logger.Error(err))
+			continue
+		}
+
+		if _, err := w.Write(data); err != nil {
+			h.logger.Debug("Failed to write queued message data", logger.Error(err))
+			continue
+		}
+	}
+	return true
+}
+
+// handlePing sends a ping message to keep the connection alive.
+func (h *Handler) handlePing(client *Client) bool {
+	if err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+		h.logger.Debug("Failed to set write deadline for ping", logger.Error(err))
+	}
+
+	if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+		return false
+	}
+
+	return true
+}
+
+// handleCommand handles VM commands.
 func (h *Handler) handleCommand(client *Client, msg *Message) {
 	// Extract command information
 	action, ok := msg.Data["action"].(string)
@@ -264,7 +323,10 @@ func (h *Handler) handleCommand(client *Client, msg *Message) {
 		return
 	}
 
-	requestID, _ := msg.Data["requestId"].(string)
+	requestID, ok := msg.Data["requestId"].(string)
+	if !ok {
+		requestID = ""
+	}
 	if requestID == "" {
 		requestID = fmt.Sprintf("cmd-%d", time.Now().UnixNano())
 	}
@@ -280,7 +342,7 @@ func (h *Handler) handleCommand(client *Client, msg *Message) {
 	client.Send <- ResponseMessage(requestID, true, fmt.Sprintf("Command '%s' acknowledged", action))
 }
 
-// handleConsoleInput handles VM console input
+// handleConsoleInput handles VM console input.
 func (h *Handler) handleConsoleInput(client *Client, msg *Message) {
 	content, ok := msg.Data["content"].(string)
 	if !ok {
@@ -298,19 +360,19 @@ func (h *Handler) handleConsoleInput(client *Client, msg *Message) {
 	client.Send <- ConsoleMessage(content, false)
 }
 
-// SendVMStatus sends a VM status update to all clients connected to the VM
+// SendVMStatus sends a VM status update to all clients connected to the VM.
 func (h *Handler) SendVMStatus(vmName string, status vmmodels.VMStatus, lastChange time.Time, uptime int64) {
 	msg := StatusMessage(status, lastChange, uptime)
 	h.hub.SendToVM(vmName, msg)
 }
 
-// SendVMMetrics sends VM metrics to all clients connected to the VM
+// SendVMMetrics sends VM metrics to all clients connected to the VM.
 func (h *Handler) SendVMMetrics(vmName string, cpu float64, memory, memoryTotal, rxBytes, txBytes, readBytes, writeBytes uint64) {
 	msg := MetricsMessage(cpu, memory, memoryTotal, rxBytes, txBytes, readBytes, writeBytes)
 	h.hub.SendToVM(vmName, msg)
 }
 
-// SendVMConsoleOutput sends VM console output to console clients
+// SendVMConsoleOutput sends VM console output to console clients.
 func (h *Handler) SendVMConsoleOutput(vmName string, content string, eof bool) {
 	msg := ConsoleMessage(content, eof)
 

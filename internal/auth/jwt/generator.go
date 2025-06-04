@@ -42,9 +42,9 @@ type JWTGenerator struct {
 	privateKey    *rsa.PrivateKey
 	publicKey     *rsa.PublicKey
 	algorithm     jwt.SigningMethod
-	expiresIn     time.Duration
 	issuer        string
 	signingMethod string
+	expiresIn     time.Duration
 }
 
 // NewJWTGenerator creates a new JWTGenerator.

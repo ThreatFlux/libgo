@@ -10,7 +10,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Config holds the configuration for the request logger
+// Config holds the configuration for the request logger.
 type Config struct {
 	// SkipPaths are paths that will not be logged
 	SkipPaths []string
@@ -25,7 +25,7 @@ type Config struct {
 	IncludeResponseBody bool
 }
 
-// RequestLogger returns a gin middleware for logging HTTP requests
+// RequestLogger returns a gin middleware for logging HTTP requests.
 func RequestLogger(log logger.Logger, config Config) gin.HandlerFunc {
 	// Create a skip paths map for faster lookup
 	skipPaths := make(map[string]bool)
@@ -40,109 +40,130 @@ func RequestLogger(log logger.Logger, config Config) gin.HandlerFunc {
 			return
 		}
 
-		// Start timer
 		start := time.Now()
-
-		// Generate a request ID if none exists
-		requestID := c.GetHeader("X-Request-ID")
-		if requestID == "" {
-			requestID = uuid.New().String()
-			c.Header("X-Request-ID", requestID)
-		}
-
-		// Store the logger with request ID in context
-		contextLogger := log.WithFields(
-			logger.String("requestId", requestID),
-			logger.String("method", c.Request.Method),
-			logger.String("path", c.Request.URL.Path),
-			logger.String("ip", c.ClientIP()),
-		)
-
+		requestID := getOrCreateRequestID(c)
+		contextLogger := createContextLogger(log, c, requestID)
 		c.Set("logger", contextLogger)
 
-		// Log request body if enabled
-		var requestBody []byte
-		if config.IncludeRequestBody && config.MaxBodyLogSize > 0 && c.Request.Body != nil {
-			requestBody, _ = io.ReadAll(c.Request.Body)
-			// Limit the size if needed
-			if len(requestBody) > config.MaxBodyLogSize {
-				requestBody = requestBody[:config.MaxBodyLogSize]
-			}
-			// Replace the body for downstream handlers
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
-		}
-
-		// Create a custom response writer to capture the response
-		var responseBodyBuffer *bytes.Buffer
-		var responseBody []byte
-		if config.IncludeResponseBody && config.MaxBodyLogSize > 0 {
-			responseBodyBuffer = &bytes.Buffer{}
-			blw := &bodyLogWriter{
-				ResponseWriter: c.Writer,
-				bodyBuffer:     responseBodyBuffer,
-				maxSize:        config.MaxBodyLogSize,
-			}
-			c.Writer = blw
-		}
+		requestBody := captureRequestBody(c, config, contextLogger)
+		responseBodyBuffer := setupResponseCapture(c, config)
 
 		// Process request
 		c.Next()
 
-		// Get response status and size
-		status := c.Writer.Status()
-		size := c.Writer.Size()
-
-		// Get response body if enabled
-		if config.IncludeResponseBody && config.MaxBodyLogSize > 0 && responseBodyBuffer != nil {
-			responseBody = responseBodyBuffer.Bytes()
-		}
-
-		// Log the request
-		endTime := time.Now()
-		latency := endTime.Sub(start)
-
-		var logEntry logger.Logger = contextLogger.WithFields(
-			logger.Int("status", status),
-			logger.Int("size", size),
-			logger.Float64("latency", latency.Seconds()),
-		)
-
-		// Add user ID if available
-		if userID, exists := c.Get("userId"); exists {
-			if userIDStr, ok := userID.(string); ok {
-				logEntry = logEntry.WithFields(logger.String("userId", userIDStr))
-			}
-		}
-
-		// Add request body if available
-		if len(requestBody) > 0 {
-			logEntry = logEntry.WithFields(logger.String("requestBody", string(requestBody)))
-		}
-
-		// Add response body if available
-		if len(responseBody) > 0 {
-			logEntry = logEntry.WithFields(logger.String("responseBody", string(responseBody)))
-		}
-
-		// Log with appropriate level based on status code
-		if status >= 500 {
-			logEntry.Error("Server error")
-		} else if status >= 400 {
-			logEntry.Warn("Client error")
-		} else {
-			logEntry.Info("Request handled")
-		}
+		logRequestCompletion(c, contextLogger, start, requestBody, responseBodyBuffer, config)
 	}
 }
 
-// bodyLogWriter is a custom response writer that captures the response body
+// getOrCreateRequestID gets existing request ID or creates a new one.
+func getOrCreateRequestID(c *gin.Context) string {
+	requestID := c.GetHeader("X-Request-ID")
+	if requestID == "" {
+		requestID = uuid.New().String()
+		c.Header("X-Request-ID", requestID)
+	}
+	return requestID
+}
+
+// createContextLogger creates a logger with request context.
+func createContextLogger(log logger.Logger, c *gin.Context, requestID string) logger.Logger {
+	return log.WithFields(
+		logger.String("requestId", requestID),
+		logger.String("method", c.Request.Method),
+		logger.String("path", c.Request.URL.Path),
+		logger.String("ip", c.ClientIP()),
+	)
+}
+
+// captureRequestBody captures and returns request body if enabled.
+func captureRequestBody(c *gin.Context, config Config, contextLogger logger.Logger) []byte {
+	if !config.IncludeRequestBody || config.MaxBodyLogSize <= 0 || c.Request.Body == nil {
+		return nil
+	}
+
+	requestBody, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		contextLogger.Error("Failed to read request body", logger.Error(err))
+		return []byte("Error reading request body")
+	}
+
+	// Limit the size if needed
+	if len(requestBody) > config.MaxBodyLogSize {
+		requestBody = requestBody[:config.MaxBodyLogSize]
+	}
+
+	// Replace the body for downstream handlers
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+	return requestBody
+}
+
+// setupResponseCapture sets up response body capture if enabled.
+func setupResponseCapture(c *gin.Context, config Config) *bytes.Buffer {
+	if !config.IncludeResponseBody || config.MaxBodyLogSize <= 0 {
+		return nil
+	}
+
+	responseBodyBuffer := &bytes.Buffer{}
+	blw := &bodyLogWriter{
+		ResponseWriter: c.Writer,
+		bodyBuffer:     responseBodyBuffer,
+		maxSize:        config.MaxBodyLogSize,
+	}
+	c.Writer = blw
+	return responseBodyBuffer
+}
+
+// logRequestCompletion logs the completed request.
+func logRequestCompletion(c *gin.Context, contextLogger logger.Logger, start time.Time, requestBody []byte, responseBodyBuffer *bytes.Buffer, config Config) {
+	status := c.Writer.Status()
+	size := c.Writer.Size()
+	latency := time.Since(start)
+
+	logEntry := contextLogger.WithFields(
+		logger.Int("status", status),
+		logger.Int("size", size),
+		logger.Float64("latency", latency.Seconds()),
+	)
+
+	// Add user ID if available
+	if userID, exists := c.Get("userId"); exists {
+		if userIDStr, ok := userID.(string); ok {
+			logEntry = logEntry.WithFields(logger.String("userId", userIDStr))
+		}
+	}
+
+	// Add request body if available
+	if len(requestBody) > 0 {
+		logEntry = logEntry.WithFields(logger.String("requestBody", string(requestBody)))
+	}
+
+	// Add response body if available
+	if config.IncludeResponseBody && config.MaxBodyLogSize > 0 && responseBodyBuffer != nil {
+		responseBody := responseBodyBuffer.Bytes()
+		if len(responseBody) > 0 {
+			logEntry = logEntry.WithFields(logger.String("responseBody", string(responseBody)))
+		}
+	}
+
+	// Log with appropriate level based on status code
+	switch {
+	case status >= 500:
+		logEntry.Error("Server error")
+	case status >= 400:
+		logEntry.Warn("Client error")
+	default:
+		logEntry.Info("Request handled")
+	}
+}
+
+// bodyLogWriter is a custom response writer that captures the response body.
 type bodyLogWriter struct {
 	gin.ResponseWriter
 	bodyBuffer *bytes.Buffer
 	maxSize    int
 }
 
-// Write captures the response body and writes it to the original response writer
+// Write captures the response body and writes it to the original response writer.
 func (w *bodyLogWriter) Write(b []byte) (int, error) {
 	// If we haven't reached the max size, add to buffer
 	if w.bodyBuffer.Len() < w.maxSize {
@@ -159,7 +180,7 @@ func (w *bodyLogWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-// WriteString is here to implement the gin.ResponseWriter interface fully
+// WriteString is here to implement the gin.ResponseWriter interface fully.
 func (w *bodyLogWriter) WriteString(s string) (int, error) {
 	return w.Write([]byte(s))
 }

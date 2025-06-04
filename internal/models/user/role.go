@@ -1,13 +1,13 @@
 package user
 
-// User roles
+// User roles.
 const (
 	RoleAdmin    = "admin"
 	RoleOperator = "operator"
 	RoleViewer   = "viewer"
 )
 
-// Permissions
+// Permissions.
 const (
 	PermCreate = "create"
 	PermRead   = "read"
@@ -18,7 +18,7 @@ const (
 	PermExport = "export"
 )
 
-// RolePermissions maps roles to their permissions
+// RolePermissions maps roles to their permissions.
 var RolePermissions = map[string][]string{
 	RoleAdmin: {
 		PermCreate, PermRead, PermUpdate, PermDelete,
@@ -32,12 +32,12 @@ var RolePermissions = map[string][]string{
 	},
 }
 
-// GetRolePermissions returns all permissions for a given role
+// GetRolePermissions returns all permissions for a given role.
 func GetRolePermissions(role string) []string {
 	return RolePermissions[role]
 }
 
-// HasPermission checks if a role has a specific permission
+// HasPermission checks if a role has a specific permission.
 func HasPermission(role, permission string) bool {
 	permissions, exists := RolePermissions[role]
 	if !exists {
@@ -52,7 +52,7 @@ func HasPermission(role, permission string) bool {
 	return false
 }
 
-// GetUserPermissions returns all unique permissions for a user based on their roles
+// GetUserPermissions returns all unique permissions for a user based on their roles.
 func GetUserPermissions(roles []string) []string {
 	// Use a map to deduplicate permissions
 	permMap := make(map[string]struct{})
@@ -72,7 +72,7 @@ func GetUserPermissions(roles []string) []string {
 	return perms
 }
 
-// UserHasPermission checks if a user with the given roles has a specific permission
+// UserHasPermission checks if a user with the given roles has a specific permission.
 func UserHasPermission(roles []string, permission string) bool {
 	for _, role := range roles {
 		if HasPermission(role, permission) {
@@ -82,12 +82,12 @@ func UserHasPermission(roles []string, permission string) bool {
 	return false
 }
 
-// Roles returns all valid roles
+// Roles returns all valid roles.
 func Roles() []string {
 	return []string{RoleAdmin, RoleOperator, RoleViewer}
 }
 
-// Permissions returns all valid permissions
+// Permissions returns all valid permissions.
 func Permissions() []string {
 	return []string{
 		PermCreate,
@@ -100,7 +100,7 @@ func Permissions() []string {
 	}
 }
 
-// IsValidRole checks if a role is valid
+// IsValidRole checks if a role is valid.
 func IsValidRole(role string) bool {
 	switch role {
 	case RoleAdmin, RoleOperator, RoleViewer:
@@ -110,7 +110,7 @@ func IsValidRole(role string) bool {
 	}
 }
 
-// IsValidPermission checks if a permission is valid
+// IsValidPermission checks if a permission is valid.
 func IsValidPermission(permission string) bool {
 	switch permission {
 	case PermCreate, PermRead, PermUpdate, PermDelete, PermStart, PermStop, PermExport:

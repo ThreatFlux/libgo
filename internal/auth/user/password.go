@@ -119,7 +119,7 @@ func VerifyPassword(password, hash string) bool {
 	if len(decodedHash) > math.MaxUint32 {
 		return false
 	}
-	keyLength := uint32(len(decodedHash))
+	keyLength := uint32(len(decodedHash)) //nolint:gosec
 	computedHash := argon2.IDKey(
 		[]byte(password),
 		salt,
@@ -178,8 +178,8 @@ func ExtractPasswordConfig(hash string) (*PasswordConfig, error) {
 		Memory:      memory,
 		Iterations:  iterations,
 		Parallelism: parallelism,
-		SaltLength:  uint32(len(salt)),
-		KeyLength:   uint32(len(decodedHash)),
+		SaltLength:  uint32(len(salt)),        //nolint:gosec
+		KeyLength:   uint32(len(decodedHash)), //nolint:gosec
 	}, nil
 }
 

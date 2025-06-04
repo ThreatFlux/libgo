@@ -77,46 +77,111 @@ func HandleError(c *gin.Context, err error) {
 
 // mapErrorToStatusAndCode maps domain errors to HTTP status codes and error codes
 func mapErrorToStatusAndCode(err error) (int, string) {
-	switch {
-	case errors.Is(err, ErrNotFound) ||
-		errors.Is(err, apierrors.ErrVMNotFound):
-		return http.StatusNotFound, "NOT_FOUND"
-
-	case errors.Is(err, ErrInvalidInput) ||
-		errors.Is(err, apierrors.ErrInvalidCPUCount) ||
-		errors.Is(err, apierrors.ErrInvalidMemorySize) ||
-		errors.Is(err, apierrors.ErrInvalidDiskSize) ||
-		errors.Is(err, apierrors.ErrInvalidDiskFormat) ||
-		errors.Is(err, apierrors.ErrInvalidNetworkType) ||
-		errors.Is(err, apierrors.ErrInvalidNetworkSource) ||
-		errors.Is(err, apierrors.ErrVMInvalidState):
-		return http.StatusBadRequest, "INVALID_INPUT"
-
-	case errors.Is(err, ErrUnauthorized) ||
-		errors.Is(err, apierrors.ErrInvalidCredentials) ||
-		errors.Is(err, userauth.ErrInvalidCredentials) ||
-		errors.Is(err, jwtauth.ErrTokenExpired) ||
-		errors.Is(err, jwtauth.ErrInvalidToken):
-		return http.StatusUnauthorized, "UNAUTHORIZED"
-
-	case errors.Is(err, ErrForbidden) ||
-		errors.Is(err, apierrors.ErrForbidden) ||
-		errors.Is(err, apierrors.ErrUserInactive) ||
-		errors.Is(err, userauth.ErrUserInactive):
-		return http.StatusForbidden, "FORBIDDEN"
-
-	case errors.Is(err, ErrAlreadyExists) ||
-		errors.Is(err, apierrors.ErrVMAlreadyExists) ||
-		errors.Is(err, apierrors.ErrDuplicateUsername) ||
-		errors.Is(err, userauth.ErrDuplicateUsername):
-		return http.StatusConflict, "RESOURCE_CONFLICT"
-
-	case errors.Is(err, ErrInternalError):
-		return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
-
-	default:
+	// Check each error category
+	if status, code := checkNotFoundErrors(err); status != 0 {
+		return status, code
+	}
+	if status, code := checkBadRequestErrors(err); status != 0 {
+		return status, code
+	}
+	if status, code := checkUnauthorizedErrors(err); status != 0 {
+		return status, code
+	}
+	if status, code := checkForbiddenErrors(err); status != 0 {
+		return status, code
+	}
+	if status, code := checkConflictErrors(err); status != 0 {
+		return status, code
+	}
+	if errors.Is(err, ErrInternalError) {
 		return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
 	}
+
+	// Default case
+	return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
+}
+
+// checkNotFoundErrors checks for not found error types.
+func checkNotFoundErrors(err error) (int, string) {
+	notFoundErrors := []error{
+		ErrNotFound,
+		apierrors.ErrVMNotFound,
+	}
+	for _, target := range notFoundErrors {
+		if errors.Is(err, target) {
+			return http.StatusNotFound, "NOT_FOUND"
+		}
+	}
+	return 0, ""
+}
+
+// checkBadRequestErrors checks for bad request error types.
+func checkBadRequestErrors(err error) (int, string) {
+	badRequestErrors := []error{
+		ErrInvalidInput,
+		apierrors.ErrInvalidCPUCount,
+		apierrors.ErrInvalidMemorySize,
+		apierrors.ErrInvalidDiskSize,
+		apierrors.ErrInvalidDiskFormat,
+		apierrors.ErrInvalidNetworkType,
+		apierrors.ErrInvalidNetworkSource,
+		apierrors.ErrVMInvalidState,
+	}
+	for _, target := range badRequestErrors {
+		if errors.Is(err, target) {
+			return http.StatusBadRequest, "INVALID_INPUT"
+		}
+	}
+	return 0, ""
+}
+
+// checkUnauthorizedErrors checks for unauthorized error types.
+func checkUnauthorizedErrors(err error) (int, string) {
+	unauthorizedErrors := []error{
+		ErrUnauthorized,
+		apierrors.ErrInvalidCredentials,
+		userauth.ErrInvalidCredentials,
+		jwtauth.ErrTokenExpired,
+		jwtauth.ErrInvalidToken,
+	}
+	for _, target := range unauthorizedErrors {
+		if errors.Is(err, target) {
+			return http.StatusUnauthorized, "UNAUTHORIZED"
+		}
+	}
+	return 0, ""
+}
+
+// checkForbiddenErrors checks for forbidden error types.
+func checkForbiddenErrors(err error) (int, string) {
+	forbiddenErrors := []error{
+		ErrForbidden,
+		apierrors.ErrForbidden,
+		apierrors.ErrUserInactive,
+		userauth.ErrUserInactive,
+	}
+	for _, target := range forbiddenErrors {
+		if errors.Is(err, target) {
+			return http.StatusForbidden, "FORBIDDEN"
+		}
+	}
+	return 0, ""
+}
+
+// checkConflictErrors checks for conflict error types.
+func checkConflictErrors(err error) (int, string) {
+	conflictErrors := []error{
+		ErrAlreadyExists,
+		apierrors.ErrVMAlreadyExists,
+		apierrors.ErrDuplicateUsername,
+		userauth.ErrDuplicateUsername,
+	}
+	for _, target := range conflictErrors {
+		if errors.Is(err, target) {
+			return http.StatusConflict, "RESOURCE_CONFLICT"
+		}
+	}
+	return 0, ""
 }
 
 // sanitizeErrorMessage creates a user-friendly error message

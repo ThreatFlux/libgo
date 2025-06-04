@@ -1,0 +1,437 @@
+package compute
+
+import (
+	"context"
+	"io"
+	"time"
+)
+
+// Service defines the unified compute service interface for managing both VMs and containers.
+type Service interface {
+	// Instance management
+	CreateInstance(ctx context.Context, req ComputeInstanceRequest) (*ComputeInstance, error)
+	GetInstance(ctx context.Context, id string) (*ComputeInstance, error)
+	GetInstanceByName(ctx context.Context, name string) (*ComputeInstance, error)
+	ListInstances(ctx context.Context, opts ComputeInstanceListOptions) ([]*ComputeInstance, error)
+	UpdateInstance(ctx context.Context, id string, update ComputeInstanceUpdate) (*ComputeInstance, error)
+	DeleteInstance(ctx context.Context, id string, force bool) error
+
+	// Instance lifecycle
+	StartInstance(ctx context.Context, id string) error
+	StopInstance(ctx context.Context, id string, force bool) error
+	RestartInstance(ctx context.Context, id string, force bool) error
+	PauseInstance(ctx context.Context, id string) error
+	UnpauseInstance(ctx context.Context, id string) error
+
+	// Instance operations
+	AttachConsole(ctx context.Context, id string, opts ConsoleOptions) (io.ReadWriteCloser, error)
+	ExecuteCommand(ctx context.Context, id string, cmd ExecRequest) (*ExecResult, error)
+	GetLogs(ctx context.Context, id string, opts LogOptions) (io.ReadCloser, error)
+
+	// Snapshots (primarily for VMs, but can support container commits)
+	CreateSnapshot(ctx context.Context, id, name, description string) (*Snapshot, error)
+	ListSnapshots(ctx context.Context, id string) ([]*Snapshot, error)
+	RestoreSnapshot(ctx context.Context, id, snapshotID string) error
+	DeleteSnapshot(ctx context.Context, id, snapshotID string) error
+
+	// Resource management
+	GetResourceUsage(ctx context.Context, id string) (*ResourceUsage, error)
+	GetResourceUsageHistory(ctx context.Context, id string, opts ResourceHistoryOptions) ([]*ResourceUsage, error)
+	UpdateResourceLimits(ctx context.Context, id string, resources ComputeResources) error
+
+	// Migration and export (primarily for VMs)
+	MigrateInstance(ctx context.Context, id, targetHost string, opts MigrationOptions) error
+	ExportInstance(ctx context.Context, id string, opts ExportOptions) (*ExportJob, error)
+	ImportInstance(ctx context.Context, source string, opts ImportOptions) (*ComputeInstance, error)
+
+	// Network management
+	AttachNetwork(ctx context.Context, id string, network NetworkAttachment) error
+	DetachNetwork(ctx context.Context, id, networkName string) error
+	ListNetworkAttachments(ctx context.Context, id string) ([]*NetworkAttachment, error)
+
+	// Storage management
+	AttachStorage(ctx context.Context, id string, storage StorageAttachment) error
+	DetachStorage(ctx context.Context, id, storageName string) error
+	ListStorageAttachments(ctx context.Context, id string) ([]*StorageAttachment, error)
+
+	// Monitoring and metrics
+	StreamMetrics(ctx context.Context, id string, opts MetricsOptions) (<-chan ResourceUsage, error)
+	GetInstanceEvents(ctx context.Context, id string, opts EventOptions) ([]*InstanceEvent, error)
+	StreamInstanceEvents(ctx context.Context, id string, opts EventOptions) (<-chan InstanceEvent, error)
+
+	// Bulk operations
+	BulkAction(ctx context.Context, action string, ids []string, opts BulkActionOptions) ([]*BulkActionResult, error)
+
+	// Backend-specific operations
+	GetBackendInfo(ctx context.Context, backend ComputeBackend) (*BackendInfo, error)
+	ValidateInstanceConfig(ctx context.Context, config ComputeInstanceConfig, backend ComputeBackend) error
+}
+
+// Manager provides higher-level orchestration across multiple backends.
+type Manager interface {
+	Service
+
+	// Multi-backend operations
+	ListAllInstances(ctx context.Context, opts ComputeInstanceListOptions) ([]*ComputeInstance, error)
+	GetClusterStatus(ctx context.Context) (*ClusterStatus, error)
+	GetResourceQuotas(ctx context.Context, userID uint) (*ResourceQuotas, error)
+	SetResourceQuotas(ctx context.Context, userID uint, quotas ResourceQuotas) error
+
+	// Template management
+	CreateTemplate(ctx context.Context, instanceID string, template InstanceTemplate) (*InstanceTemplate, error)
+	GetTemplate(ctx context.Context, templateID string) (*InstanceTemplate, error)
+	ListTemplates(ctx context.Context, opts TemplateListOptions) ([]*InstanceTemplate, error)
+	DeleteTemplate(ctx context.Context, templateID string) error
+	CloneFromTemplate(ctx context.Context, templateID string, req CloneRequest) (*ComputeInstance, error)
+
+	// Compose/orchestration support
+	DeployCompose(ctx context.Context, composeData []byte, opts ComposeDeployOptions) (*ComposeDeployment, error)
+	GetComposeDeployment(ctx context.Context, deploymentID string) (*ComposeDeployment, error)
+	ListComposeDeployments(ctx context.Context, opts ComposeListOptions) ([]*ComposeDeployment, error)
+	UpdateComposeDeployment(ctx context.Context, deploymentID string, composeData []byte) (*ComposeDeployment, error)
+	DeleteComposeDeployment(ctx context.Context, deploymentID string, force bool) error
+
+	// Health and maintenance
+	HealthCheck(ctx context.Context) (*HealthStatus, error)
+	PerformMaintenance(ctx context.Context, opts MaintenanceOptions) error
+}
+
+// BackendService defines the interface that each backend (KVM, Docker) must implement.
+type BackendService interface {
+	// Basic CRUD operations
+	Create(ctx context.Context, req ComputeInstanceRequest) (*ComputeInstance, error)
+	Get(ctx context.Context, id string) (*ComputeInstance, error)
+	List(ctx context.Context, opts ComputeInstanceListOptions) ([]*ComputeInstance, error)
+	Update(ctx context.Context, id string, update ComputeInstanceUpdate) (*ComputeInstance, error)
+	Delete(ctx context.Context, id string, force bool) error
+
+	// Lifecycle operations
+	Start(ctx context.Context, id string) error
+	Stop(ctx context.Context, id string, force bool) error
+	Restart(ctx context.Context, id string, force bool) error
+	Pause(ctx context.Context, id string) error
+	Unpause(ctx context.Context, id string) error
+
+	// Resource operations
+	GetResourceUsage(ctx context.Context, id string) (*ResourceUsage, error)
+	UpdateResourceLimits(ctx context.Context, id string, resources ComputeResources) error
+
+	// Backend-specific information
+	GetBackendInfo(ctx context.Context) (*BackendInfo, error)
+	ValidateConfig(ctx context.Context, config ComputeInstanceConfig) error
+
+	// Type identification
+	GetBackendType() ComputeBackend
+	GetSupportedInstanceTypes() []ComputeInstanceType
+}
+
+// Supporting types for the service interface
+
+// ConsoleOptions represents options for console attachment.
+type ConsoleOptions struct {
+	Type   string `json:"type"` // vnc, spice, serial, web
+	Width  int    `json:"width,omitempty"`
+	Height int    `json:"height,omitempty"`
+	Secure bool   `json:"secure,omitempty"`
+}
+
+// ExecRequest represents a command execution request.
+type ExecRequest struct {
+	Command []string          `json:"command"`
+	Env     map[string]string `json:"env,omitempty"`
+	WorkDir string            `json:"work_dir,omitempty"`
+	User    string            `json:"user,omitempty"`
+	TTY     bool              `json:"tty,omitempty"`
+	Stdin   bool              `json:"stdin,omitempty"`
+	Stdout  bool              `json:"stdout,omitempty"`
+	Stderr  bool              `json:"stderr,omitempty"`
+	Timeout int               `json:"timeout,omitempty"` // seconds
+}
+
+// ExecResult represents the result of command execution.
+type ExecResult struct {
+	ExitCode int    `json:"exit_code"`
+	Stdout   string `json:"stdout,omitempty"`
+	Stderr   string `json:"stderr,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Duration int64  `json:"duration"` // milliseconds
+	Timeout  bool   `json:"timeout"`
+}
+
+// LogOptions represents options for log retrieval.
+type LogOptions struct {
+	Follow     bool       `json:"follow,omitempty"`
+	Tail       int        `json:"tail,omitempty"`
+	Since      *TimeStamp `json:"since,omitempty"`
+	Until      *TimeStamp `json:"until,omitempty"`
+	Timestamps bool       `json:"timestamps,omitempty"`
+	Details    bool       `json:"details,omitempty"`
+}
+
+// TimeStamp represents a timestamp that can be parsed from various formats.
+type TimeStamp struct {
+	time.Time
+}
+
+// Snapshot represents a compute instance snapshot.
+type Snapshot struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	InstanceID  string            `json:"instance_id"`
+	State       string            `json:"state"`
+	Size        int64             `json:"size,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	Parent      string            `json:"parent,omitempty"`
+	Children    []string          `json:"children,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+}
+
+// ResourceHistoryOptions represents options for resource usage history.
+type ResourceHistoryOptions struct {
+	Start    *TimeStamp `json:"start,omitempty"`
+	End      *TimeStamp `json:"end,omitempty"`
+	Interval string     `json:"interval,omitempty"` // 1m, 5m, 1h, etc.
+	Metrics  []string   `json:"metrics,omitempty"`  // cpu, memory, network, storage
+}
+
+// MigrationOptions represents options for instance migration.
+type MigrationOptions struct {
+	Live       bool              `json:"live,omitempty"`
+	Offline    bool              `json:"offline,omitempty"`
+	Persistent bool              `json:"persistent,omitempty"`
+	Undefine   bool              `json:"undefine,omitempty"`
+	Compressed bool              `json:"compressed,omitempty"`
+	Bandwidth  int64             `json:"bandwidth,omitempty"` // MB/s
+	Timeout    int               `json:"timeout,omitempty"`   // seconds
+	Flags      []string          `json:"flags,omitempty"`
+	Parameters map[string]string `json:"parameters,omitempty"`
+}
+
+// ExportOptions represents options for instance export.
+type ExportOptions struct {
+	Format      string            `json:"format"`      // ova, qcow2, vmdk, tar
+	Destination string            `json:"destination"` // local path or remote URL
+	Compress    bool              `json:"compress,omitempty"`
+	Metadata    bool              `json:"metadata,omitempty"`
+	Snapshots   bool              `json:"snapshots,omitempty"`
+	Parameters  map[string]string `json:"parameters,omitempty"`
+}
+
+// ImportOptions represents options for instance import.
+type ImportOptions struct {
+	Name       string              `json:"name"`
+	Backend    ComputeBackend      `json:"backend,omitempty"`
+	Networks   []NetworkAttachment `json:"networks,omitempty"`
+	Storage    []StorageAttachment `json:"storage,omitempty"`
+	Resources  *ComputeResources   `json:"resources,omitempty"`
+	AutoStart  bool                `json:"auto_start,omitempty"`
+	Parameters map[string]string   `json:"parameters,omitempty"`
+}
+
+// ExportJob represents an export operation.
+type ExportJob struct {
+	ID          string     `json:"id"`
+	InstanceID  string     `json:"instance_id"`
+	Format      string     `json:"format"`
+	Destination string     `json:"destination"`
+	State       string     `json:"state"`
+	Progress    float64    `json:"progress"`
+	Error       string     `json:"error,omitempty"`
+	StartedAt   time.Time  `json:"started_at"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	Size        int64      `json:"size,omitempty"`
+	Checksum    string     `json:"checksum,omitempty"`
+}
+
+// MetricsOptions represents options for metrics streaming.
+type MetricsOptions struct {
+	Interval time.Duration `json:"interval,omitempty"`
+	Metrics  []string      `json:"metrics,omitempty"`
+	Buffer   int           `json:"buffer,omitempty"`
+}
+
+// EventOptions represents options for event retrieval.
+type EventOptions struct {
+	Types  []string   `json:"types,omitempty"`
+	Since  *TimeStamp `json:"since,omitempty"`
+	Until  *TimeStamp `json:"until,omitempty"`
+	Follow bool       `json:"follow,omitempty"`
+	Limit  int        `json:"limit,omitempty"`
+}
+
+// InstanceEvent represents an instance event.
+type InstanceEvent struct {
+	ID         string                 `json:"id"`
+	InstanceID string                 `json:"instance_id"`
+	Type       string                 `json:"type"`
+	Action     string                 `json:"action"`
+	Status     string                 `json:"status"`
+	Message    string                 `json:"message,omitempty"`
+	Details    map[string]interface{} `json:"details,omitempty"`
+	Timestamp  time.Time              `json:"timestamp"`
+	User       string                 `json:"user,omitempty"`
+}
+
+// BulkActionOptions represents options for bulk operations.
+type BulkActionOptions struct {
+	Force      bool              `json:"force,omitempty"`
+	Parallel   bool              `json:"parallel,omitempty"`
+	BatchSize  int               `json:"batch_size,omitempty"`
+	Timeout    int               `json:"timeout,omitempty"` // seconds
+	Parameters map[string]string `json:"parameters,omitempty"`
+}
+
+// BulkActionResult represents the result of a bulk action on an instance.
+type BulkActionResult struct {
+	InstanceID  string     `json:"instance_id"`
+	Action      string     `json:"action"`
+	Success     bool       `json:"success"`
+	Error       string     `json:"error,omitempty"`
+	StartedAt   time.Time  `json:"started_at"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
+// BackendInfo represents information about a compute backend.
+type BackendInfo struct {
+	Type               ComputeBackend         `json:"type"`
+	Version            string                 `json:"version"`
+	APIVersion         string                 `json:"api_version"`
+	Status             string                 `json:"status"`
+	Capabilities       []string               `json:"capabilities"`
+	SupportedTypes     []ComputeInstanceType  `json:"supported_types"`
+	ResourceLimits     ComputeResources       `json:"resource_limits"`
+	AvailableResources ComputeResources       `json:"available_resources"`
+	Configuration      map[string]interface{} `json:"configuration,omitempty"`
+	HealthCheck        *HealthStatus          `json:"health_check,omitempty"`
+}
+
+// ClusterStatus represents the overall status of the compute cluster.
+type ClusterStatus struct {
+	TotalInstances   int                             `json:"total_instances"`
+	RunningInstances int                             `json:"running_instances"`
+	StoppedInstances int                             `json:"stopped_instances"`
+	ErrorInstances   int                             `json:"error_instances"`
+	Backends         map[ComputeBackend]*BackendInfo `json:"backends"`
+	ResourceUsage    ComputeResources                `json:"resource_usage"`
+	ResourceLimits   ComputeResources                `json:"resource_limits"`
+	Health           *HealthStatus                   `json:"health"`
+	Uptime           time.Duration                   `json:"uptime"`
+	LastUpdated      time.Time                       `json:"last_updated"`
+}
+
+// ResourceQuotas represents resource quotas for a user.
+type ResourceQuotas struct {
+	UserID          uint                  `json:"user_id"`
+	MaxInstances    int                   `json:"max_instances"`
+	MaxCPUCores     float64               `json:"max_cpu_cores"`
+	MaxMemoryGB     int                   `json:"max_memory_gb"`
+	MaxStorageGB    int                   `json:"max_storage_gb"`
+	MaxNetworks     int                   `json:"max_networks"`
+	AllowedBackends []ComputeBackend      `json:"allowed_backends"`
+	AllowedTypes    []ComputeInstanceType `json:"allowed_types"`
+	CreatedAt       time.Time             `json:"created_at"`
+	UpdatedAt       time.Time             `json:"updated_at"`
+}
+
+// InstanceTemplate represents a template for creating instances.
+type InstanceTemplate struct {
+	ID          string                `json:"id"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Type        ComputeInstanceType   `json:"type"`
+	Backend     ComputeBackend        `json:"backend"`
+	Config      ComputeInstanceConfig `json:"config"`
+	Resources   ComputeResources      `json:"resources"`
+	Networks    []NetworkAttachment   `json:"networks"`
+	Storage     []StorageAttachment   `json:"storage"`
+	Labels      map[string]string     `json:"labels,omitempty"`
+	UserID      uint                  `json:"user_id"`
+	Public      bool                  `json:"public"`
+	CreatedAt   time.Time             `json:"created_at"`
+	UpdatedAt   time.Time             `json:"updated_at"`
+}
+
+// TemplateListOptions represents options for listing templates.
+type TemplateListOptions struct {
+	Type      ComputeInstanceType `json:"type,omitempty"`
+	Backend   ComputeBackend      `json:"backend,omitempty"`
+	UserID    *uint               `json:"user_id,omitempty"`
+	Public    *bool               `json:"public,omitempty"`
+	Labels    map[string]string   `json:"labels,omitempty"`
+	Limit     int                 `json:"limit,omitempty"`
+	Offset    int                 `json:"offset,omitempty"`
+	SortBy    string              `json:"sort_by,omitempty"`
+	SortOrder string              `json:"sort_order,omitempty"`
+}
+
+// CloneRequest represents a request to clone from a template.
+type CloneRequest struct {
+	Name        string                 `json:"name"`
+	Resources   *ComputeResources      `json:"resources,omitempty"`
+	Networks    []NetworkAttachment    `json:"networks,omitempty"`
+	Storage     []StorageAttachment    `json:"storage,omitempty"`
+	Labels      map[string]string      `json:"labels,omitempty"`
+	Annotations map[string]string      `json:"annotations,omitempty"`
+	AutoStart   bool                   `json:"auto_start,omitempty"`
+	Overrides   *ComputeInstanceConfig `json:"overrides,omitempty"`
+}
+
+// ComposeDeployment represents a Docker Compose deployment.
+type ComposeDeployment struct {
+	ID          string                      `json:"id"`
+	Name        string                      `json:"name"`
+	ProjectName string                      `json:"project_name"`
+	Content     string                      `json:"content,omitempty"`
+	State       string                      `json:"state"`
+	Services    map[string]*ComputeInstance `json:"services"`
+	Networks    []string                    `json:"networks"`
+	Volumes     []string                    `json:"volumes"`
+	Environment map[string]string           `json:"environment,omitempty"`
+	Labels      map[string]string           `json:"labels,omitempty"`
+	UserID      uint                        `json:"user_id"`
+	CreatedAt   time.Time                   `json:"created_at"`
+	UpdatedAt   time.Time                   `json:"updated_at"`
+	DeployedAt  *time.Time                  `json:"deployed_at,omitempty"`
+}
+
+// ComposeDeployOptions represents options for Compose deployment.
+type ComposeDeployOptions struct {
+	ProjectName string            `json:"project_name,omitempty"`
+	Environment map[string]string `json:"environment,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	AutoStart   bool              `json:"auto_start,omitempty"`
+	Force       bool              `json:"force,omitempty"`
+}
+
+// ComposeListOptions represents options for listing Compose deployments.
+type ComposeListOptions struct {
+	UserID    *uint             `json:"user_id,omitempty"`
+	State     string            `json:"state,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+	Limit     int               `json:"limit,omitempty"`
+	Offset    int               `json:"offset,omitempty"`
+	SortBy    string            `json:"sort_by,omitempty"`
+	SortOrder string            `json:"sort_order,omitempty"`
+}
+
+// HealthStatus represents health check results.
+type HealthStatus struct {
+	Status       string            `json:"status"` // healthy, unhealthy, unknown
+	Message      string            `json:"message,omitempty"`
+	Details      map[string]string `json:"details,omitempty"`
+	LastCheck    time.Time         `json:"last_check"`
+	CheckCount   int               `json:"check_count"`
+	FailureCount int               `json:"failure_count"`
+}
+
+// MaintenanceOptions represents options for maintenance operations.
+type MaintenanceOptions struct {
+	Type       string            `json:"type"` // cleanup, backup, update
+	Force      bool              `json:"force,omitempty"`
+	DryRun     bool              `json:"dry_run,omitempty"`
+	Timeout    int               `json:"timeout,omitempty"`  // seconds
+	Schedule   string            `json:"schedule,omitempty"` // cron expression
+	Notify     bool              `json:"notify,omitempty"`
+	Parameters map[string]string `json:"parameters,omitempty"`
+}

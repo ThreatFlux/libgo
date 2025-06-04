@@ -15,8 +15,8 @@ import (
 type UserService struct {
 	users  map[string]*user.User // Map of user ID to user
 	byName map[string]string     // Map of username to user ID
-	mu     sync.RWMutex
 	logger logger.Logger
+	mu     sync.RWMutex
 }
 
 // NewUserService creates a new UserService.

@@ -11,16 +11,16 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Define context keys
+// Define context keys.
 const UserContextKey = "user"
 
-// RoleMiddleware implements role-based access control for Gin
+// RoleMiddleware implements role-based access control for Gin.
 type RoleMiddleware struct {
 	userService userservice.Service
 	logger      logger.Logger
 }
 
-// NewRoleMiddleware creates a new RoleMiddleware
+// NewRoleMiddleware creates a new RoleMiddleware.
 func NewRoleMiddleware(userService userservice.Service, logger logger.Logger) *RoleMiddleware {
 	return &RoleMiddleware{
 		userService: userService,
@@ -28,7 +28,7 @@ func NewRoleMiddleware(userService userservice.Service, logger logger.Logger) *R
 	}
 }
 
-// RequireRole checks if the user has the specified role
+// RequireRole checks if the user has the specified role.
 func (m *RoleMiddleware) RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get the user from the context
@@ -61,7 +61,7 @@ func (m *RoleMiddleware) RequireRole(role string) gin.HandlerFunc {
 	}
 }
 
-// RequireAnyRole checks if the user has any of the specified roles
+// RequireAnyRole checks if the user has any of the specified roles.
 func (m *RoleMiddleware) RequireAnyRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get the user from the context
@@ -94,7 +94,7 @@ func (m *RoleMiddleware) RequireAnyRole(roles ...string) gin.HandlerFunc {
 	}
 }
 
-// RequirePermission checks if the user has the specified permission
+// RequirePermission checks if the user has the specified permission.
 func (m *RoleMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get the user from the context
@@ -145,7 +145,7 @@ func (m *RoleMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 	}
 }
 
-// handleUnauthorized handles unauthorized requests
+// handleUnauthorized handles unauthorized requests.
 func (m *RoleMiddleware) handleUnauthorized(c *gin.Context, message string) {
 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 		"status":  http.StatusUnauthorized,
@@ -154,7 +154,7 @@ func (m *RoleMiddleware) handleUnauthorized(c *gin.Context, message string) {
 	})
 }
 
-// handleForbidden handles forbidden requests
+// handleForbidden handles forbidden requests.
 func (m *RoleMiddleware) handleForbidden(c *gin.Context, message string) {
 	c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 		"status":  http.StatusForbidden,

@@ -217,8 +217,7 @@ func createCustomWindowsVM(ctx context.Context, t *testing.T, apiURL string, par
 	resp, err := client.Do(req)
 	require.NoError(t, err, "Failed to send HTTP request")
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
+		if closeErr := Body.Close(); closeErr != nil {
 			t.Logf("Failed to close response body")
 		}
 	}(resp.Body)

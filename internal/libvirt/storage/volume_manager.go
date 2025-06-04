@@ -17,14 +17,14 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
-// Error types
+// Error types.
 var (
 	ErrVolumeNotFound = fmt.Errorf("storage volume not found")
 	ErrVolumeExists   = fmt.Errorf("storage volume already exists")
 	ErrPoolNotActive  = fmt.Errorf("storage pool is not active")
 )
 
-// LibvirtVolumeManager implements VolumeManager for libvirt
+// LibvirtVolumeManager implements VolumeManager for libvirt.
 type LibvirtVolumeManager struct {
 	connManager connection.Manager
 	poolManager PoolManager
@@ -32,7 +32,7 @@ type LibvirtVolumeManager struct {
 	logger      logger.Logger
 }
 
-// NewLibvirtVolumeManager creates a new LibvirtVolumeManager
+// NewLibvirtVolumeManager creates a new LibvirtVolumeManager.
 func NewLibvirtVolumeManager(connManager connection.Manager, poolManager PoolManager, xmlBuilder XMLBuilder, logger logger.Logger) *LibvirtVolumeManager {
 	return &LibvirtVolumeManager{
 		connManager: connManager,
@@ -42,7 +42,7 @@ func NewLibvirtVolumeManager(connManager connection.Manager, poolManager PoolMan
 	}
 }
 
-// Create implements VolumeManager.Create
+// Create implements VolumeManager.Create.
 func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volName string, capacityBytes uint64, format string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -64,7 +64,7 @@ func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volN
 	}
 
 	// Ensure the pool is active
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(*pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(*pool) //nolint:dogsled
 	if err != nil {
 		return fmt.Errorf("getting pool info: %w", err)
 	}
@@ -107,7 +107,7 @@ func (m *LibvirtVolumeManager) Create(ctx context.Context, poolName string, volN
 	return nil
 }
 
-// CreateFromImage implements VolumeManager.CreateFromImage
+// CreateFromImage implements VolumeManager.CreateFromImage.
 func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName string, volName string, imagePath string, format string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -122,51 +122,91 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 
 	libvirtConn := conn.GetLibvirtConnection()
 
+	// Get and validate pool
+	pool, err := m.validateAndGetPool(ctx, libvirtConn, poolName)
+	if err != nil {
+		return err
+	}
+
+	// Handle existing volume (delete if exists)
+	if handleErr := m.handleExistingVolume(libvirtConn, pool, poolName, volName); handleErr != nil {
+		return handleErr
+	}
+
+	// Validate and get image info
+	imgInfo, finalFormat, err := m.validateImageAndFormat(ctx, imagePath, format)
+	if err != nil {
+		return err
+	}
+
+	// Create and populate volume
+	return m.createAndPopulateVolume(ctx, libvirtConn, pool, volName, imagePath, finalFormat, imgInfo, poolName)
+}
+
+// validateAndGetPool validates and retrieves the storage pool.
+func (m *LibvirtVolumeManager) validateAndGetPool(ctx context.Context, libvirtConn *libvirt.Libvirt, poolName string) (*libvirt.StoragePool, error) {
 	// Get the pool
 	pool, err := m.poolManager.Get(ctx, poolName)
 	if err != nil {
-		return fmt.Errorf("getting storage pool: %w", err)
+		return nil, fmt.Errorf("getting storage pool: %w", err)
 	}
 
 	// Ensure the pool is active
-	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(*pool)
+	poolInfo, _, _, _, err := libvirtConn.StoragePoolGetInfo(*pool) //nolint:dogsled //nolint:dogsled
 	if err != nil {
-		return fmt.Errorf("getting pool info: %w", err)
+		return nil, fmt.Errorf("getting pool info: %w", err)
 	}
 
 	if libvirt.StoragePoolState(poolInfo) != libvirt.StoragePoolRunning {
-		return fmt.Errorf("pool %s: %w", poolName, ErrPoolNotActive)
+		return nil, fmt.Errorf("pool %s: %w", poolName, ErrPoolNotActive)
 	}
 
-	// Check if volume already exists
+	return pool, nil
+}
+
+// handleExistingVolume checks for and removes existing volumes.
+func (m *LibvirtVolumeManager) handleExistingVolume(libvirtConn *libvirt.Libvirt, pool *libvirt.StoragePool, poolName, volName string) error {
 	existingVol, err := libvirtConn.StorageVolLookupByName(*pool, volName)
-	if err == nil {
-		// If volume already exists, instead of failing, delete it first and recreate
-		m.logger.Warn("Volume already exists, deleting and recreating",
-			logger.String("pool", poolName),
-			logger.String("volume", volName))
-
-		if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
-			return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
-		}
+	if err != nil {
+		return nil // Volume doesn't exist, which is fine
 	}
 
+	// If volume already exists, delete it first and recreate
+	m.logger.Warn("Volume already exists, deleting and recreating",
+		logger.String("pool", poolName),
+		logger.String("volume", volName))
+
+	if deleteErr := libvirtConn.StorageVolDelete(existingVol, 0); deleteErr != nil {
+		return fmt.Errorf("deleting existing volume %s in pool %s: %w", volName, poolName, deleteErr)
+	}
+
+	return nil
+}
+
+// validateImageAndFormat validates the source image and determines format.
+func (m *LibvirtVolumeManager) validateImageAndFormat(ctx context.Context, imagePath, format string) (*imageInfo, string, error) {
 	// Check if source image exists
 	if _, statErr := os.Stat(imagePath); os.IsNotExist(statErr) {
-		return fmt.Errorf("source image %s does not exist", imagePath)
+		return nil, "", fmt.Errorf("source image %s does not exist", imagePath)
 	}
 
 	// Get image info (size, format)
 	imgInfo, err := m.getImageInfo(ctx, imagePath)
 	if err != nil {
-		return fmt.Errorf("getting image info: %w", err)
+		return nil, "", fmt.Errorf("getting image info: %w", err)
 	}
 
 	// If format not specified, use the image format
-	if format == "" {
-		format = imgInfo.Format
+	finalFormat := format
+	if finalFormat == "" {
+		finalFormat = imgInfo.Format
 	}
 
+	return imgInfo, finalFormat, nil
+}
+
+// createAndPopulateVolume creates the volume and populates it with image data.
+func (m *LibvirtVolumeManager) createAndPopulateVolume(ctx context.Context, libvirtConn *libvirt.Libvirt, pool *libvirt.StoragePool, volName, imagePath, format string, imgInfo *imageInfo, poolName string) error {
 	// Create the volume
 	volumeXML, err := m.xmlBuilder.BuildStorageVolumeXML(volName, imgInfo.VirtualSize, format)
 	if err != nil {
@@ -181,36 +221,14 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	// Get the volume path
 	volPath, err := libvirtConn.StorageVolGetPath(vol)
 	if err != nil {
-		// Try to clean up
-		if deleteErr := libvirtConn.StorageVolDelete(vol, 0); deleteErr != nil {
-			m.logger.Error("Failed to delete volume during cleanup", logger.Error(deleteErr))
-		}
+		m.cleanupVolume(libvirtConn, vol)
 		return fmt.Errorf("getting volume path: %w", err)
 	}
 
-	// Use qemu-img to copy the image content
-	cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
-
-	args := []string{
-		"convert",
-		"-f", imgInfo.Format,
-		"-O", format,
-		imagePath,
-		volPath,
-	}
-
-	cmdOpts := executil.CommandOptions{
-		Timeout: 5 * time.Minute,
-	}
-
-	output, err := executil.ExecuteCommand(cmdCtx, "qemu-img", args, cmdOpts)
-	if err != nil {
-		// Clean up the volume
-		if deleteErr := libvirtConn.StorageVolDelete(vol, 0); deleteErr != nil {
-			m.logger.Error("Failed to delete volume during cleanup", logger.Error(deleteErr))
-		}
-		return fmt.Errorf("converting image: %w: %s", err, string(output))
+	// Convert and copy image content
+	if err := m.convertImageToVolume(ctx, imagePath, volPath, imgInfo.Format, format); err != nil {
+		m.cleanupVolume(libvirtConn, vol)
+		return err
 	}
 
 	m.logger.Info("Created volume from image",
@@ -222,12 +240,44 @@ func (m *LibvirtVolumeManager) CreateFromImage(ctx context.Context, poolName str
 	return nil
 }
 
+// convertImageToVolume uses qemu-img to convert the image to the volume.
+func (m *LibvirtVolumeManager) convertImageToVolume(ctx context.Context, imagePath, volPath, sourceFormat, targetFormat string) error {
+	cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	args := []string{
+		"convert",
+		"-f", sourceFormat,
+		"-O", targetFormat,
+		imagePath,
+		volPath,
+	}
+
+	cmdOpts := executil.CommandOptions{
+		Timeout: 5 * time.Minute,
+	}
+
+	output, err := executil.ExecuteCommand(cmdCtx, "qemu-img", args, cmdOpts)
+	if err != nil {
+		return fmt.Errorf("converting image: %w: %s", err, string(output))
+	}
+
+	return nil
+}
+
+// cleanupVolume removes a volume during error cleanup.
+func (m *LibvirtVolumeManager) cleanupVolume(libvirtConn *libvirt.Libvirt, vol libvirt.StorageVol) {
+	if deleteErr := libvirtConn.StorageVolDelete(vol, 0); deleteErr != nil {
+		m.logger.Error("Failed to delete volume during cleanup", logger.Error(deleteErr))
+	}
+}
+
 // withVolumeConnection is a helper that handles the common pattern of:
 // 1. Getting a libvirt connection
 // 2. Getting the storage pool
 // 3. Looking up the volume
 // 4. Executing the provided operation
-// 5. Cleaning up the connection
+// 5. Cleaning up the connection.
 func (m *LibvirtVolumeManager) withVolumeConnection(ctx context.Context, poolName string, volName string, operation func(*libvirt.Libvirt, libvirt.StorageVol) error) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -258,7 +308,7 @@ func (m *LibvirtVolumeManager) withVolumeConnection(ctx context.Context, poolNam
 	return operation(libvirtConn, vol)
 }
 
-// Delete implements VolumeManager.Delete
+// Delete implements VolumeManager.Delete.
 func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volName string) error {
 	err := m.withVolumeConnection(ctx, poolName, volName, func(libvirtConn *libvirt.Libvirt, vol libvirt.StorageVol) error {
 		// Delete the volume
@@ -279,7 +329,7 @@ func (m *LibvirtVolumeManager) Delete(ctx context.Context, poolName string, volN
 	return nil
 }
 
-// Resize implements VolumeManager.Resize
+// Resize implements VolumeManager.Resize.
 func (m *LibvirtVolumeManager) Resize(ctx context.Context, poolName string, volName string, capacityBytes uint64) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -320,7 +370,7 @@ func (m *LibvirtVolumeManager) Resize(ctx context.Context, poolName string, volN
 	return nil
 }
 
-// GetPath implements VolumeManager.GetPath
+// GetPath implements VolumeManager.GetPath.
 func (m *LibvirtVolumeManager) GetPath(ctx context.Context, poolName string, volName string) (string, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -356,7 +406,7 @@ func (m *LibvirtVolumeManager) GetPath(ctx context.Context, poolName string, vol
 	return path, nil
 }
 
-// Clone implements VolumeManager.Clone
+// Clone implements VolumeManager.Clone.
 func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourceVolName string, destVolName string) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -425,14 +475,14 @@ func (m *LibvirtVolumeManager) Clone(ctx context.Context, poolName string, sourc
 	return nil
 }
 
-// imageInfo holds information about a disk image
+// imageInfo holds information about a disk image.
 type imageInfo struct {
 	Format      string
 	VirtualSize uint64
 	ActualSize  uint64
 }
 
-// getImageInfo uses qemu-img info to get image details
+// getImageInfo uses qemu-img info to get image details.
 func (m *LibvirtVolumeManager) getImageInfo(ctx context.Context, imagePath string) (*imageInfo, error) {
 	// Ensure the file exists
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
@@ -482,7 +532,7 @@ func (m *LibvirtVolumeManager) getImageInfo(ctx context.Context, imagePath strin
 	}, nil
 }
 
-// List implements VolumeManager.List
+// List implements VolumeManager.List.
 func (m *LibvirtVolumeManager) List(ctx context.Context, poolName string) ([]*StorageVolumeInfo, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -524,7 +574,7 @@ func (m *LibvirtVolumeManager) List(ctx context.Context, poolName string) ([]*St
 	return volumeInfos, nil
 }
 
-// GetInfo implements VolumeManager.GetInfo
+// GetInfo implements VolumeManager.GetInfo.
 func (m *LibvirtVolumeManager) GetInfo(ctx context.Context, poolName string, volName string) (*StorageVolumeInfo, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -554,7 +604,7 @@ func (m *LibvirtVolumeManager) GetInfo(ctx context.Context, poolName string, vol
 	return m.getVolumeInfo(libvirtConn, &vol, poolName)
 }
 
-// GetXML implements VolumeManager.GetXML
+// GetXML implements VolumeManager.GetXML.
 func (m *LibvirtVolumeManager) GetXML(ctx context.Context, poolName string, volName string) (string, error) {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -590,7 +640,7 @@ func (m *LibvirtVolumeManager) GetXML(ctx context.Context, poolName string, volN
 	return xml, nil
 }
 
-// Wipe implements VolumeManager.Wipe
+// Wipe implements VolumeManager.Wipe.
 func (m *LibvirtVolumeManager) Wipe(ctx context.Context, poolName string, volName string) error {
 	err := m.withVolumeConnection(ctx, poolName, volName, func(libvirtConn *libvirt.Libvirt, vol libvirt.StorageVol) error {
 		// Wipe the volume
@@ -611,7 +661,7 @@ func (m *LibvirtVolumeManager) Wipe(ctx context.Context, poolName string, volNam
 	return nil
 }
 
-// Upload implements VolumeManager.Upload
+// Upload implements VolumeManager.Upload.
 func (m *LibvirtVolumeManager) Upload(ctx context.Context, poolName string, volName string, reader io.Reader) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -629,7 +679,7 @@ func (m *LibvirtVolumeManager) Upload(ctx context.Context, poolName string, volN
 	return fmt.Errorf("volume upload is not currently supported")
 }
 
-// Download implements VolumeManager.Download
+// Download implements VolumeManager.Download.
 func (m *LibvirtVolumeManager) Download(ctx context.Context, poolName string, volName string, writer io.Writer) error {
 	// Get libvirt connection
 	conn, err := m.connManager.Connect(ctx)
@@ -647,7 +697,7 @@ func (m *LibvirtVolumeManager) Download(ctx context.Context, poolName string, vo
 	return fmt.Errorf("volume download is not currently supported")
 }
 
-// getVolumeInfo is a helper method to get volume information
+// getVolumeInfo is a helper method to get volume information.
 func (m *LibvirtVolumeManager) getVolumeInfo(libvirtConn *libvirt.Libvirt, vol *libvirt.StorageVol, poolName string) (*StorageVolumeInfo, error) {
 	// Get volume info
 	_, capacity, allocation, err := libvirtConn.StorageVolGetInfo(*vol)
@@ -671,7 +721,7 @@ func (m *LibvirtVolumeManager) getVolumeInfo(libvirtConn *libvirt.Libvirt, vol *
 	}
 
 	// Extract format from XML (simple regex for now)
-	// TODO: Proper XML parsing
+	// TODO: Proper XML parsing.
 	format := "raw" // Default
 	if formatStart := strings.Index(xml, `<format type="`); formatStart != -1 {
 		formatEnd := strings.Index(xml[formatStart+14:], `"`)

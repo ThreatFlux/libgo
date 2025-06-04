@@ -13,7 +13,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Mock logger
+// Mock logger.
 type mockLogger struct {
 	mock.Mock
 }
@@ -59,7 +59,7 @@ func (m *mockLogger) Sync() error {
 	return args.Error(0)
 }
 
-// Mock libvirt and connection
+// Mock libvirt and connection.
 type mockLibvirt struct {
 	mock.Mock
 }
@@ -124,14 +124,14 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 	return args.Error(0)
 }
 
-// invalidConn is a test type that doesn't implement Connection correctly
+// invalidConn is a test type that doesn't implement Connection correctly.
 type invalidConn struct{}
 
 func (c *invalidConn) GetLibvirtConnection() *libvirt.Libvirt { return nil }
 func (c *invalidConn) Close() error                           { return nil }
 func (c *invalidConn) IsActive() bool                         { return true }
 
-// Tests
+// Tests.
 func TestNewConnectionManager(t *testing.T) {
 	mockLog := new(mockLogger)
 	mockLog.On("Debug", mock.Anything, mock.Anything).Return()

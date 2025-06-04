@@ -2,7 +2,7 @@ package logger
 
 import "go.uber.org/zap/zapcore"
 
-// Logger defines the interface for logging
+// Logger defines the interface for logging.
 type Logger interface {
 	// Debug logs a message at debug level
 	Debug(msg string, fields ...Field)
@@ -29,71 +29,71 @@ type Logger interface {
 	Sync() error
 }
 
-// Field represents a structured log field
+// Field represents a structured log field.
 type Field struct {
 	Key   string
 	Value interface{}
 }
 
-// String creates a string Field
+// String creates a string Field.
 func String(key, value string) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Int creates an integer Field
+// Int creates an integer Field.
 func Int(key string, value int) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Int64 creates an int64 Field
+// Int64 creates an int64 Field.
 func Int64(key string, value int64) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Uint64 creates a uint64 Field
+// Uint64 creates a uint64 Field.
 func Uint64(key string, value uint64) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Float64 creates a float64 Field
+// Float64 creates a float64 Field.
 func Float64(key string, value float64) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Bool creates a bool Field
+// Bool creates a bool Field.
 func Bool(key string, value bool) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Error creates an error Field
+// Error creates an error Field.
 func Error(err error) Field {
 	return Field{Key: "error", Value: err}
 }
 
-// Any creates a field with any value
+// Any creates a field with any value.
 func Any(key string, value interface{}) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Duration creates a duration field
+// Duration creates a duration field.
 func Duration(key string, value interface{}) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Time creates a time field
+// Time creates a time field.
 func Time(key string, value interface{}) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Binary creates a field for binary data
+// Binary creates a field for binary data.
 func Binary(key string, value []byte) Field {
 	return Field{Key: key, Value: value}
 }
 
-// Level represents a logging level
+// Level represents a logging level.
 type Level zapcore.Level
 
-// Log levels
+// Log levels.
 const (
 	DebugLevel Level = Level(zapcore.DebugLevel)
 	InfoLevel  Level = Level(zapcore.InfoLevel)
@@ -102,7 +102,7 @@ const (
 	FatalLevel Level = Level(zapcore.FatalLevel)
 )
 
-// String returns the string representation of the Level
+// String returns the string representation of the Level.
 func (l Level) String() string {
 	return zapcore.Level(l).String()
 }

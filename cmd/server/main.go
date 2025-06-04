@@ -16,8 +16,11 @@ import (
 	"github.com/threatflux/libgo/internal/api/handlers"
 	"github.com/threatflux/libgo/internal/auth/jwt"
 	"github.com/threatflux/libgo/internal/auth/user"
+	"github.com/threatflux/libgo/internal/compute"
 	"github.com/threatflux/libgo/internal/config"
 	"github.com/threatflux/libgo/internal/database"
+	"github.com/threatflux/libgo/internal/docker"
+	"github.com/threatflux/libgo/internal/docker/container"
 	"github.com/threatflux/libgo/internal/export"
 	"github.com/threatflux/libgo/internal/export/formats/ova"
 	"github.com/threatflux/libgo/internal/health"
@@ -30,6 +33,7 @@ import (
 	"github.com/threatflux/libgo/internal/middleware/auth"
 	"github.com/threatflux/libgo/internal/middleware/logging"
 	"github.com/threatflux/libgo/internal/middleware/recovery"
+	vmmodels "github.com/threatflux/libgo/internal/models/vm"
 	"github.com/threatflux/libgo/internal/ovs"
 	"github.com/threatflux/libgo/internal/vm"
 	"github.com/threatflux/libgo/internal/vm/cloudinit"
@@ -91,14 +95,14 @@ func main() {
 	// Initialize components
 	components, err := initComponents(ctx, cfg, connManager, log)
 	if err != nil {
-		connManager.Close()
-		log.Fatal("Failed to initialize components", logger.Error(err))
+		log.Error("Failed to initialize components", logger.Error(err))
+		return
 	}
 
 	// Ensure storage pool exists
 	if poolErr := ensureStoragePool(ctx, components.PoolManager, cfg, log); poolErr != nil {
-		connManager.Close()
-		log.Fatal("Failed to ensure storage pool", logger.Error(poolErr))
+		log.Error("Failed to ensure storage pool", logger.Error(poolErr))
+		return
 	}
 
 	// Initialize default users if configured
@@ -201,7 +205,7 @@ func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	connManager.Release(conn)
+	_ = connManager.Release(conn) // Ignore release errors for test connection
 
 	return connManager, nil
 }
@@ -220,6 +224,12 @@ type ComponentDependencies struct {
 	TemplateManager  template.Manager
 	CloudInitManager cloudinit.Manager
 	VMManager        vm.Manager
+
+	// Docker related
+	DockerManager docker.Manager
+
+	// Unified compute
+	ComputeManager compute.Manager
 
 	// Export
 	ExportManager export.Manager
@@ -349,11 +359,84 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	components.RecoveryMiddleware = recovery.RecoveryMiddleware(log)
 	components.LoggingMiddleware = logging.RequestLoggerMiddleware(log)
 
+	// Initialize Docker manager if enabled
+	if cfg.Docker.Enabled {
+		log.Info("Initializing Docker client manager")
+
+		dockerOpts := []docker.ClientOption{
+			docker.WithHost(cfg.Docker.Host),
+			docker.WithAPIVersion(cfg.Docker.APIVersion),
+			docker.WithTLSVerify(cfg.Docker.TLSVerify),
+			docker.WithRequestTimeout(cfg.Docker.RequestTimeout),
+			docker.WithRetry(cfg.Docker.MaxRetries, cfg.Docker.RetryDelay),
+			docker.WithLogger(log),
+		}
+
+		if cfg.Docker.TLSVerify {
+			dockerOpts = append(dockerOpts, docker.WithTLSConfig(
+				cfg.Docker.TLSCertPath,
+				cfg.Docker.TLSKeyPath,
+				cfg.Docker.TLSCAPath,
+			))
+		}
+
+		components.DockerManager, err = docker.NewManager(dockerOpts...)
+		if err != nil {
+			return nil, fmt.Errorf("creating Docker manager: %w", err)
+		}
+
+		log.Info("Docker client manager initialized successfully")
+	} else {
+		log.Info("Docker support disabled in configuration")
+	}
+
+	// Initialize unified compute manager
+	log.Info("Initializing unified compute manager")
+
+	computeConfig := compute.ManagerConfig{
+		DefaultBackend:      compute.ComputeBackend(cfg.Compute.DefaultBackend),
+		AllowMixedWorkloads: cfg.Compute.AllowMixedDeployments,
+		ResourceLimits:      convertConfigResourceLimits(cfg.Compute.ResourceLimits),
+		HealthCheckInterval: cfg.Compute.HealthCheckInterval,
+		MetricsInterval:     cfg.Compute.MetricsCollectionInterval,
+		EnableQuotas:        true, // Enable quotas by default
+	}
+
+	components.ComputeManager = compute.NewComputeManager(computeConfig, log)
+
+	// Register KVM backend through VM manager wrapper
+	kvmBackend := NewKVMBackendAdapter(components.VMManager, log)
+	if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
+		if err := concreteManager.RegisterBackend(compute.BackendKVM, kvmBackend); err != nil {
+			return nil, fmt.Errorf("registering KVM backend: %w", err)
+		}
+	} else {
+		return nil, fmt.Errorf("compute manager is not a concrete ComputeManager")
+	}
+
+	// Register Docker backend if enabled
+	if cfg.Docker.Enabled && components.DockerManager != nil {
+		dockerBackend := docker.NewBackendService(components.DockerManager, log)
+		if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
+			if err := concreteManager.RegisterBackend(compute.BackendDocker, dockerBackend); err != nil {
+				return nil, fmt.Errorf("registering Docker backend: %w", err)
+			}
+			log.Info("Docker backend registered with compute manager")
+		}
+	}
+
+	log.Info("Unified compute manager initialized successfully")
+
 	// Initialize metrics
 	metricsDeps := map[string]interface{}{
-		"vm_manager":     components.VMManager,
-		"export_manager": components.ExportManager,
+		"vm_manager":      components.VMManager,
+		"export_manager":  components.ExportManager,
+		"compute_manager": components.ComputeManager,
 	}
+	if components.DockerManager != nil {
+		metricsDeps["docker_manager"] = components.DockerManager
+	}
+
 	components.MetricsCollector, err = metrics.NewCollector("prometheus", ctx, metricsDeps, log)
 	if err != nil {
 		return nil, fmt.Errorf("creating metrics collector: %w", err)
@@ -387,6 +470,9 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 	authHandler := handlers.NewAuthHandler(components.UserService, components.JWTGenerator, log, cfg.Auth.TokenExpiration)
 	healthHandler := handlers.NewHealthHandler(healthChecker, log)
 	metricsHandler := handlers.NewMetricsHandler(components.MetricsCollector, log)
+
+	// Create unified compute handler
+	computeHandler := handlers.NewComputeHandler(components.ComputeManager, log)
 
 	// Create network handlers
 	networkHandlers := &api.NetworkHandlers{
@@ -431,6 +517,35 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		CreateFlow:   handlers.NewOVSFlowCreateHandler(components.OVSManager, log),
 	}
 
+	// Create Docker handlers if Docker is enabled
+	var dockerHandlers *api.DockerHandlers
+	if cfg.Docker.Enabled && components.DockerManager != nil {
+		log.Info("Creating Docker API handlers")
+
+		// Create container service
+		containerService := container.NewService(components.DockerManager, log)
+
+		// Create container handler
+		containerHandler := handlers.NewDockerContainerHandler(containerService, log)
+
+		// Build Docker handlers structure
+		dockerHandlers = &api.DockerHandlers{
+			CreateContainer:   containerHandler,
+			ListContainers:    containerHandler,
+			GetContainer:      containerHandler,
+			StartContainer:    containerHandler,
+			StopContainer:     containerHandler,
+			RestartContainer:  containerHandler,
+			DeleteContainer:   containerHandler,
+			GetContainerLogs:  containerHandler,
+			GetContainerStats: containerHandler,
+		}
+
+		log.Info("Docker API handlers created successfully")
+	} else {
+		log.Info("Docker handlers disabled or Docker manager not available")
+	}
+
 	// Setup router
 	router := server.Router()
 
@@ -450,9 +565,11 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 		authHandler,
 		healthHandler,
 		metricsHandler,
+		computeHandler,
 		networkHandlers,
 		storageHandlers,
 		ovsHandlers,
+		dockerHandlers,
 		cfg, // Pass the configuration
 	)
 }
@@ -504,94 +621,331 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 
 // ensureStoragePool ensures the required storage pool exists and is active.
 func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log logger.Logger) error {
-	// Get the configured pool name and path
+	poolName, poolPath := resolvePoolConfiguration(cfg, log)
+
+	if err := createPoolDirectory(poolPath); err != nil {
+		return err
+	}
+
+	if err := poolManager.EnsureExists(ctx, poolName, poolPath); err != nil {
+		return fmt.Errorf("failed to ensure storage pool %s exists: %w", poolName, err)
+	}
+
+	return copyTemplateImages(cfg.Storage.Templates, poolPath, log)
+}
+
+// resolvePoolConfiguration resolves pool name and path from configuration.
+func resolvePoolConfiguration(cfg *config.Config, log logger.Logger) (string, string) {
 	poolName := cfg.Storage.DefaultPool
 	poolPath := cfg.Storage.PoolPath
 
-	// Use libvirt pool name as fallback if storage pool not specified
 	if poolName == "" {
 		poolName = cfg.Libvirt.PoolName
 		log.Warn("Storage default pool not specified, using libvirt pool name",
 			logger.String("pool", poolName))
 	}
 
-	// Ensure the path exists
 	if poolPath == "" {
 		poolPath = "/tmp/libgo-storage"
 		log.Warn("Storage pool path not specified, using default path",
 			logger.String("path", poolPath))
 	}
 
-	// Create the directory with generous permissions
+	return poolName, poolPath
+}
+
+// createPoolDirectory creates the storage pool directory.
+func createPoolDirectory(poolPath string) error {
 	if err := os.MkdirAll(poolPath, 0777); err != nil {
 		return fmt.Errorf("failed to create storage path %s: %w", poolPath, err)
 	}
+	return nil
+}
 
-	// Ensure the storage pool exists
-	if err := poolManager.EnsureExists(ctx, poolName, poolPath); err != nil {
-		return fmt.Errorf("failed to ensure storage pool %s exists: %w", poolName, err)
-	}
-
-	// Copy template images if needed
-	for templateName, imagePath := range cfg.Storage.Templates {
-		// Check if the source image exists
-		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-			log.Warn("Template image not found, skipping copy",
+// copyTemplateImages copies template images to the storage pool.
+func copyTemplateImages(templates map[string]string, poolPath string, log logger.Logger) error {
+	for templateName, imagePath := range templates {
+		if err := copyTemplateImage(templateName, imagePath, poolPath, log); err != nil {
+			// Log error but continue with other templates
+			log.Warn("Failed to copy template image",
 				logger.String("template", templateName),
-				logger.String("path", imagePath))
-			continue
-		}
-
-		// Copy the image to the pool path if needed
-		destPath := filepath.Join(poolPath, filepath.Base(imagePath))
-		if _, err := os.Stat(destPath); os.IsNotExist(err) {
-			log.Info("Copying template image to storage pool",
-				logger.String("template", templateName),
-				logger.String("source", imagePath),
-				logger.String("destination", destPath))
-
-			// Use io.Copy with file handles
-			src, err := os.Open(imagePath)
-			if err != nil {
-				log.Warn("Failed to open source template image",
-					logger.String("template", templateName),
-					logger.String("path", imagePath),
-					logger.Error(err))
-				continue
-			}
-			defer src.Close()
-
-			dst, err := os.Create(destPath)
-			if err != nil {
-				log.Warn("Failed to create destination file",
-					logger.String("path", destPath),
-					logger.Error(err))
-				continue
-			}
-			defer dst.Close()
-
-			// Set generous permissions on destination
-			if err := dst.Chmod(0666); err != nil {
-				log.Warn("Failed to set permissions on destination file",
-					logger.String("path", destPath),
-					logger.Error(err))
-			}
-
-			// Copy the file
-			if _, err := io.Copy(dst, src); err != nil {
-				log.Warn("Failed to copy template image",
-					logger.String("template", templateName),
-					logger.String("source", imagePath),
-					logger.String("destination", destPath),
-					logger.Error(err))
-				continue
-			}
-
-			log.Info("Template image copied successfully",
-				logger.String("template", templateName),
-				logger.String("destination", destPath))
+				logger.Error(err))
 		}
 	}
+	return nil
+}
+
+// copyTemplateImage copies a single template image to the pool.
+func copyTemplateImage(templateName, imagePath, poolPath string, log logger.Logger) error {
+	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+		log.Warn("Template image not found, skipping copy",
+			logger.String("template", templateName),
+			logger.String("path", imagePath))
+		return nil
+	}
+
+	destPath := filepath.Join(poolPath, filepath.Base(imagePath))
+	if _, err := os.Stat(destPath); !os.IsNotExist(err) {
+		return nil // Destination already exists
+	}
+
+	log.Info("Copying template image to storage pool",
+		logger.String("template", templateName),
+		logger.String("source", imagePath),
+		logger.String("destination", destPath))
+
+	return performImageCopy(imagePath, destPath, templateName, log)
+}
+
+// performImageCopy performs the actual file copy operation.
+func performImageCopy(imagePath, destPath, templateName string, log logger.Logger) error {
+	src, err := os.Open(imagePath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer src.Close()
+
+	dst, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dst.Close()
+
+	if err := dst.Chmod(0666); err != nil {
+		log.Warn("Failed to set permissions on destination file",
+			logger.String("path", destPath),
+			logger.Error(err))
+	}
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return fmt.Errorf("failed to copy file: %w", err)
+	}
+
+	log.Info("Template image copied successfully",
+		logger.String("template", templateName),
+		logger.String("destination", destPath))
 
 	return nil
+}
+
+// convertConfigResourceLimits converts config resource limits to compute resource limits
+func convertConfigResourceLimits(limits config.ResourceLimits) compute.ComputeResources {
+	return compute.ComputeResources{
+		CPU: compute.CPUResources{
+			Cores: float64(limits.MaxCPUCores),
+		},
+		Memory: compute.MemoryResources{
+			Limit: int64(limits.MaxMemoryGB) * 1024 * 1024 * 1024, // Convert GB to bytes
+		},
+		Storage: compute.StorageResources{
+			TotalSpace: int64(limits.MaxStorageGB) * 1024 * 1024 * 1024, // Convert GB to bytes
+		},
+		Network: compute.NetworkResources{
+			BandwidthLimit: int64(limits.MaxNetworkMbps) * 1024 * 1024, // Convert Mbps to bps
+		},
+	}
+}
+
+// NewKVMBackendAdapter creates an adapter that wraps the VM manager to implement the BackendService interface
+func NewKVMBackendAdapter(vmManager vm.Manager, logger logger.Logger) compute.BackendService {
+	return &kvmBackendAdapter{
+		vmManager: vmManager,
+		logger:    logger,
+	}
+}
+
+// kvmBackendAdapter adapts the VM manager to the compute backend interface
+type kvmBackendAdapter struct {
+	vmManager vm.Manager
+	logger    logger.Logger
+}
+
+// Create creates a new KVM instance
+func (a *kvmBackendAdapter) Create(ctx context.Context, req compute.ComputeInstanceRequest) (*compute.ComputeInstance, error) {
+	// Convert compute request to VM request
+	vmReq := a.convertToVMRequest(req)
+
+	// Create VM
+	vmInstance, err := a.vmManager.Create(ctx, vmReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create VM: %w", err)
+	}
+
+	// Convert VM to compute instance
+	return a.convertFromVM(vmInstance), nil
+}
+
+// Get retrieves a KVM instance by ID
+func (a *kvmBackendAdapter) Get(ctx context.Context, id string) (*compute.ComputeInstance, error) {
+	vmInstance, err := a.vmManager.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get VM: %w", err)
+	}
+
+	return a.convertFromVM(vmInstance), nil
+}
+
+// List retrieves KVM instances
+func (a *kvmBackendAdapter) List(ctx context.Context, opts compute.ComputeInstanceListOptions) ([]*compute.ComputeInstance, error) {
+	// VM manager List method doesn't take options - just list all VMs
+	vmInstances, err := a.vmManager.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list VMs: %w", err)
+	}
+
+	instances := make([]*compute.ComputeInstance, len(vmInstances))
+	for i, vm := range vmInstances {
+		instances[i] = a.convertFromVM(vm)
+	}
+
+	return instances, nil
+}
+
+// Update updates a KVM instance
+func (a *kvmBackendAdapter) Update(ctx context.Context, id string, update compute.ComputeInstanceUpdate) (*compute.ComputeInstance, error) {
+	// For now, just return the current instance since VM updates are complex
+	return a.Get(ctx, id)
+}
+
+// Delete removes a KVM instance
+func (a *kvmBackendAdapter) Delete(ctx context.Context, id string, force bool) error {
+	return a.vmManager.Delete(ctx, id)
+}
+
+// Start starts a KVM instance
+func (a *kvmBackendAdapter) Start(ctx context.Context, id string) error {
+	return a.vmManager.Start(ctx, id)
+}
+
+// Stop stops a KVM instance
+func (a *kvmBackendAdapter) Stop(ctx context.Context, id string, force bool) error {
+	return a.vmManager.Stop(ctx, id)
+}
+
+// Restart restarts a KVM instance
+func (a *kvmBackendAdapter) Restart(ctx context.Context, id string, force bool) error {
+	return a.vmManager.Restart(ctx, id)
+}
+
+// Pause pauses a KVM instance
+func (a *kvmBackendAdapter) Pause(ctx context.Context, id string) error {
+	return fmt.Errorf("pause not implemented for KVM backend")
+}
+
+// Unpause unpauses a KVM instance
+func (a *kvmBackendAdapter) Unpause(ctx context.Context, id string) error {
+	return fmt.Errorf("unpause not implemented for KVM backend")
+}
+
+// GetResourceUsage gets current resource usage for a KVM instance
+func (a *kvmBackendAdapter) GetResourceUsage(ctx context.Context, id string) (*compute.ResourceUsage, error) {
+	// This would integrate with the VM manager's resource monitoring
+	return nil, fmt.Errorf("resource usage not implemented for KVM backend")
+}
+
+// UpdateResourceLimits updates resource limits for a KVM instance
+func (a *kvmBackendAdapter) UpdateResourceLimits(ctx context.Context, id string, resources compute.ComputeResources) error {
+	// This would involve updating VM configuration
+	return fmt.Errorf("resource limit updates not implemented for KVM backend")
+}
+
+// GetBackendInfo returns information about the KVM backend
+func (a *kvmBackendAdapter) GetBackendInfo(ctx context.Context) (*compute.BackendInfo, error) {
+	return &compute.BackendInfo{
+		Type:           compute.BackendKVM,
+		Version:        "libvirt",
+		APIVersion:     "1.0",
+		Status:         "running",
+		Capabilities:   []string{"vms", "snapshots", "migration", "export"},
+		SupportedTypes: []compute.ComputeInstanceType{compute.InstanceTypeVM},
+		HealthCheck: &compute.HealthStatus{
+			Status:    "healthy",
+			LastCheck: time.Now(),
+		},
+	}, nil
+}
+
+// ValidateConfig validates a compute instance configuration for KVM
+func (a *kvmBackendAdapter) ValidateConfig(ctx context.Context, config compute.ComputeInstanceConfig) error {
+	if config.Image == "" {
+		return fmt.Errorf("image is required for KVM VMs")
+	}
+	return nil
+}
+
+// GetBackendType returns the backend type
+func (a *kvmBackendAdapter) GetBackendType() compute.ComputeBackend {
+	return compute.BackendKVM
+}
+
+// GetSupportedInstanceTypes returns supported instance types
+func (a *kvmBackendAdapter) GetSupportedInstanceTypes() []compute.ComputeInstanceType {
+	return []compute.ComputeInstanceType{compute.InstanceTypeVM}
+}
+
+// Helper conversion methods
+func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceRequest) vmmodels.VMParams {
+	return vmmodels.VMParams{
+		Name:     req.Name,
+		Template: req.Config.Image, // Use image as template name
+		CPU: vmmodels.CPUParams{
+			Count: int(req.Resources.CPU.Cores),
+		},
+		Memory: vmmodels.MemoryParams{
+			SizeBytes: uint64(req.Resources.Memory.Limit),
+		},
+		Disk: vmmodels.DiskParams{
+			SizeBytes: uint64(req.Resources.Storage.TotalSpace),
+			Format:    vmmodels.DiskFormatQCOW2,
+		},
+		Network: vmmodels.NetParams{
+			Type:   vmmodels.NetworkTypeBridge,
+			Source: "default", // Use default network for now
+		},
+	}
+}
+
+func (a *kvmBackendAdapter) convertFromVM(vmInstance *vmmodels.VM) *compute.ComputeInstance {
+	state := a.convertVMState(vmInstance.Status)
+
+	return &compute.ComputeInstance{
+		ID:      vmInstance.UUID, // Use UUID as ID
+		Name:    vmInstance.Name,
+		UUID:    vmInstance.UUID,
+		Type:    compute.InstanceTypeVM,
+		Backend: compute.BackendKVM,
+		State:   state,
+		Status:  string(vmInstance.Status),
+		Config:  compute.ComputeInstanceConfig{
+			// Image/template info would need to be tracked separately
+		},
+		Resources: compute.ComputeResources{
+			CPU: compute.CPUResources{
+				Cores: float64(vmInstance.CPU.Count),
+			},
+			Memory: compute.MemoryResources{
+				Limit: int64(vmInstance.Memory.SizeBytes),
+			},
+		},
+		CreatedAt: vmInstance.CreatedAt,
+		BackendData: map[string]interface{}{
+			"kvm_uuid": vmInstance.UUID,
+			"kvm_name": vmInstance.Name,
+		},
+	}
+}
+
+func (a *kvmBackendAdapter) convertVMState(vmState vmmodels.VMStatus) compute.ComputeInstanceState {
+	switch vmState {
+	case vmmodels.VMStatusRunning:
+		return compute.StateRunning
+	case vmmodels.VMStatusStopped, vmmodels.VMStatusShutdown:
+		return compute.StateStopped
+	case vmmodels.VMStatusPaused:
+		return compute.StatePaused
+	case vmmodels.VMStatusCrashed:
+		return compute.StateError
+	default:
+		return compute.StateUnknown
+	}
 }

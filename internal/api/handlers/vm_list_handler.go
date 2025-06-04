@@ -10,13 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// VMHandler handles VM-related requests
+// VMHandler handles VM-related requests.
 type VMHandler struct {
 	vmManager vmservice.Manager
 	logger    logger.Logger
 }
 
-// NewVMHandler creates a new VMHandler
+// NewVMHandler creates a new VMHandler.
 func NewVMHandler(vmManager vmservice.Manager, logger logger.Logger) *VMHandler {
 	return &VMHandler{
 		vmManager: vmManager,
@@ -24,12 +24,12 @@ func NewVMHandler(vmManager vmservice.Manager, logger logger.Logger) *VMHandler 
 	}
 }
 
-// GetVMManager returns the VM manager instance
+// GetVMManager returns the VM manager instance.
 func (h *VMHandler) GetVMManager() vmservice.Manager {
 	return h.vmManager
 }
 
-// ListVMsResponse represents the response for a VM listing request
+// ListVMsResponse represents the response for a VM listing request.
 type ListVMsResponse struct {
 	VMs      interface{} `json:"vms"`
 	Count    int         `json:"count"`
@@ -37,7 +37,7 @@ type ListVMsResponse struct {
 	Page     int         `json:"page,omitempty"`
 }
 
-// ListVMs handles requests to list all VMs
+// ListVMs handles requests to list all VMs.
 func (h *VMHandler) ListVMs(c *gin.Context) {
 	// Get page and page size parameters for pagination
 	page := 1
@@ -113,7 +113,7 @@ func (h *VMHandler) ListVMs(c *gin.Context) {
 
 // Helper functions
 
-// getVMFilterFromQuery extracts VM filter parameters from the query string
+// getVMFilterFromQuery extracts VM filter parameters from the query string.
 func getVMFilterFromQuery(c *gin.Context) map[string]string {
 	filter := make(map[string]string)
 
@@ -133,7 +133,7 @@ func getVMFilterFromQuery(c *gin.Context) map[string]string {
 	return filter
 }
 
-// parseInt parses a string to an integer with min/max bounds
+// parseInt parses a string to an integer with min/max bounds.
 func parseInt(value string, minVal, maxVal int) (int, error) {
 	var result int
 	if _, err := fmt.Sscanf(value, "%d", &result); err != nil {
@@ -151,7 +151,7 @@ func parseInt(value string, minVal, maxVal int) (int, error) {
 	return result, nil
 }
 
-// getContextLogger gets the logger from the context or falls back to the provided logger
+// getContextLogger gets the logger from the context or falls back to the provided logger.
 func getContextLogger(c *gin.Context, defaultLogger logger.Logger) logger.Logger {
 	if loggerInstance, exists := c.Get("logger"); exists {
 		if contextLogger, ok := loggerInstance.(logger.Logger); ok {

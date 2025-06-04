@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 )
 
-// Manager defines the interface for managing libvirt domains
+// Manager defines the interface for managing libvirt domains.
 type Manager interface {
 	// Create creates a new domain (VM)
 	Create(ctx context.Context, params vm.VMParams) (*vm.VM, error)
@@ -49,7 +49,7 @@ type Manager interface {
 	RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error
 }
 
-// XMLBuilder defines interface for building domain XML
+// XMLBuilder defines interface for building domain XML.
 type XMLBuilder interface {
 	// BuildDomainXML builds XML for domain creation
 	BuildDomainXML(params vm.VMParams) (string, error)

@@ -5,17 +5,17 @@ import (
 	"time"
 )
 
-// Params represents export parameters
+// Params represents export parameters.
 type Params struct {
 	Format   string            `json:"format" binding:"required,oneof=qcow2 vmdk vdi ova raw"`
 	Options  map[string]string `json:"options,omitempty"`
 	FileName string            `json:"fileName,omitempty"`
 }
 
-// Status represents export job status
+// Status represents export job status.
 type Status string
 
-// Job status constants
+// Job status constants.
 const (
 	StatusPending   Status = "pending"
 	StatusRunning   Status = "running"
@@ -24,7 +24,7 @@ const (
 	StatusCanceled  Status = "canceled"
 )
 
-// Job represents an export job
+// Job represents an export job.
 type Job struct {
 	ID         string            `json:"id"`
 	VMName     string            `json:"vmName"`

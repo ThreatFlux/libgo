@@ -6,19 +6,19 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
-// SudoExecutor wraps CommandExecutor to add sudo to OVS commands
+// SudoExecutor wraps CommandExecutor to add sudo to OVS commands.
 type SudoExecutor struct {
 	executor exec.CommandExecutor
 }
 
-// NewSudoExecutor creates a new SudoExecutor
+// NewSudoExecutor creates a new SudoExecutor.
 func NewSudoExecutor(executor exec.CommandExecutor) *SudoExecutor {
 	return &SudoExecutor{
 		executor: executor,
 	}
 }
 
-// ExecuteContext adds sudo to OVS commands
+// ExecuteContext adds sudo to OVS commands.
 func (s *SudoExecutor) ExecuteContext(ctx context.Context, name string, args ...string) ([]byte, error) {
 	// Check if this is an OVS command
 	if name == "ovs-vsctl" || name == "ovs-ofctl" || name == "ovs-appctl" {
@@ -29,7 +29,7 @@ func (s *SudoExecutor) ExecuteContext(ctx context.Context, name string, args ...
 	return s.executor.ExecuteContext(ctx, name, args...)
 }
 
-// Execute adds sudo to OVS commands
+// Execute adds sudo to OVS commands.
 func (s *SudoExecutor) Execute(name string, args ...string) ([]byte, error) {
 	// Check if this is an OVS command
 	if name == "ovs-vsctl" || name == "ovs-ofctl" || name == "ovs-appctl" {

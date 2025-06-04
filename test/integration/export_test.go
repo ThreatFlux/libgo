@@ -204,8 +204,8 @@ func TestVMExport(t *testing.T) {
 
 				break
 			} else if status == "failed" {
-				error, _ := job["error"].(string)
-				t.Fatalf("Export job failed: %s", error)
+				errMsg, _ := job["error"].(string)
+				t.Fatalf("Export job failed: %s", errMsg)
 			}
 
 			// Wait before next check

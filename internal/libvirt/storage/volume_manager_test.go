@@ -221,11 +221,12 @@ func TestLibvirtVolumeManager_Create(t *testing.T) {
 
 			if tc.expectError {
 				assert.Error(t, err)
-				if tc.volExists {
+				switch {
+				case tc.volExists:
 					assert.ErrorIs(t, err, ErrVolumeExists)
-				} else if !tc.poolActive && tc.poolName == "inactive-pool" {
+				case !tc.poolActive && tc.poolName == "inactive-pool":
 					assert.ErrorIs(t, err, ErrPoolNotActive)
-				} else if tc.poolName == "nonexistent-pool" {
+				case tc.poolName == "nonexistent-pool":
 					assert.ErrorContains(t, err, "getting storage pool")
 				}
 			} else {

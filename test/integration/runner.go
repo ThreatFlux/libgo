@@ -142,8 +142,7 @@ func verifyService(t *testing.T, ipAddress string, port int, protocol string, ex
 		return false
 	}
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
+		if closeErr := Body.Close(); closeErr != nil {
 			t.Logf("Failed to close response body")
 		}
 	}(resp.Body)
@@ -224,8 +223,7 @@ func sendExportRequest(ctx context.Context, t *testing.T, url string, reqBody ma
 	resp, err := client.Do(req)
 	require.NoError(t, err, "Failed to send HTTP request")
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
+		if closeErr := Body.Close(); closeErr != nil {
 			t.Logf("Failed to close response body")
 		}
 	}(resp.Body)

@@ -140,39 +140,59 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client] = true
-			// Add to VM specific clients
-			h.vmClients[client.VMName] = append(h.vmClients[client.VMName], client)
-
+			h.handleClientRegistration(client)
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.Send)
-
-				// Remove from VM specific clients
-				clients := h.vmClients[client.VMName]
-				for i, c := range clients {
-					if c == client {
-						h.vmClients[client.VMName] = append(clients[:i], clients[i+1:]...)
-						break
-					}
-				}
-
-				// Clean up empty VM entries
-				if len(h.vmClients[client.VMName]) == 0 {
-					delete(h.vmClients, client.VMName)
-				}
-			}
-
+			h.handleClientUnregistration(client)
 		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.Send <- message:
-				default:
-					close(client.Send)
-					delete(h.clients, client)
-				}
-			}
+			h.handleBroadcastMessage(message)
+		}
+	}
+}
+
+// handleClientRegistration registers a new client.
+func (h *Hub) handleClientRegistration(client *Client) {
+	h.clients[client] = true
+	// Add to VM specific clients
+	h.vmClients[client.VMName] = append(h.vmClients[client.VMName], client)
+}
+
+// handleClientUnregistration unregisters a client.
+func (h *Hub) handleClientUnregistration(client *Client) {
+	if _, ok := h.clients[client]; !ok {
+		return
+	}
+
+	delete(h.clients, client)
+	close(client.Send)
+
+	// Remove from VM specific clients
+	h.removeClientFromVM(client)
+}
+
+// removeClientFromVM removes a client from VM-specific client list.
+func (h *Hub) removeClientFromVM(client *Client) {
+	clients := h.vmClients[client.VMName]
+	for i, c := range clients {
+		if c == client {
+			h.vmClients[client.VMName] = append(clients[:i], clients[i+1:]...)
+			break
+		}
+	}
+
+	// Clean up empty VM entries
+	if len(h.vmClients[client.VMName]) == 0 {
+		delete(h.vmClients, client.VMName)
+	}
+}
+
+// handleBroadcastMessage broadcasts a message to all clients.
+func (h *Hub) handleBroadcastMessage(message *Message) {
+	for client := range h.clients {
+		select {
+		case client.Send <- message:
+		default:
+			close(client.Send)
+			delete(h.clients, client)
 		}
 	}
 }

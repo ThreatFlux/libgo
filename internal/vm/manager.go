@@ -15,7 +15,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// VMManager implements Manager interface
+// VMManager implements Manager interface.
 type VMManager struct {
 	domainManager    domain.Manager
 	storageManager   storage.VolumeManager
@@ -26,7 +26,7 @@ type VMManager struct {
 	logger           logger.Logger
 }
 
-// Config holds VM manager configuration
+// Config holds VM manager configuration.
 type Config struct {
 	StoragePoolName string
 	NetworkName     string
@@ -34,7 +34,7 @@ type Config struct {
 	CloudInitDir    string
 }
 
-// NewVMManager creates a new VMManager
+// NewVMManager creates a new VMManager.
 func NewVMManager(
 	domainManager domain.Manager,
 	storageManager storage.VolumeManager,
@@ -55,7 +55,7 @@ func NewVMManager(
 	}
 }
 
-// Create implements Manager.Create
+// Create implements Manager.Create.
 func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, error) {
 	// Apply template if specified
 	if params.Template != "" {
@@ -89,7 +89,7 @@ func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, err
 	// Generate and create cloud-init ISO
 	if err := m.setupCloudInit(ctx, params); err != nil {
 		// Attempt to clean up disk on failure
-		_ = m.cleanupDisk(ctx, params)
+		_ = m.cleanupDisk(ctx, params) //nolint:errcheck // Cleanup errors are logged but don't affect the primary error
 		return nil, fmt.Errorf("setting up cloud-init: %w", err)
 	}
 
@@ -97,7 +97,7 @@ func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, err
 	vm, err := m.domainManager.Create(ctx, params)
 	if err != nil {
 		// Attempt to clean up resources on failure
-		_ = m.cleanupResources(ctx, params)
+		_ = m.cleanupResources(ctx, params) //nolint:errcheck // Cleanup errors are logged but don't affect the primary error
 		return nil, fmt.Errorf("creating domain: %w", err)
 	}
 
@@ -105,17 +105,17 @@ func (m *VMManager) Create(ctx context.Context, params vm.VMParams) (*vm.VM, err
 	return vm, nil
 }
 
-// Get implements Manager.Get
+// Get implements Manager.Get.
 func (m *VMManager) Get(ctx context.Context, name string) (*vm.VM, error) {
 	return m.domainManager.Get(ctx, name)
 }
 
-// List implements Manager.List
+// List implements Manager.List.
 func (m *VMManager) List(ctx context.Context) ([]*vm.VM, error) {
 	return m.domainManager.List(ctx)
 }
 
-// Delete implements Manager.Delete
+// Delete implements Manager.Delete.
 func (m *VMManager) Delete(ctx context.Context, name string) error {
 	// Get VM first to ensure it exists and to get disk info
 	vmInfo, err := m.domainManager.Get(ctx, name)
@@ -154,13 +154,13 @@ func (m *VMManager) Delete(ctx context.Context, name string) error {
 
 	// Delete cloud-init ISO if it exists
 	cloudInitVolName := fmt.Sprintf("%s-cloudinit.iso", name)
-	_ = m.storageManager.Delete(ctx, m.config.StoragePoolName, cloudInitVolName)
+	_ = m.storageManager.Delete(ctx, m.config.StoragePoolName, cloudInitVolName) //nolint:errcheck // Cloud-init ISO deletion failure is not critical
 
 	m.logger.Info("VM deleted", logger.String("name", name))
 	return nil
 }
 
-// Start implements Manager.Start
+// Start implements Manager.Start.
 func (m *VMManager) Start(ctx context.Context, name string) error {
 	if err := m.domainManager.Start(ctx, name); err != nil {
 		return fmt.Errorf("starting VM: %w", err)
@@ -170,7 +170,7 @@ func (m *VMManager) Start(ctx context.Context, name string) error {
 	return nil
 }
 
-// Stop implements Manager.Stop
+// Stop implements Manager.Stop.
 func (m *VMManager) Stop(ctx context.Context, name string) error {
 	if err := m.domainManager.Stop(ctx, name); err != nil {
 		return fmt.Errorf("stopping VM: %w", err)
@@ -180,7 +180,7 @@ func (m *VMManager) Stop(ctx context.Context, name string) error {
 	return nil
 }
 
-// Restart implements Manager.Restart
+// Restart implements Manager.Restart.
 func (m *VMManager) Restart(ctx context.Context, name string) error {
 	// Get VM to check its status
 	vm, err := m.domainManager.Get(ctx, name)
@@ -204,7 +204,7 @@ func (m *VMManager) Restart(ctx context.Context, name string) error {
 	return nil
 }
 
-// validateParams validates VM creation parameters
+// validateParams validates VM creation parameters.
 func (m *VMManager) validateParams(params vm.VMParams) error {
 	// Check VM name
 	if params.Name == "" {
@@ -241,7 +241,7 @@ func (m *VMManager) validateParams(params vm.VMParams) error {
 	return nil
 }
 
-// setDefaultParams sets default values for parameters that weren't provided
+// setDefaultParams sets default values for parameters that weren't provided.
 func (m *VMManager) setDefaultParams(params vm.VMParams) vm.VMParams {
 	// Default CPU model
 	if params.CPU.Model == "" {
@@ -272,7 +272,7 @@ func (m *VMManager) setDefaultParams(params vm.VMParams) vm.VMParams {
 	return params
 }
 
-// createVMDisk creates the VM disk
+// createVMDisk creates the VM disk.
 func (m *VMManager) createVMDisk(ctx context.Context, params vm.VMParams) error {
 	poolName := params.Disk.StoragePool
 	volumeName := vm.GenerateVolumeName(params.Name, 0)
@@ -305,7 +305,7 @@ func (m *VMManager) createVMDisk(ctx context.Context, params vm.VMParams) error 
 	)
 }
 
-// setupCloudInit generates cloud-init data and creates the ISO
+// setupCloudInit generates cloud-init data and creates the ISO.
 func (m *VMManager) setupCloudInit(ctx context.Context, params vm.VMParams) error {
 	// Generate cloud-init data if not provided
 	var config vm.CloudInitConfig
@@ -364,7 +364,7 @@ func (m *VMManager) setupCloudInit(ctx context.Context, params vm.VMParams) erro
 	return nil
 }
 
-// cleanupDisk cleans up VM disk on failure
+// cleanupDisk cleans up VM disk on failure.
 func (m *VMManager) cleanupDisk(ctx context.Context, params vm.VMParams) error {
 	poolName := params.Disk.StoragePool
 	volumeName := vm.GenerateVolumeName(params.Name, 0)
@@ -377,7 +377,7 @@ func (m *VMManager) cleanupDisk(ctx context.Context, params vm.VMParams) error {
 	return m.storageManager.Delete(ctx, poolName, volumeName)
 }
 
-// cleanupResources cleans up all VM resources on failure
+// cleanupResources cleans up all VM resources on failure.
 func (m *VMManager) cleanupResources(ctx context.Context, params vm.VMParams) error {
 	// Cleanup disk
 	if err := m.cleanupDisk(ctx, params); err != nil {
@@ -398,7 +398,7 @@ func (m *VMManager) cleanupResources(ctx context.Context, params vm.VMParams) er
 	return nil
 }
 
-// CreateSnapshot creates a new snapshot of a VM
+// CreateSnapshot creates a new snapshot of a VM.
 func (m *VMManager) CreateSnapshot(ctx context.Context, vmName string, params vm.SnapshotParams) (*vm.Snapshot, error) {
 	m.logger.Info("Creating VM snapshot",
 		logger.String("vm", vmName),
@@ -417,7 +417,7 @@ func (m *VMManager) CreateSnapshot(ctx context.Context, vmName string, params vm
 	return snapshot, nil
 }
 
-// ListSnapshots lists all snapshots for a VM
+// ListSnapshots lists all snapshots for a VM.
 func (m *VMManager) ListSnapshots(ctx context.Context, vmName string, opts vm.SnapshotListOptions) ([]*vm.Snapshot, error) {
 	m.logger.Debug("Listing VM snapshots",
 		logger.String("vm", vmName))
@@ -435,7 +435,7 @@ func (m *VMManager) ListSnapshots(ctx context.Context, vmName string, opts vm.Sn
 	return snapshots, nil
 }
 
-// GetSnapshot retrieves information about a specific snapshot
+// GetSnapshot retrieves information about a specific snapshot.
 func (m *VMManager) GetSnapshot(ctx context.Context, vmName string, snapshotName string) (*vm.Snapshot, error) {
 	m.logger.Debug("Getting VM snapshot",
 		logger.String("vm", vmName),
@@ -450,7 +450,7 @@ func (m *VMManager) GetSnapshot(ctx context.Context, vmName string, snapshotName
 	return snapshot, nil
 }
 
-// DeleteSnapshot deletes a snapshot
+// DeleteSnapshot deletes a snapshot.
 func (m *VMManager) DeleteSnapshot(ctx context.Context, vmName string, snapshotName string) error {
 	m.logger.Info("Deleting VM snapshot",
 		logger.String("vm", vmName),
@@ -468,7 +468,7 @@ func (m *VMManager) DeleteSnapshot(ctx context.Context, vmName string, snapshotN
 	return nil
 }
 
-// RevertSnapshot reverts a VM to a snapshot
+// RevertSnapshot reverts a VM to a snapshot.
 func (m *VMManager) RevertSnapshot(ctx context.Context, vmName string, snapshotName string) error {
 	m.logger.Info("Reverting VM to snapshot",
 		logger.String("vm", vmName),

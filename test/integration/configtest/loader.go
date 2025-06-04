@@ -39,16 +39,16 @@ type TestConfig struct {
 	Verification struct {
 		Services []struct {
 			Name            string `yaml:"name"`
-			Port            int    `yaml:"port"`
 			Protocol        string `yaml:"protocol"`
 			ExpectedContent string `yaml:"expectedContent"`
+			Port            int    `yaml:"port"`
 			Timeout         int    `yaml:"timeout"`
 		} `yaml:"services"`
 	} `yaml:"verification"`
 
 	Export struct {
-		Format  string            `yaml:"format"`
 		Options map[string]string `yaml:"options"`
+		Format  string            `yaml:"format"`
 	} `yaml:"export"`
 }
 

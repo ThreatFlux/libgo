@@ -13,13 +13,13 @@ const (
 	emptyListString = "[]\n"
 )
 
-// OVSManager implements Manager for Open vSwitch operations
+// OVSManager implements Manager for Open vSwitch operations.
 type OVSManager struct {
 	executor exec.CommandExecutor
 	logger   logger.Logger
 }
 
-// NewOVSManager creates a new OVSManager
+// NewOVSManager creates a new OVSManager.
 func NewOVSManager(executor exec.CommandExecutor, logger logger.Logger) *OVSManager {
 	return &OVSManager{
 		executor: executor,
@@ -27,7 +27,7 @@ func NewOVSManager(executor exec.CommandExecutor, logger logger.Logger) *OVSMana
 	}
 }
 
-// CreateBridge implements Manager.CreateBridge
+// CreateBridge implements Manager.CreateBridge.
 func (m *OVSManager) CreateBridge(ctx context.Context, name string) error {
 	// Check if bridge already exists
 	exists, err := m.bridgeExists(ctx, name)
@@ -48,7 +48,7 @@ func (m *OVSManager) CreateBridge(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteBridge implements Manager.DeleteBridge
+// DeleteBridge implements Manager.DeleteBridge.
 func (m *OVSManager) DeleteBridge(ctx context.Context, name string) error {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, name)
@@ -69,7 +69,7 @@ func (m *OVSManager) DeleteBridge(ctx context.Context, name string) error {
 	return nil
 }
 
-// ListBridges implements Manager.ListBridges
+// ListBridges implements Manager.ListBridges.
 func (m *OVSManager) ListBridges(ctx context.Context) ([]BridgeInfo, error) {
 	// Get list of bridges
 	cmd := []string{"ovs-vsctl", "list-br"}
@@ -102,7 +102,7 @@ func (m *OVSManager) ListBridges(ctx context.Context) ([]BridgeInfo, error) {
 	return bridges, nil
 }
 
-// GetBridge implements Manager.GetBridge
+// GetBridge implements Manager.GetBridge.
 func (m *OVSManager) GetBridge(ctx context.Context, name string) (*BridgeInfo, error) {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, name)
@@ -173,61 +173,19 @@ func (m *OVSManager) GetBridge(ctx context.Context, name string) (*BridgeInfo, e
 	return info, nil
 }
 
-// AddPort implements Manager.AddPort
+// AddPort implements Manager.AddPort.
 func (m *OVSManager) AddPort(ctx context.Context, bridge string, port string, options *PortOptions) error {
-	// Check if bridge exists
-	exists, err := m.bridgeExists(ctx, bridge)
-	if err != nil {
-		return fmt.Errorf("checking if bridge exists: %w", err)
-	}
-	if !exists {
-		return fmt.Errorf("bridge %s not found", bridge)
+	if err := m.validateBridgeExists(ctx, bridge); err != nil {
+		return err
 	}
 
-	// Build command
-	cmd := []string{"ovs-vsctl", "add-port", bridge, port}
-
-	// Add options if provided
-	if options != nil {
-		// Set port type
-		if options.Type != "" {
-			cmd = append(cmd, "--", "set", "Interface", port, fmt.Sprintf("type=%s", options.Type))
-		}
-
-		// Set tunnel options for tunnel ports
-		if options.Type == "vxlan" || options.Type == "gre" || options.Type == "geneve" {
-			if options.RemoteIP != "" {
-				cmd = append(cmd, fmt.Sprintf("options:remote_ip=%s", options.RemoteIP))
-			}
-		}
-
-		// Set patch port peer
-		if options.Type == "patch" && options.PeerPort != "" {
-			cmd = append(cmd, fmt.Sprintf("options:peer=%s", options.PeerPort))
-		}
+	cmd := m.buildAddPortCommand(bridge, port, options)
+	if err := m.executeAddPortCommand(ctx, cmd); err != nil {
+		return err
 	}
 
-	// Execute command
-	if _, err := m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...); err != nil {
-		return fmt.Errorf("adding port: %w", err)
-	}
-
-	// Set VLAN tag if specified
-	if options != nil && options.Tag != nil {
-		if err := m.SetPortVLAN(ctx, bridge, port, *options.Tag); err != nil {
-			// Try to clean up
-			_ = m.DeletePort(ctx, bridge, port)
-			return fmt.Errorf("setting VLAN tag: %w", err)
-		}
-	}
-
-	// Set trunk VLANs if specified
-	if options != nil && len(options.Trunks) > 0 {
-		if err := m.SetPortTrunk(ctx, bridge, port, options.Trunks); err != nil {
-			// Try to clean up
-			_ = m.DeletePort(ctx, bridge, port)
-			return fmt.Errorf("setting trunk VLANs: %w", err)
-		}
+	if err := m.configurePortOptions(ctx, bridge, port, options); err != nil {
+		return err
 	}
 
 	m.logger.Info("Port added to OVS bridge",
@@ -236,7 +194,90 @@ func (m *OVSManager) AddPort(ctx context.Context, bridge string, port string, op
 	return nil
 }
 
-// DeletePort implements Manager.DeletePort
+// validateBridgeExists checks if the bridge exists.
+func (m *OVSManager) validateBridgeExists(ctx context.Context, bridge string) error {
+	exists, err := m.bridgeExists(ctx, bridge)
+	if err != nil {
+		return fmt.Errorf("checking if bridge exists: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("bridge %s not found", bridge)
+	}
+	return nil
+}
+
+// buildAddPortCommand builds the ovs-vsctl command.
+func (m *OVSManager) buildAddPortCommand(bridge, port string, options *PortOptions) []string {
+	cmd := []string{"ovs-vsctl", "add-port", bridge, port}
+
+	if options == nil {
+		return cmd
+	}
+
+	// Set port type
+	if options.Type != "" {
+		cmd = append(cmd, "--", "set", "Interface", port, fmt.Sprintf("type=%s", options.Type))
+	}
+
+	// Set tunnel options for tunnel ports
+	if m.isTunnelPort(options.Type) && options.RemoteIP != "" {
+		cmd = append(cmd, fmt.Sprintf("options:remote_ip=%s", options.RemoteIP))
+	}
+
+	// Set patch port peer
+	if options.Type == "patch" && options.PeerPort != "" {
+		cmd = append(cmd, fmt.Sprintf("options:peer=%s", options.PeerPort))
+	}
+
+	return cmd
+}
+
+// isTunnelPort checks if the port type is a tunnel port.
+func (m *OVSManager) isTunnelPort(portType string) bool {
+	return portType == "vxlan" || portType == "gre" || portType == "geneve"
+}
+
+// executeAddPortCommand executes the add port command.
+func (m *OVSManager) executeAddPortCommand(ctx context.Context, cmd []string) error {
+	if _, err := m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...); err != nil {
+		return fmt.Errorf("adding port: %w", err)
+	}
+	return nil
+}
+
+// configurePortOptions configures VLAN and trunk options.
+func (m *OVSManager) configurePortOptions(ctx context.Context, bridge, port string, options *PortOptions) error {
+	if options == nil {
+		return nil
+	}
+
+	// Set VLAN tag if specified
+	if options.Tag != nil {
+		if err := m.SetPortVLAN(ctx, bridge, port, *options.Tag); err != nil {
+			m.cleanupPortOnError(ctx, bridge, port)
+			return fmt.Errorf("setting VLAN tag: %w", err)
+		}
+	}
+
+	// Set trunk VLANs if specified
+	if len(options.Trunks) > 0 {
+		if err := m.SetPortTrunk(ctx, bridge, port, options.Trunks); err != nil {
+			m.cleanupPortOnError(ctx, bridge, port)
+			return fmt.Errorf("setting trunk VLANs: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// cleanupPortOnError attempts to cleanup a port during error recovery.
+func (m *OVSManager) cleanupPortOnError(ctx context.Context, bridge, port string) {
+	if deleteErr := m.DeletePort(ctx, bridge, port); deleteErr != nil {
+		m.logger.Debug("Failed to cleanup port during error recovery", logger.Error(deleteErr))
+	}
+}
+
+// DeletePort implements Manager.DeletePort.
 func (m *OVSManager) DeletePort(ctx context.Context, bridge string, port string) error {
 	// Check if port exists
 	exists, err := m.portExists(ctx, bridge, port)
@@ -259,7 +300,7 @@ func (m *OVSManager) DeletePort(ctx context.Context, bridge string, port string)
 	return nil
 }
 
-// ListPorts implements Manager.ListPorts
+// ListPorts implements Manager.ListPorts.
 func (m *OVSManager) ListPorts(ctx context.Context, bridge string) ([]PortInfo, error) {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, bridge)
@@ -301,7 +342,7 @@ func (m *OVSManager) ListPorts(ctx context.Context, bridge string) ([]PortInfo, 
 	return ports, nil
 }
 
-// GetPort implements Manager.GetPort
+// GetPort implements Manager.GetPort.
 func (m *OVSManager) GetPort(ctx context.Context, bridge string, port string) (*PortInfo, error) {
 	// Check if port exists
 	exists, err := m.portExists(ctx, bridge, port)
@@ -336,7 +377,7 @@ func (m *OVSManager) GetPort(ctx context.Context, bridge string, port string) (*
 	output, err = m.executor.ExecuteContext(ctx, cmd[0], cmd[1:]...)
 	if err == nil && string(output) != emptyListString {
 		var tag int
-		if _, err := fmt.Sscanf(string(output), "%d", &tag); err == nil {
+		if _, scanErr := fmt.Sscanf(string(output), "%d", &tag); scanErr == nil {
 			info.Tag = &tag
 		}
 	}
@@ -357,7 +398,7 @@ func (m *OVSManager) GetPort(ctx context.Context, bridge string, port string) (*
 	return info, nil
 }
 
-// SetPortVLAN implements Manager.SetPortVLAN
+// SetPortVLAN implements Manager.SetPortVLAN.
 func (m *OVSManager) SetPortVLAN(ctx context.Context, bridge string, port string, vlan int) error {
 	// Check if port exists
 	exists, err := m.portExists(ctx, bridge, port)
@@ -380,7 +421,7 @@ func (m *OVSManager) SetPortVLAN(ctx context.Context, bridge string, port string
 	return nil
 }
 
-// SetPortTrunk implements Manager.SetPortTrunk
+// SetPortTrunk implements Manager.SetPortTrunk.
 func (m *OVSManager) SetPortTrunk(ctx context.Context, bridge string, port string, vlans []int) error {
 	// Check if port exists
 	exists, err := m.portExists(ctx, bridge, port)
@@ -410,7 +451,7 @@ func (m *OVSManager) SetPortTrunk(ctx context.Context, bridge string, port strin
 	return nil
 }
 
-// AddFlow implements Manager.AddFlow
+// AddFlow implements Manager.AddFlow.
 func (m *OVSManager) AddFlow(ctx context.Context, bridge string, flow *FlowRule) error {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, bridge)
@@ -441,7 +482,7 @@ func (m *OVSManager) AddFlow(ctx context.Context, bridge string, flow *FlowRule)
 	return nil
 }
 
-// DeleteFlow implements Manager.DeleteFlow
+// DeleteFlow implements Manager.DeleteFlow.
 func (m *OVSManager) DeleteFlow(ctx context.Context, bridge string, flowID string) error {
 	// For now, we'll delete by cookie
 	cmd := []string{"ovs-ofctl", "del-flows", bridge, fmt.Sprintf("cookie=%s/-1", flowID)}
@@ -452,7 +493,7 @@ func (m *OVSManager) DeleteFlow(ctx context.Context, bridge string, flowID strin
 	return nil
 }
 
-// ListFlows implements Manager.ListFlows
+// ListFlows implements Manager.ListFlows.
 func (m *OVSManager) ListFlows(ctx context.Context, bridge string) ([]FlowRule, error) {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, bridge)
@@ -484,7 +525,7 @@ func (m *OVSManager) ListFlows(ctx context.Context, bridge string) ([]FlowRule, 
 	return flows, nil
 }
 
-// SetController implements Manager.SetController
+// SetController implements Manager.SetController.
 func (m *OVSManager) SetController(ctx context.Context, bridge string, controller string) error {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, bridge)
@@ -507,7 +548,7 @@ func (m *OVSManager) SetController(ctx context.Context, bridge string, controlle
 	return nil
 }
 
-// DeleteController implements Manager.DeleteController
+// DeleteController implements Manager.DeleteController.
 func (m *OVSManager) DeleteController(ctx context.Context, bridge string) error {
 	// Check if bridge exists
 	exists, err := m.bridgeExists(ctx, bridge)
@@ -528,7 +569,7 @@ func (m *OVSManager) DeleteController(ctx context.Context, bridge string) error 
 	return nil
 }
 
-// GetBridgeStats implements Manager.GetBridgeStats
+// GetBridgeStats implements Manager.GetBridgeStats.
 func (m *OVSManager) GetBridgeStats(ctx context.Context, bridge string) (*BridgeStats, error) {
 	// Get flow count
 	cmd := []string{"ovs-ofctl", "dump-flows", bridge}
@@ -557,7 +598,7 @@ func (m *OVSManager) GetBridgeStats(ctx context.Context, bridge string) (*Bridge
 	}, nil
 }
 
-// GetPortStats implements Manager.GetPortStats
+// GetPortStats implements Manager.GetPortStats.
 func (m *OVSManager) GetPortStats(ctx context.Context, bridge string, port string) (*PortStats, error) {
 	// Get port statistics
 	cmd := []string{"ovs-vsctl", "get", "Interface", port, "statistics"}
@@ -570,36 +611,29 @@ func (m *OVSManager) GetPortStats(ctx context.Context, bridge string, port strin
 	statsMap := m.parseOVSMap(string(output))
 	stats := &PortStats{}
 
-	// Extract values
-	if val, ok := statsMap["rx_packets"]; ok {
-		fmt.Sscanf(val, "%d", &stats.RxPackets)
-	}
-	if val, ok := statsMap["rx_bytes"]; ok {
-		fmt.Sscanf(val, "%d", &stats.RxBytes)
-	}
-	if val, ok := statsMap["rx_dropped"]; ok {
-		fmt.Sscanf(val, "%d", &stats.RxDropped)
-	}
-	if val, ok := statsMap["rx_errors"]; ok {
-		fmt.Sscanf(val, "%d", &stats.RxErrors)
-	}
-	if val, ok := statsMap["tx_packets"]; ok {
-		fmt.Sscanf(val, "%d", &stats.TxPackets)
-	}
-	if val, ok := statsMap["tx_bytes"]; ok {
-		fmt.Sscanf(val, "%d", &stats.TxBytes)
-	}
-	if val, ok := statsMap["tx_dropped"]; ok {
-		fmt.Sscanf(val, "%d", &stats.TxDropped)
-	}
-	if val, ok := statsMap["tx_errors"]; ok {
-		fmt.Sscanf(val, "%d", &stats.TxErrors)
-	}
+	// Extract values using helper function
+	m.parseStatValue(statsMap, "rx_packets", &stats.RxPackets)
+	m.parseStatValue(statsMap, "rx_bytes", &stats.RxBytes)
+	m.parseStatValue(statsMap, "rx_dropped", &stats.RxDropped)
+	m.parseStatValue(statsMap, "rx_errors", &stats.RxErrors)
+	m.parseStatValue(statsMap, "tx_packets", &stats.TxPackets)
+	m.parseStatValue(statsMap, "tx_bytes", &stats.TxBytes)
+	m.parseStatValue(statsMap, "tx_dropped", &stats.TxDropped)
+	m.parseStatValue(statsMap, "tx_errors", &stats.TxErrors)
 
 	return stats, nil
 }
 
-// Helper methods
+// parseStatValue parses a single statistic value from the map.
+func (m *OVSManager) parseStatValue(statsMap map[string]string, key string, dest *uint64) {
+	if val, ok := statsMap[key]; ok {
+		if _, scanErr := fmt.Sscanf(val, "%d", dest); scanErr != nil {
+			m.logger.Debug(fmt.Sprintf("Failed to parse %s", key), logger.Error(scanErr))
+		}
+	}
+}
+
+// Helper methods.
 
 func (m *OVSManager) bridgeExists(ctx context.Context, name string) (bool, error) {
 	cmd := []string{"ovs-vsctl", "br-exists", name}

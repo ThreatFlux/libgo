@@ -250,8 +250,7 @@ func verifyNginxRunning(t *testing.T, ipAddress string) bool {
 		return false
 	}
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
+		if closeErr := Body.Close(); closeErr != nil {
 			t.Logf("Failed to close response body")
 		}
 	}(resp.Body)

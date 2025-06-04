@@ -9,14 +9,14 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// LibvirtIntegration handles OVS-libvirt integration
+// LibvirtIntegration handles OVS-libvirt integration.
 type LibvirtIntegration struct {
 	ovsManager  Manager
 	connManager connection.Manager
 	logger      logger.Logger
 }
 
-// NewLibvirtIntegration creates a new LibvirtIntegration
+// NewLibvirtIntegration creates a new LibvirtIntegration.
 func NewLibvirtIntegration(ovsManager Manager, connManager connection.Manager, logger logger.Logger) *LibvirtIntegration {
 	return &LibvirtIntegration{
 		ovsManager:  ovsManager,
@@ -25,7 +25,7 @@ func NewLibvirtIntegration(ovsManager Manager, connManager connection.Manager, l
 	}
 }
 
-// CreateNetworkForBridge creates a libvirt network that uses an OVS bridge
+// CreateNetworkForBridge creates a libvirt network that uses an OVS bridge.
 func (l *LibvirtIntegration) CreateNetworkForBridge(ctx context.Context, networkName string, bridgeName string) error {
 	// First ensure the OVS bridge exists
 	_, err := l.ovsManager.GetBridge(ctx, bridgeName)
@@ -90,7 +90,7 @@ func (l *LibvirtIntegration) CreateNetworkForBridge(ctx context.Context, network
 	return nil
 }
 
-// AttachVMToOVSBridge attaches a VM interface to an OVS bridge with optional VLAN
+// AttachVMToOVSBridge attaches a VM interface to an OVS bridge with optional VLAN.
 func (l *LibvirtIntegration) AttachVMToOVSBridge(ctx context.Context, vmName string, bridgeName string, vlan *int) (string, error) {
 	// Ensure OVS bridge exists
 	_, err := l.ovsManager.GetBridge(ctx, bridgeName)
@@ -136,8 +136,8 @@ func (l *LibvirtIntegration) AttachVMToOVSBridge(ctx context.Context, vmName str
 	}
 
 	// Attach the interface
-	if err := libvirtConn.DomainAttachDevice(domain, interfaceXML); err != nil {
-		return "", fmt.Errorf("attaching interface: %w", err)
+	if attachErr := libvirtConn.DomainAttachDevice(domain, interfaceXML); attachErr != nil {
+		return "", fmt.Errorf("attaching interface: %w", attachErr)
 	}
 
 	// Get the MAC address of the newly attached interface
@@ -157,7 +157,7 @@ func (l *LibvirtIntegration) AttachVMToOVSBridge(ctx context.Context, vmName str
 	return macAddr, nil
 }
 
-// CreateVXLANTunnel creates a VXLAN tunnel port on an OVS bridge
+// CreateVXLANTunnel creates a VXLAN tunnel port on an OVS bridge.
 func (l *LibvirtIntegration) CreateVXLANTunnel(ctx context.Context, bridgeName string, tunnelName string, remoteIP string, vni int) error {
 	options := &PortOptions{
 		Type:     "vxlan",
@@ -180,7 +180,7 @@ func (l *LibvirtIntegration) CreateVXLANTunnel(ctx context.Context, bridgeName s
 	return nil
 }
 
-// CreatePatchPort creates a patch port between two OVS bridges
+// CreatePatchPort creates a patch port between two OVS bridges.
 func (l *LibvirtIntegration) CreatePatchPort(ctx context.Context, bridge1 string, bridge2 string) error {
 	// Create patch port names
 	patch1 := fmt.Sprintf("patch-%s-to-%s", bridge1, bridge2)
@@ -215,7 +215,7 @@ func (l *LibvirtIntegration) CreatePatchPort(ctx context.Context, bridge1 string
 	return nil
 }
 
-// SetupQoSForVM sets up QoS rules for a VM's port on an OVS bridge
+// SetupQoSForVM sets up QoS rules for a VM's port on an OVS bridge.
 func (l *LibvirtIntegration) SetupQoSForVM(ctx context.Context, vmMAC string, bridgeName string, ingressRate int64, egressRate int64) error {
 	// Find the port associated with the VM MAC
 	ports, err := l.ovsManager.ListPorts(ctx, bridgeName)
@@ -272,7 +272,7 @@ func (l *LibvirtIntegration) SetupQoSForVM(ctx context.Context, vmMAC string, br
 	return nil
 }
 
-// Helper method to extract MAC address from domain XML
+// Helper method to extract MAC address from domain XML.
 func (l *LibvirtIntegration) extractMACFromXML(xml string, bridgeName string) string {
 	// This is a simplified implementation
 	// In production, use proper XML parsing
@@ -299,12 +299,12 @@ func (l *LibvirtIntegration) extractMACFromXML(xml string, bridgeName string) st
 	return ""
 }
 
-// isInterfaceStart checks if line is the start of a bridge interface
+// isInterfaceStart checks if line is the start of a bridge interface.
 func (l *LibvirtIntegration) isInterfaceStart(line string) bool {
 	return strings.Contains(line, "<interface") && strings.Contains(line, "bridge")
 }
 
-// findMACInLines searches for MAC address in the next few lines
+// findMACInLines searches for MAC address in the next few lines.
 func (l *LibvirtIntegration) findMACInLines(lines []string, startIndex int) string {
 	maxLines := 5
 	for j := startIndex; j < len(lines) && j < startIndex+maxLines; j++ {
@@ -315,7 +315,7 @@ func (l *LibvirtIntegration) findMACInLines(lines []string, startIndex int) stri
 	return ""
 }
 
-// extractMACFromLine extracts MAC address from a line containing "address="
+// extractMACFromLine extracts MAC address from a line containing "address=".
 func (l *LibvirtIntegration) extractMACFromLine(line string) string {
 	addressPrefix := "address='"
 	start := strings.Index(line, addressPrefix)

@@ -29,8 +29,8 @@ type LoginRequest struct {
 // LoginResponse represents a login response
 type LoginResponse struct {
 	Token     string           `json:"token"`
-	ExpiresAt time.Time        `json:"expiresAt"`
 	User      *usermodels.User `json:"user"`
+	ExpiresAt time.Time        `json:"expiresAt"`
 }
 
 // CreateVMResponse holds the create VM response
@@ -118,14 +118,14 @@ type ExportJob struct {
 	VMName       string            `json:"vmName"`
 	Format       string            `json:"format"`
 	Status       string            `json:"status"`
-	Progress     int               `json:"progress"`
 	FilePath     string            `json:"filePath,omitempty"`
-	FileSize     int64             `json:"fileSize,omitempty"`
 	Error        string            `json:"error,omitempty"`
+	DownloadLink string            `json:"downloadLink,omitempty"`
+	Options      map[string]string `json:"options,omitempty"`
 	StartTime    time.Time         `json:"startTime"`
 	EndTime      time.Time         `json:"endTime,omitempty"`
-	Options      map[string]string `json:"options,omitempty"`
-	DownloadLink string            `json:"downloadLink,omitempty"`
+	FileSize     int64             `json:"fileSize,omitempty"`
+	Progress     int               `json:"progress"`
 }
 
 // getExportJob gets export job details via the API
@@ -205,7 +205,7 @@ func getVMIPAddress(ctx context.Context, t *testing.T, apiURL, vmName string) st
 
 	// For libvirt VMs, we'll parse the IP address from interfaces
 	// In a real-world scenario, this would retrieve the IP from a network interface
-	if vm.Networks != nil && len(vm.Networks) > 0 {
+	if len(vm.Networks) > 0 {
 		for _, nic := range vm.Networks {
 			if nic.IPAddress != "" {
 				return nic.IPAddress

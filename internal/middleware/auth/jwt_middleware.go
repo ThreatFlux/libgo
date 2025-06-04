@@ -11,20 +11,20 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ErrInvalidToken indicates authentication failed due to invalid token
+// ErrInvalidToken indicates authentication failed due to invalid token.
 var ErrInvalidToken = errors.New("invalid or missing authentication token")
 
-// ErrInsufficientPermissions indicates authorization failed due to insufficient permissions
+// ErrInsufficientPermissions indicates authorization failed due to insufficient permissions.
 var ErrInsufficientPermissions = errors.New("insufficient permissions for this operation")
 
-// JWTMiddleware implements JWT authentication middleware for Gin
+// JWTMiddleware implements JWT authentication middleware for Gin.
 type JWTMiddleware struct {
 	validator   jwt.Validator
 	userService user.Service
 	logger      logger.Logger
 }
 
-// NewJWTMiddleware creates a new JWTMiddleware
+// NewJWTMiddleware creates a new JWTMiddleware.
 func NewJWTMiddleware(validator jwt.Validator, userService user.Service, logger logger.Logger) *JWTMiddleware {
 	return &JWTMiddleware{
 		validator:   validator,
@@ -33,7 +33,7 @@ func NewJWTMiddleware(validator jwt.Validator, userService user.Service, logger 
 	}
 }
 
-// Authenticate middleware for JWT authentication
+// Authenticate middleware for JWT authentication.
 func (m *JWTMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Extract token from header
@@ -82,7 +82,7 @@ func (m *JWTMiddleware) Authenticate() gin.HandlerFunc {
 	}
 }
 
-// Authorize middleware for permission-based authorization
+// Authorize middleware for permission-based authorization.
 func (m *JWTMiddleware) Authorize(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user ID from context
@@ -115,7 +115,7 @@ func (m *JWTMiddleware) Authorize(permission string) gin.HandlerFunc {
 	}
 }
 
-// handleAuthError handles authentication and authorization errors
+// handleAuthError handles authentication and authorization errors.
 func (m *JWTMiddleware) handleAuthError(c *gin.Context, err error, message string) {
 	statusCode := http.StatusUnauthorized
 	if errors.Is(err, ErrInsufficientPermissions) {

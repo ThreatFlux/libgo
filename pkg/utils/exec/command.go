@@ -9,41 +9,41 @@ import (
 	"time"
 )
 
-// CommandExecutor defines an interface for executing commands
+// CommandExecutor defines an interface for executing commands.
 type CommandExecutor interface {
 	Execute(cmd string, args ...string) ([]byte, error)
 	ExecuteContext(ctx context.Context, cmd string, args ...string) ([]byte, error)
 }
 
-// DefaultCommandExecutor implements CommandExecutor using the system commands
+// DefaultCommandExecutor implements CommandExecutor using the system commands.
 type DefaultCommandExecutor struct{}
 
-// Execute implements CommandExecutor.Execute
+// Execute implements CommandExecutor.Execute.
 func (e *DefaultCommandExecutor) Execute(cmd string, args ...string) ([]byte, error) {
 	return e.ExecuteContext(context.Background(), cmd, args...)
 }
 
-// ExecuteContext implements CommandExecutor.ExecuteContext
+// ExecuteContext implements CommandExecutor.ExecuteContext.
 func (e *DefaultCommandExecutor) ExecuteContext(ctx context.Context, cmd string, args ...string) ([]byte, error) {
 	return executeCommandImpl(ctx, cmd, args, CommandOptions{})
 }
 
-// ExecuteCommandFunc is a function type for command execution (allows mocking in tests)
+// ExecuteCommandFunc is a function type for command execution (allows mocking in tests).
 type ExecuteCommandFunc func(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error)
 
-// ExecuteCommand is a variable holding the command execution function (can be mocked in tests)
+// ExecuteCommand is a variable holding the command execution function (can be mocked in tests).
 var ExecuteCommand ExecuteCommandFunc = executeCommandImpl
 
-// CommandOptions holds options for command execution
+// CommandOptions holds options for command execution.
 type CommandOptions struct {
-	Timeout        time.Duration
 	Directory      string
 	Environment    []string
 	StdinData      []byte
+	Timeout        time.Duration
 	CombinedOutput bool
 }
 
-// executeCommandImpl is the actual implementation of command execution
+// executeCommandImpl is the actual implementation of command execution.
 func executeCommandImpl(ctx context.Context, name string, args []string, opts CommandOptions) ([]byte, error) {
 	// If a timeout is specified, create a timeout context
 	var cancel context.CancelFunc
@@ -85,11 +85,12 @@ func executeCommandImpl(ctx context.Context, name string, args []string, opts Co
 	// Handle errors, including timeout
 	if err != nil {
 		var errMsg string
-		if ctx.Err() == context.DeadlineExceeded {
+		switch {
+		case ctx.Err() == context.DeadlineExceeded:
 			errMsg = fmt.Sprintf("command timed out after %s: %s", opts.Timeout, err)
-		} else if stderr.Len() > 0 {
+		case stderr.Len() > 0:
 			errMsg = fmt.Sprintf("command failed: %s: %s", err, stderr.String())
-		} else {
+		default:
 			errMsg = fmt.Sprintf("command failed: %s", err)
 		}
 		return stdout.Bytes(), fmt.Errorf("%s", errMsg)
@@ -98,7 +99,7 @@ func executeCommandImpl(ctx context.Context, name string, args []string, opts Co
 	return stdout.Bytes(), nil
 }
 
-// ExecuteCommandWithInput executes a command with input data
+// ExecuteCommandWithInput executes a command with input data.
 func ExecuteCommandWithInput(ctx context.Context, name string, args []string, input []byte, opts CommandOptions) ([]byte, error) {
 	// Set input data and execute
 	opts.StdinData = input

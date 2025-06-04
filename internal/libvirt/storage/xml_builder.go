@@ -7,26 +7,26 @@ import (
 	xmlutils "github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
-// TemplateXMLBuilder implements XMLBuilder using templates
+// TemplateXMLBuilder implements XMLBuilder using templates.
 type TemplateXMLBuilder struct {
 	templateLoader *xmlutils.TemplateLoader
 	logger         logger.Logger
 }
 
-// PoolTemplate contains data for storage pool XML template
+// PoolTemplate contains data for storage pool XML template.
 type PoolTemplate struct {
 	Name string
 	Path string
 }
 
-// VolumeTemplate contains data for storage volume XML template
+// VolumeTemplate contains data for storage volume XML template.
 type VolumeTemplate struct {
 	Name          string
 	CapacityBytes uint64
 	Format        string
 }
 
-// NewTemplateXMLBuilder creates a new TemplateXMLBuilder
+// NewTemplateXMLBuilder creates a new TemplateXMLBuilder.
 func NewTemplateXMLBuilder(templateLoader *xmlutils.TemplateLoader, logger logger.Logger) *TemplateXMLBuilder {
 	return &TemplateXMLBuilder{
 		templateLoader: templateLoader,
@@ -34,7 +34,7 @@ func NewTemplateXMLBuilder(templateLoader *xmlutils.TemplateLoader, logger logge
 	}
 }
 
-// BuildStoragePoolXML implements XMLBuilder.BuildStoragePoolXML
+// BuildStoragePoolXML implements XMLBuilder.BuildStoragePoolXML.
 func (b *TemplateXMLBuilder) BuildStoragePoolXML(name string, path string) (string, error) {
 	// Prepare template data
 	templateData := PoolTemplate{
@@ -55,7 +55,7 @@ func (b *TemplateXMLBuilder) BuildStoragePoolXML(name string, path string) (stri
 	return poolXML, nil
 }
 
-// BuildStorageVolumeXML implements XMLBuilder.BuildStorageVolumeXML
+// BuildStorageVolumeXML implements XMLBuilder.BuildStorageVolumeXML.
 func (b *TemplateXMLBuilder) BuildStorageVolumeXML(volName string, capacityBytes uint64, format string) (string, error) {
 	// Default format if not specified
 	if format == "" {

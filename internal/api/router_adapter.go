@@ -117,9 +117,11 @@ func ConfigureRoutes(
 	authHandler *handlers.AuthHandler,
 	healthHandler *handlers.HealthHandler,
 	metricsHandler *handlers.MetricsHandler,
+	computeHandler *handlers.ComputeHandler,
 	networkHandlers *NetworkHandlers,
 	storageHandlers *StorageHandlers,
 	ovsHandlers *OVSHandlers,
+	dockerHandlers *DockerHandlers,
 	config *config.Config, // Add config parameter
 ) {
 	// Register health check endpoints
@@ -166,6 +168,63 @@ func ConfigureRoutes(
 		vms.GET("/:name/snapshots/:snapshot", vmHandler.GetSnapshot)
 		vms.DELETE("/:name/snapshots/:snapshot", vmHandler.DeleteSnapshot)
 		vms.PUT("/:name/snapshots/:snapshot/revert", vmHandler.RevertSnapshot)
+	}
+
+	// Unified compute instance management endpoints (KVM + Docker)
+	if computeHandler != nil {
+		compute := protected.Group("/compute")
+		{
+			// Instance management
+			compute.GET("/instances", computeHandler.ListInstances)
+			compute.POST("/instances", computeHandler.CreateInstance)
+			compute.GET("/instances/:id", computeHandler.GetInstance)
+			compute.PUT("/instances/:id", computeHandler.UpdateInstance)
+			compute.DELETE("/instances/:id", computeHandler.DeleteInstance)
+
+			// Lifecycle operations
+			compute.PUT("/instances/:id/start", computeHandler.StartInstance)
+			compute.PUT("/instances/:id/stop", computeHandler.StopInstance)
+			compute.PUT("/instances/:id/restart", computeHandler.RestartInstance)
+			compute.PUT("/instances/:id/pause", computeHandler.PauseInstance)
+			compute.PUT("/instances/:id/unpause", computeHandler.UnpauseInstance)
+
+			// Resource management
+			compute.GET("/instances/:id/usage", computeHandler.GetResourceUsage)
+			compute.PUT("/instances/:id/resources", computeHandler.UpdateResourceLimits)
+
+			// Events and monitoring
+			compute.GET("/instances/:id/events", computeHandler.GetInstanceEvents)
+
+			// Alternative access by name
+			compute.GET("/instances/name/:name", computeHandler.GetInstanceByName)
+
+			// Cluster and backend status
+			compute.GET("/cluster/status", computeHandler.GetClusterStatus)
+			compute.GET("/backends/:backend/info", computeHandler.GetBackendInfo)
+			compute.GET("/health", computeHandler.HealthCheck)
+		}
+	}
+
+	// Docker-specific endpoints (if enabled)
+	if dockerHandlers != nil && config != nil && config.Docker.Enabled {
+		docker := protected.Group("/docker")
+		{
+			// Container management
+			containers := docker.Group("/containers")
+			{
+				containers.GET("", dockerHandlers.ListContainers.ListContainers)
+				containers.POST("", dockerHandlers.CreateContainer.CreateContainer)
+				containers.GET("/:id", dockerHandlers.GetContainer.GetContainer)
+				containers.POST("/:id/start", dockerHandlers.StartContainer.StartContainer)
+				containers.POST("/:id/stop", dockerHandlers.StopContainer.StopContainer)
+				containers.POST("/:id/restart", dockerHandlers.RestartContainer.RestartContainer)
+				containers.DELETE("/:id", dockerHandlers.DeleteContainer.DeleteContainer)
+				containers.GET("/:id/logs", dockerHandlers.GetContainerLogs.GetContainerLogs)
+				containers.GET("/:id/stats", dockerHandlers.GetContainerStats.GetContainerStats)
+			}
+
+			// Future: Images, Networks, Volumes endpoints
+		}
 	}
 
 	// Export job management

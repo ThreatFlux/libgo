@@ -9,7 +9,9 @@ import (
 	"strings"
 )
 
-// Common errors
+const localhostHost = "localhost"
+
+// Common errors.
 var (
 	ErrEmptyValue         = errors.New("value cannot be empty")
 	ErrFileNotAccessible  = errors.New("file is not accessible")
@@ -19,7 +21,7 @@ var (
 	ErrInvalidFormat      = errors.New("invalid format")
 )
 
-// Validate checks if the configuration is valid
+// Validate checks if the configuration is valid.
 func Validate(cfg *Config) error {
 	if err := ValidateServer(cfg.Server); err != nil {
 		return fmt.Errorf("server config: %w", err)
@@ -48,23 +50,23 @@ func Validate(cfg *Config) error {
 	return nil
 }
 
-// ValidateServer validates server configuration
+// ValidateServer validates server configuration.
 func ValidateServer(server ServerConfig) error {
-	// Validate host if specified
+	// Validate host if specified.
 	if server.Host != "" {
-		if ip := net.ParseIP(server.Host); ip == nil && server.Host != "localhost" {
+		if ip := net.ParseIP(server.Host); ip == nil && server.Host != localhostHost {
 			if _, err := net.LookupHost(server.Host); err != nil {
 				return fmt.Errorf("invalid host: %w", err)
 			}
 		}
 	}
 
-	// Validate port
+	// Validate port.
 	if server.Port < 1 || server.Port > 65535 {
 		return fmt.Errorf("port %d: %w", server.Port, ErrInvalidPort)
 	}
 
-	// Validate timeouts
+	// Validate timeouts.
 	if server.ReadTimeout <= 0 {
 		return fmt.Errorf("read timeout: %w", ErrInvalidTimeout)
 	}
@@ -73,7 +75,7 @@ func ValidateServer(server ServerConfig) error {
 		return fmt.Errorf("write timeout: %w", ErrInvalidTimeout)
 	}
 
-	// Validate TLS settings if enabled
+	// Validate TLS settings if enabled.
 	if server.TLS.Enabled {
 		if server.TLS.CertFile == "" {
 			return fmt.Errorf("TLS cert file: %w", ErrEmptyValue)
@@ -83,7 +85,7 @@ func ValidateServer(server ServerConfig) error {
 			return fmt.Errorf("TLS key file: %w", ErrEmptyValue)
 		}
 
-		// Check if cert and key files exist and are readable
+		// Check if cert and key files exist and are readable.
 		if err := checkFileReadable(server.TLS.CertFile); err != nil {
 			return fmt.Errorf("TLS cert file: %w", err)
 		}
@@ -96,14 +98,14 @@ func ValidateServer(server ServerConfig) error {
 	return nil
 }
 
-// ValidateLibvirt validates libvirt configuration
+// ValidateLibvirt validates libvirt configuration.
 func ValidateLibvirt(libvirt LibvirtConfig) error {
-	// URI should not be empty
+	// URI should not be empty.
 	if libvirt.URI == "" {
 		return fmt.Errorf("URI: %w", ErrEmptyValue)
 	}
 
-	// Check URI format
+	// Check URI format.
 	if !strings.HasPrefix(libvirt.URI, "qemu") &&
 		!strings.HasPrefix(libvirt.URI, "xen") &&
 		!strings.HasPrefix(libvirt.URI, "lxc") &&
@@ -111,22 +113,22 @@ func ValidateLibvirt(libvirt LibvirtConfig) error {
 		return fmt.Errorf("URI %s: unsupported hypervisor", libvirt.URI)
 	}
 
-	// Connection timeout should be positive
+	// Connection timeout should be positive.
 	if libvirt.ConnectionTimeout <= 0 {
 		return fmt.Errorf("connection timeout: %w", ErrInvalidTimeout)
 	}
 
-	// Max connections should be at least 1
+	// Max connections should be at least 1.
 	if libvirt.MaxConnections < 1 {
 		return fmt.Errorf("max connections must be at least 1")
 	}
 
-	// Pool name should not be empty
+	// Pool name should not be empty.
 	if libvirt.PoolName == "" {
 		return fmt.Errorf("pool name: %w", ErrEmptyValue)
 	}
 
-	// Network name should not be empty
+	// Network name should not be empty.
 	if libvirt.NetworkName == "" {
 		return fmt.Errorf("network name: %w", ErrEmptyValue)
 	}
@@ -134,24 +136,24 @@ func ValidateLibvirt(libvirt LibvirtConfig) error {
 	return nil
 }
 
-// ValidateAuth validates authentication configuration
+// ValidateAuth validates authentication configuration.
 func ValidateAuth(auth AuthConfig) error {
-	// If auth is disabled, no need to validate further
+	// If auth is disabled, no need to validate further.
 	if !auth.Enabled {
 		return nil
 	}
 
-	// JWT secret should not be empty
+	// JWT secret should not be empty.
 	if auth.JWTSecretKey == "" {
 		return fmt.Errorf("JWT secret key: %w", ErrEmptyValue)
 	}
 
-	// Token expiration should be positive
+	// Token expiration should be positive.
 	if auth.TokenExpiration <= 0 {
 		return fmt.Errorf("token expiration: %w", ErrInvalidTimeout)
 	}
 
-	// Validate signing method
+	// Validate signing method.
 	validMethods := map[string]bool{
 		"HS256": true,
 		"HS384": true,
@@ -171,9 +173,9 @@ func ValidateAuth(auth AuthConfig) error {
 	return nil
 }
 
-// ValidateLogging validates logging configuration
+// ValidateLogging validates logging configuration.
 func ValidateLogging(logging LoggingConfig) error {
-	// Validate log level
+	// Validate log level.
 	validLevels := map[string]bool{
 		"debug":  true,
 		"info":   true,
@@ -188,7 +190,7 @@ func ValidateLogging(logging LoggingConfig) error {
 		return fmt.Errorf("log level %s: %w", logging.Level, ErrInvalidFormat)
 	}
 
-	// Validate log format
+	// Validate log format.
 	validFormats := map[string]bool{
 		"json":    true,
 		"console": true,
@@ -198,7 +200,7 @@ func ValidateLogging(logging LoggingConfig) error {
 		return fmt.Errorf("log format %s: %w", logging.Format, ErrInvalidFormat)
 	}
 
-	// If file path is specified, ensure directory exists
+	// If file path is specified, ensure directory exists.
 	if logging.FilePath != "" {
 		dir := filepath.Dir(logging.FilePath)
 		if err := checkDirWritable(dir); err != nil {
@@ -206,17 +208,17 @@ func ValidateLogging(logging LoggingConfig) error {
 		}
 	}
 
-	// Max size should be positive if set
+	// Max size should be positive if set.
 	if logging.MaxSize < 0 {
 		return fmt.Errorf("max size must be non-negative")
 	}
 
-	// Max backups should be non-negative
+	// Max backups should be non-negative.
 	if logging.MaxBackups < 0 {
 		return fmt.Errorf("max backups must be non-negative")
 	}
 
-	// Max age should be non-negative
+	// Max age should be non-negative.
 	if logging.MaxAge < 0 {
 		return fmt.Errorf("max age must be non-negative")
 	}
@@ -224,14 +226,14 @@ func ValidateLogging(logging LoggingConfig) error {
 	return nil
 }
 
-// ValidateStorage validates storage configuration
+// ValidateStorage validates storage configuration.
 func ValidateStorage(storage StorageConfig) error {
-	// Default pool should not be empty
+	// Default pool should not be empty.
 	if storage.DefaultPool == "" {
 		return fmt.Errorf("default pool: %w", ErrEmptyValue)
 	}
 
-	// Pool path should be a valid directory
+	// Pool path should be a valid directory.
 	if storage.PoolPath == "" {
 		return fmt.Errorf("pool path: %w", ErrEmptyValue)
 	}
@@ -240,7 +242,7 @@ func ValidateStorage(storage StorageConfig) error {
 		return fmt.Errorf("pool path: %w", err)
 	}
 
-	// Validate templates if provided
+	// Validate templates if provided.
 	for name, path := range storage.Templates {
 		if name == "" {
 			return fmt.Errorf("template name: %w", ErrEmptyValue)
@@ -258,9 +260,9 @@ func ValidateStorage(storage StorageConfig) error {
 	return nil
 }
 
-// ValidateExport validates export configuration
+// ValidateExport validates export configuration.
 func ValidateExport(export ExportConfig) error {
-	// Output directory should exist and be writable
+	// Output directory should exist and be writable.
 	if export.OutputDir == "" {
 		return fmt.Errorf("output directory: %w", ErrEmptyValue)
 	}
@@ -269,7 +271,7 @@ func ValidateExport(export ExportConfig) error {
 		return fmt.Errorf("output directory: %w", err)
 	}
 
-	// Temp directory should exist and be writable
+	// Temp directory should exist and be writable.
 	if export.TempDir == "" {
 		return fmt.Errorf("temp directory: %w", ErrEmptyValue)
 	}
@@ -278,7 +280,7 @@ func ValidateExport(export ExportConfig) error {
 		return fmt.Errorf("temp directory: %w", err)
 	}
 
-	// Validate default format
+	// Validate default format.
 	validFormats := map[string]bool{
 		"qcow2": true,
 		"vmdk":  true,
@@ -291,7 +293,7 @@ func ValidateExport(export ExportConfig) error {
 		return fmt.Errorf("default format %s: %w", export.DefaultFormat, ErrInvalidFormat)
 	}
 
-	// Retention should be positive
+	// Retention should be positive.
 	if export.Retention <= 0 {
 		return fmt.Errorf("retention: %w", ErrInvalidTimeout)
 	}
@@ -299,9 +301,9 @@ func ValidateExport(export ExportConfig) error {
 	return nil
 }
 
-// Helper functions
+// Helper functions.
 
-// checkFileReadable checks if a file exists and is readable
+// checkFileReadable checks if a file exists and is readable.
 func checkFileReadable(path string) error {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -311,7 +313,7 @@ func checkFileReadable(path string) error {
 		return fmt.Errorf("accessing %s: %w", path, err)
 	}
 
-	// Check if file is readable
+	// Check if file is readable.
 	file, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("opening %s: %w", path, err)
@@ -321,7 +323,7 @@ func checkFileReadable(path string) error {
 	return nil
 }
 
-// checkDirWritable checks if a directory exists and is writable
+// checkDirWritable checks if a directory exists and is writable.
 func checkDirWritable(path string) error {
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -331,19 +333,19 @@ func checkDirWritable(path string) error {
 		return fmt.Errorf("accessing %s: %w", path, err)
 	}
 
-	// Check if it's a directory
+	// Check if it's a directory.
 	if !fi.IsDir() {
 		return fmt.Errorf("%s is not a directory", path)
 	}
 
-	// Check if directory is writable by attempting to create a temporary file
+	// Check if directory is writable by attempting to create a temporary file.
 	tempFile := filepath.Join(path, ".libgo-write-test")
 	f, err := os.Create(tempFile)
 	if err != nil {
 		return fmt.Errorf("directory %s is not writable: %w", path, err)
 	}
 
-	// Clean up the temporary file
+	// Clean up the temporary file.
 	f.Close()
 	os.Remove(tempFile)
 

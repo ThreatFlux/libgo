@@ -39,9 +39,8 @@ func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitCo
 
 	for filename, content := range files {
 		filePath := filepath.Join(tmpDir, filename)
-		err := os.WriteFile(filePath, []byte(content), 0644)
-		if err != nil {
-			return fmt.Errorf("writing %s: %w", filename, err)
+		if writeErr := os.WriteFile(filePath, []byte(content), 0644); writeErr != nil {
+			return fmt.Errorf("writing %s: %w", filename, writeErr)
 		}
 	}
 

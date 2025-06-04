@@ -8,7 +8,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// RequestLoggerMiddleware returns a standard HTTP middleware function for logging HTTP requests
+// RequestLoggerMiddleware returns a standard HTTP middleware function for logging HTTP requests.
 func RequestLoggerMiddleware(log logger.Logger) func(http.ResponseWriter, *http.Request, func(http.ResponseWriter, *http.Request)) {
 	return func(w http.ResponseWriter, r *http.Request, next func(http.ResponseWriter, *http.Request)) {
 		// Start timer
@@ -44,13 +44,13 @@ func RequestLoggerMiddleware(log logger.Logger) func(http.ResponseWriter, *http.
 	}
 }
 
-// responseWriterWrapper wraps http.ResponseWriter to capture the status code
+// responseWriterWrapper wraps http.ResponseWriter to capture the status code.
 type responseWriterWrapper struct {
 	http.ResponseWriter
 	statusCode int
 }
 
-// WriteHeader captures the status code before calling the underlying WriteHeader
+// WriteHeader captures the status code before calling the underlying WriteHeader.
 func (w *responseWriterWrapper) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)

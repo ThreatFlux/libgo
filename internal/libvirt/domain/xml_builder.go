@@ -10,13 +10,13 @@ import (
 	xmlutils "github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
 
-// TemplateXMLBuilder implements XMLBuilder using templates
+// TemplateXMLBuilder implements XMLBuilder using templates.
 type TemplateXMLBuilder struct {
 	templateLoader *xmlutils.TemplateLoader
 	logger         logger.Logger
 }
 
-// DomainTemplate contains data for domain XML template
+// DomainTemplate contains data for domain XML template.
 type DomainTemplate struct {
 	Name         string
 	UUID         string
@@ -27,12 +27,12 @@ type DomainTemplate struct {
 	CloudInitISO string
 }
 
-// MemoryTemplate contains memory data for the template
+// MemoryTemplate contains memory data for the template.
 type MemoryTemplate struct {
 	KiB uint64
 }
 
-// CPUTemplate contains CPU data for the template
+// CPUTemplate contains CPU data for the template.
 type CPUTemplate struct {
 	Count   int
 	Model   string
@@ -41,7 +41,7 @@ type CPUTemplate struct {
 	Sockets int
 }
 
-// DiskTemplate contains disk data for the template
+// DiskTemplate contains disk data for the template.
 type DiskTemplate struct {
 	Type       string
 	Format     string
@@ -56,7 +56,7 @@ type DiskTemplate struct {
 	Shareable  bool
 }
 
-// NetworkTemplate contains network data for the template
+// NetworkTemplate contains network data for the template.
 type NetworkTemplate struct {
 	Type       string
 	Source     string
@@ -65,7 +65,7 @@ type NetworkTemplate struct {
 	Model      string
 }
 
-// NewTemplateXMLBuilder creates a new TemplateXMLBuilder
+// NewTemplateXMLBuilder creates a new TemplateXMLBuilder.
 func NewTemplateXMLBuilder(templateLoader *xmlutils.TemplateLoader, logger logger.Logger) *TemplateXMLBuilder {
 	return &TemplateXMLBuilder{
 		templateLoader: templateLoader,
@@ -73,7 +73,7 @@ func NewTemplateXMLBuilder(templateLoader *xmlutils.TemplateLoader, logger logge
 	}
 }
 
-// BuildDomainXML implements XMLBuilder.BuildDomainXML
+// BuildDomainXML implements XMLBuilder.BuildDomainXML.
 func (b *TemplateXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) {
 	// Generate a UUID if not provided
 	domainUUID := uuid.New().String()
@@ -189,7 +189,7 @@ func (b *TemplateXMLBuilder) BuildDomainXML(params vm.VMParams) (string, error) 
 	return domainXML, nil
 }
 
-// GenerateCloudInitISOPath generates a path for cloud-init ISO
+// GenerateCloudInitISOPath generates a path for cloud-init ISO.
 func (b *TemplateXMLBuilder) GenerateCloudInitISOPath(vmName string, isoDir string) string {
 	// Create filename
 	filename := fmt.Sprintf("%s-cloudinit.iso", vmName)

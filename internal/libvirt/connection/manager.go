@@ -12,25 +12,25 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ConnectionManager implements Manager for libvirt connections
+// ConnectionManager implements Manager for libvirt connections.
 type ConnectionManager struct {
 	uri            string
 	connPool       chan *libvirtConnection
-	maxConnections int
-	timeout        time.Duration
 	logger         logger.Logger
 	mu             sync.Mutex
+	maxConnections int
+	timeout        time.Duration
 }
 
-// libvirtConnection implements Connection interface
+// libvirtConnection implements Connection interface.
 type libvirtConnection struct {
 	libvirt *libvirt.Libvirt
 	conn    net.Conn
-	active  bool
 	manager *ConnectionManager
+	active  bool
 }
 
-// NewConnectionManager creates a new ConnectionManager
+// NewConnectionManager creates a new ConnectionManager.
 func NewConnectionManager(cfg config.LibvirtConfig, logger logger.Logger) (*ConnectionManager, error) {
 	if cfg.MaxConnections <= 0 {
 		cfg.MaxConnections = 5 // Default value if not configured
@@ -47,7 +47,7 @@ func NewConnectionManager(cfg config.LibvirtConfig, logger logger.Logger) (*Conn
 	return manager, nil
 }
 
-// Connect implements Manager.Connect
+// Connect implements Manager.Connect.
 func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 	// Try to get connection from the pool
 	select {
@@ -67,12 +67,9 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 		// Pool is empty, continue to create a new connection
 	}
 
-	// Set context timeout if specified
-	var cancel context.CancelFunc
-	if m.timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, m.timeout)
-		defer cancel()
-	}
+	// Note: timeout is handled via net.DialTimeout below
+	// Context is preserved for future use if needed
+	_ = ctx
 
 	// Create a new connection
 	m.logger.Debug("Creating new libvirt connection",
@@ -152,7 +149,7 @@ func (m *ConnectionManager) Connect(ctx context.Context) (Connection, error) {
 	return libvirtConn, nil
 }
 
-// Release implements Manager.Release
+// Release implements Manager.Release.
 func (m *ConnectionManager) Release(conn Connection) error {
 	libvirtConn, ok := conn.(*libvirtConnection)
 	if !ok {
@@ -178,7 +175,7 @@ func (m *ConnectionManager) Release(conn Connection) error {
 	}
 }
 
-// Close implements Manager.Close
+// Close implements Manager.Close.
 func (m *ConnectionManager) Close() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -202,12 +199,12 @@ func (m *ConnectionManager) Close() error {
 	}
 }
 
-// GetLibvirtConnection implements Connection.GetLibvirtConnection
+// GetLibvirtConnection implements Connection.GetLibvirtConnection.
 func (c *libvirtConnection) GetLibvirtConnection() *libvirt.Libvirt {
 	return c.libvirt
 }
 
-// Close implements Connection.Close
+// Close implements Connection.Close.
 func (c *libvirtConnection) Close() error {
 	if !c.active {
 		return nil // Already closed
@@ -230,22 +227,22 @@ func (c *libvirtConnection) Close() error {
 	return nil
 }
 
-// IsActive implements Connection.IsActive
+// IsActive implements Connection.IsActive.
 func (c *libvirtConnection) IsActive() bool {
 	return c.active
 }
 
-// IsConnected implements Connection.IsConnected
+// IsConnected implements Connection.IsConnected.
 func (c *libvirtConnection) IsConnected() bool {
 	return c.active
 }
 
-// connDialer implements socket.Dialer interface for libvirt connections
+// connDialer implements socket.Dialer interface for libvirt connections.
 type connDialer struct {
 	conn net.Conn
 }
 
-// Dial implements socket.Dialer
+// Dial implements socket.Dialer.
 func (d *connDialer) Dial() (net.Conn, error) {
 	return d.conn, nil
 }

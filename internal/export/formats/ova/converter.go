@@ -11,13 +11,13 @@ import (
 	"github.com/threatflux/libgo/pkg/utils/exec"
 )
 
-// OVAConverter implements Converter for OVA format
+// OVAConverter implements Converter for OVA format.
 type OVAConverter struct {
 	templateGenerator *OVFTemplateGenerator
 	logger            logger.Logger
 }
 
-// NewOVAConverter creates a new OVAConverter
+// NewOVAConverter creates a new OVAConverter.
 func NewOVAConverter(templateGenerator *OVFTemplateGenerator, logger logger.Logger) *OVAConverter {
 	return &OVAConverter{
 		templateGenerator: templateGenerator,
@@ -25,9 +25,9 @@ func NewOVAConverter(templateGenerator *OVFTemplateGenerator, logger logger.Logg
 	}
 }
 
-// Convert implements Converter.Convert
+// Convert implements Converter.Convert.
 // For OVA conversion, sourcePath is the path to the VM disk
-// and destPath is the path where to create the OVA file
+// and destPath is the path where to create the OVA file.
 func (c *OVAConverter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
 	// Create temporary directory for intermediate files
 	tempDir, err := os.MkdirTemp("", "ova-export-")
@@ -44,8 +44,8 @@ func (c *OVAConverter) Convert(ctx context.Context, sourcePath string, destPath 
 
 	// Step 1: Convert disk to VMDK format (which is standard for OVA)
 	vmdkPath := filepath.Join(tempDir, "disk.vmdk")
-	if err := c.convertToDisk(ctx, sourcePath, vmdkPath); err != nil {
-		return fmt.Errorf("failed to convert disk to VMDK: %w", err)
+	if convertErr := c.convertToDisk(ctx, sourcePath, vmdkPath); convertErr != nil {
+		return fmt.Errorf("failed to convert disk to VMDK: %w", convertErr)
 	}
 
 	// Get disk size
@@ -76,7 +76,7 @@ func (c *OVAConverter) Convert(ctx context.Context, sourcePath string, destPath 
 	return nil
 }
 
-// convertToDisk converts source to VMDK format
+// convertToDisk converts source to VMDK format.
 func (c *OVAConverter) convertToDisk(ctx context.Context, sourcePath string, destPath string) error {
 	args := []string{
 		"convert",
@@ -107,7 +107,7 @@ func (c *OVAConverter) convertToDisk(ctx context.Context, sourcePath string, des
 	return nil
 }
 
-// packageOVA packages VMDK and OVF into OVA
+// packageOVA packages VMDK and OVF into OVA.
 func (c *OVAConverter) packageOVA(ctx context.Context, vmdkPath string, ovfPath string, ovaPath string) error {
 	c.logger.Info("Packaging OVA",
 		logger.String("ovf", ovfPath),
@@ -143,7 +143,7 @@ func (c *OVAConverter) packageOVA(ctx context.Context, vmdkPath string, ovfPath 
 	return nil
 }
 
-// getVMInfoFromOptions extracts VM information from options
+// getVMInfoFromOptions extracts VM information from options.
 func (c *OVAConverter) getVMInfoFromOptions(options map[string]string) (*vm.VM, error) {
 	// Minimal VM info required for OVF
 	vmInfo := &vm.VM{
@@ -175,12 +175,12 @@ func (c *OVAConverter) getVMInfoFromOptions(options map[string]string) (*vm.VM, 
 	return vmInfo, nil
 }
 
-// GetFormatName implements Converter.GetFormatName
+// GetFormatName implements Converter.GetFormatName.
 func (c *OVAConverter) GetFormatName() string {
 	return "ova"
 }
 
-// ValidateOptions implements Converter.ValidateOptions
+// ValidateOptions implements Converter.ValidateOptions.
 func (c *OVAConverter) ValidateOptions(options map[string]string) error {
 	// Required options
 	requiredOptions := []string{"vm_name"}

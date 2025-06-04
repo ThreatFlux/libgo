@@ -7,14 +7,14 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// TestConnectionManager is a special variant of ConnectionManager for testing
-// that allows using Connection interface in the channel
+// TestConnectionManager is a special variant of ConnectionManager for testing.
+// that allows using Connection interface in the channel.
 type TestConnectionManager struct {
 	ConnectionManager
 	testConnPool chan Connection
 }
 
-// NewTestConnectionManager creates a ConnectionManager suitable for testing
+// NewTestConnectionManager creates a ConnectionManager suitable for testing.
 func NewTestConnectionManager(uri string, maxConnections int, timeoutDuration time.Duration, log logger.Logger) *TestConnectionManager {
 	mgr := &TestConnectionManager{
 		ConnectionManager: ConnectionManager{
@@ -29,35 +29,35 @@ func NewTestConnectionManager(uri string, maxConnections int, timeoutDuration ti
 	return mgr
 }
 
-// AddToTestPool adds a test connection to the test pool
+// AddToTestPool adds a test connection to the test pool.
 func (m *TestConnectionManager) AddToTestPool(conn Connection) {
 	m.testConnPool <- conn
 }
 
-// TestLibvirtConnection is a test implementation of the Connection interface
+// TestLibvirtConnection is a test implementation of the Connection interface.
 type TestLibvirtConnection struct {
 	libvirt *libvirt.Libvirt
 	active  bool
 }
 
-// GetLibvirtConnection implements Connection.GetLibvirtConnection
+// GetLibvirtConnection implements Connection.GetLibvirtConnection.
 func (c *TestLibvirtConnection) GetLibvirtConnection() *libvirt.Libvirt {
 	return c.libvirt
 }
 
-// Close implements Connection.Close
+// Close implements Connection.Close.
 func (c *TestLibvirtConnection) Close() error {
 	c.active = false
 	// In a real system we would close, but for tests we don't need to
 	return nil
 }
 
-// IsActive implements Connection.IsActive
+// IsActive implements Connection.IsActive.
 func (c *TestLibvirtConnection) IsActive() bool {
 	return c.active
 }
 
-// ToLibvirtConnection attempts to convert a Connection to a *libvirtConnection
+// ToLibvirtConnection attempts to convert a Connection to a *libvirtConnection.
 func ToLibvirtConnection(conn Connection) *libvirtConnection {
 	if lc, ok := conn.(*libvirtConnection); ok {
 		return lc

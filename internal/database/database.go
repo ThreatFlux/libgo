@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// NewConnection creates a new database connection based on configuration
+// NewConnection creates a new database connection based on configuration.
 func NewConnection(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 

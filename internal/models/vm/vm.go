@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// VM represents a virtual machine
+// VM represents a virtual machine.
 type VM struct {
 	Name        string     `json:"name"`
 	UUID        string     `json:"uuid"`
@@ -19,7 +19,7 @@ type VM struct {
 
 // Using VMStatus from status.go, not redeclaring here
 
-// CPUInfo contains CPU information
+// CPUInfo contains CPU information.
 type CPUInfo struct {
 	Count   int    `json:"count"`
 	Model   string `json:"model,omitempty"`
@@ -28,7 +28,7 @@ type CPUInfo struct {
 	Threads int    `json:"threads,omitempty"`
 }
 
-// MemoryInfo contains memory information
+// MemoryInfo contains memory information.
 type MemoryInfo struct {
 	SizeBytes uint64 `json:"sizeBytes"`
 	SizeMB    uint64 `json:"sizeMB"`
