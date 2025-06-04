@@ -7,26 +7,26 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StartVMResponse represents the response for a VM start request
+// StartVMResponse represents the response for a VM start request.
 type StartVMResponse struct {
 	Message string `json:"message"`
 	Success bool   `json:"success"`
 }
 
-// StartVM handles requests to start a VM
+// StartVM handles requests to start a VM.
 func (h *VMHandler) StartVM(c *gin.Context) {
-	// Get VM name from URL path
+	// Get VM name from URL path.
 	name := c.Param("name")
 	if name == "" {
 		HandleError(c, ErrInvalidInput)
 		return
 	}
 
-	// Get context logger
+	// Get context logger.
 	contextLogger := getContextLogger(c, h.logger)
 	contextLogger = contextLogger.WithFields(logger.String("vmName", name))
 
-	// Start VM
+	// Start VM.
 	err := h.vmManager.Start(c.Request.Context(), name)
 	if err != nil {
 		contextLogger.Error("Failed to start VM",
@@ -35,10 +35,10 @@ func (h *VMHandler) StartVM(c *gin.Context) {
 		return
 	}
 
-	// Log success
+	// Log success.
 	contextLogger.Info("VM started successfully")
 
-	// Return response
+	// Return response.
 	c.JSON(http.StatusOK, StartVMResponse{
 		Success: true,
 		Message: "VM started successfully",

@@ -9,10 +9,10 @@ import (
 
 // ResourceTracker tracks resource usage across all instances.
 type ResourceTracker struct {
-	// Mutex (sync.RWMutex is typically 24 bytes)
-	mu sync.RWMutex
-	// Map fields (24 bytes)
+	// Map fields (8 bytes)
 	instances map[string]*ComputeInstance
+	// Mutex (24 bytes)
+	mu sync.RWMutex
 }
 
 // NewResourceTracker creates a new resource tracker.
@@ -61,10 +61,10 @@ func (rt *ResourceTracker) GetTotalResources() ComputeResources {
 
 // QuotaManager manages resource quotas for users.
 type QuotaManager struct {
-	// Mutex (sync.RWMutex is typically 24 bytes)
-	mu sync.RWMutex
-	// Map fields (24 bytes)
+	// Map fields (8 bytes)
 	quotas map[uint]*ResourceQuotas
+	// Mutex (24 bytes)
+	mu sync.RWMutex
 }
 
 // NewQuotaManager creates a new quota manager.
@@ -142,12 +142,12 @@ func (qm *QuotaManager) CheckQuota(ctx context.Context, req ComputeInstanceReque
 
 // EventBus handles instance events.
 type EventBus struct {
-	// Mutex (sync.RWMutex is typically 24 bytes)
-	mu sync.RWMutex
 	// Slice fields (24 bytes)
 	events []InstanceEvent
-	// Map fields (24 bytes)
+	// Map fields (8 bytes)
 	subscribers map[string][]chan InstanceEvent
+	// Mutex (24 bytes)
+	mu sync.RWMutex
 }
 
 // NewEventBus creates a new event bus.

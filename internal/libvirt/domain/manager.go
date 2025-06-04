@@ -34,11 +34,11 @@ type DomainManager struct {
 
 // libvirtDomain is a struct to parse libvirt domain XML.
 type libvirtDomain struct {
-	// Anonymous struct fields (need to be first for alignment)
-	Memory struct {
-		Value uint64 `xml:",chardata"`
-		Unit  string `xml:"unit,attr"`
-	} `xml:"memory"`
+	// Anonymous struct fields (largest first)
+	Devices struct {
+		Disks      []libvirtDisk      `xml:"disk"`
+		Interfaces []libvirtInterface `xml:"interface"`
+	} `xml:"devices"`
 	CPU struct {
 		Mode  string `xml:"mode,attr"`
 		Model struct {
@@ -50,25 +50,21 @@ type libvirtDomain struct {
 			Threads int `xml:"threads,attr"`
 		} `xml:"topology"`
 	} `xml:"cpu"`
-	Devices struct {
-		Disks      []libvirtDisk      `xml:"disk"`
-		Interfaces []libvirtInterface `xml:"interface"`
-	} `xml:"devices"`
-	// String fields (8 bytes each)
+	Memory struct {
+		Value uint64 `xml:",chardata"`
+		Unit  string `xml:"unit,attr"`
+	} `xml:"memory"`
+	// String fields (16 bytes each)
 	Name   string `xml:"name"`
 	UUID   string `xml:"uuid"`
 	Status string `xml:"state,attr"`
-	// Int fields (4 bytes)
+	// Int fields (8 bytes on 64-bit)
 	VCPUs int `xml:"vcpu"`
 }
 
 // libvirtDisk represents a disk in libvirt domain XML.
 type libvirtDisk struct {
-	// Anonymous struct fields (need to be first for alignment)
-	Driver struct {
-		Name string `xml:"name,attr"`
-		Type string `xml:"type,attr"`
-	} `xml:"driver"`
+	// Anonymous struct fields (largest first)
 	Source struct {
 		File    string `xml:"file,attr"`
 		Pool    string `xml:"pool,attr"`
@@ -76,6 +72,10 @@ type libvirtDisk struct {
 		Bridge  string `xml:"bridge,attr"`
 		Network string `xml:"network,attr"`
 	} `xml:"source"`
+	Driver struct {
+		Name string `xml:"name,attr"`
+		Type string `xml:"type,attr"`
+	} `xml:"driver"`
 	Target struct {
 		Dev string `xml:"dev,attr"`
 		Bus string `xml:"bus,attr"`
@@ -83,12 +83,12 @@ type libvirtDisk struct {
 	Boot struct {
 		Order int `xml:"order,attr"`
 	} `xml:"boot"`
+	// String fields (16 bytes each)
+	Type   string `xml:"type,attr"`
+	Device string `xml:"device,attr"`
 	// Pointer fields (8 bytes each)
 	ReadOnly  *struct{} `xml:"readonly"`
 	Shareable *struct{} `xml:"shareable"`
-	// String fields (8 bytes each)
-	Type   string `xml:"type,attr"`
-	Device string `xml:"device,attr"`
 }
 
 // libvirtInterface represents an interface in libvirt domain XML.
@@ -795,21 +795,21 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 
 // snapshotXML represents libvirt snapshot XML structure.
 type snapshotXML struct {
-	// XMLName field (typically 24 bytes)
-	XMLName xml.Name `xml:"domainsnapshot"`
 	// Slice fields (24 bytes)
 	Disks []struct {
 		Name string `xml:"name,attr"`
 	} `xml:"disks>disk,omitempty"`
-	// Pointer fields (8 bytes)
-	Memory *struct{} `xml:"memory,omitempty"`
-	// String fields (8 bytes each)
+	// XMLName field (24 bytes)
+	XMLName xml.Name `xml:"domainsnapshot"`
+	// String fields (16 bytes each)
 	Name        string `xml:"name"`
 	Description string `xml:"description,omitempty"`
 	State       string `xml:"state,omitempty"`
 	Parent      string `xml:"parent>name,omitempty"`
 	// Int64 fields (8 bytes)
 	CreationTime int64 `xml:"creationTime"`
+	// Pointer fields (8 bytes)
+	Memory *struct{} `xml:"memory,omitempty"`
 }
 
 // buildSnapshotXML builds XML for snapshot creation.

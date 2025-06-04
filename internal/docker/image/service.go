@@ -13,7 +13,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Service provides Docker image management functionality
+// Service provides Docker image management functionality.
 type Service interface {
 	// Image operations
 	Pull(ctx context.Context, refStr string, options image.PullOptions) (io.ReadCloser, error)
@@ -43,13 +43,13 @@ type Service interface {
 	GetDigest(ctx context.Context, imageID string) (string, error)
 }
 
-// serviceImpl implements the Service interface
+// serviceImpl implements the Service interface.
 type serviceImpl struct {
 	manager docker.Manager
 	logger  logger.Logger
 }
 
-// NewService creates a new image service
+// NewService creates a new image service.
 func NewService(manager docker.Manager, logger logger.Logger) Service {
 	return &serviceImpl{
 		manager: manager,

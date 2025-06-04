@@ -11,7 +11,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// AuthHandler handles authentication-related requests
+// AuthHandler handles authentication-related requests.
 type AuthHandler struct {
 	userService  userservice.Service
 	jwtGenerator jwt.Generator
@@ -19,7 +19,7 @@ type AuthHandler struct {
 	tokenExpiry  time.Duration
 }
 
-// NewAuthHandler creates a new AuthHandler
+// NewAuthHandler creates a new AuthHandler.
 func NewAuthHandler(
 	userService userservice.Service,
 	jwtGenerator jwt.Generator,
@@ -34,23 +34,23 @@ func NewAuthHandler(
 	}
 }
 
-// LoginRequest represents a login request
+// LoginRequest represents a login request.
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
-// LoginResponse represents a login response
+// LoginResponse represents a login response.
 type LoginResponse struct {
-	// Time fields (24 bytes, must be first for alignment)
+	// Time fields (24 bytes, must be first for alignment).
 	ExpiresAt time.Time `json:"expiresAt"`
-	// Pointer fields (8 bytes)
+	// Pointer fields (8 bytes).
 	User *usermodels.User `json:"user"`
-	// String fields (16 bytes)
+	// String fields (16 bytes).
 	Token string `json:"token"`
 }
 
-// Login handles user login
+// Login handles user login.
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,7 +60,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Authenticate the user
+	// Authenticate the user.
 	u, err := h.userService.Authenticate(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
 		h.logger.Warn("Authentication failed",
@@ -70,7 +70,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Generate JWT token
+	// Generate JWT token.
 	token, err := h.jwtGenerator.GenerateWithExpiration(u, h.tokenExpiry)
 	if err != nil {
 		h.logger.Error("Failed to generate token",
@@ -80,10 +80,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Calculate expiration time
+	// Calculate expiration time.
 	expiresAt := time.Now().Add(h.tokenExpiry)
 
-	// Create response
+	// Create response.
 	response := LoginResponse{
 		Token:     token,
 		ExpiresAt: expiresAt,
@@ -97,12 +97,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// RefreshRequest represents a token refresh request
+// RefreshRequest represents a token refresh request.
 type RefreshRequest struct {
 	Token string `json:"token" binding:"required"`
 }
 
-// Refresh handles token refresh
+// Refresh handles token refresh.
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -110,7 +110,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	// Parse the token
+	// Parse the token.
 	claims, err := h.jwtGenerator.Parse(req.Token)
 	if err != nil {
 		h.logger.Warn("Invalid token for refresh",
@@ -119,7 +119,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	// Get the user
+	// Get the user.
 	u, err := h.userService.GetByID(c.Request.Context(), claims.UserID)
 	if err != nil {
 		h.logger.Warn("Failed to get user for token refresh",
@@ -129,7 +129,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	// Generate a new token
+	// Generate a new token.
 	newToken, err := h.jwtGenerator.GenerateWithExpiration(u, h.tokenExpiry)
 	if err != nil {
 		h.logger.Error("Failed to generate new token",
@@ -139,10 +139,10 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	// Calculate expiration time
+	// Calculate expiration time.
 	expiresAt := time.Now().Add(h.tokenExpiry)
 
-	// Create response
+	// Create response.
 	response := LoginResponse{
 		Token:     newToken,
 		ExpiresAt: expiresAt,

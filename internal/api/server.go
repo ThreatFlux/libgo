@@ -10,7 +10,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Server represents the HTTP server
+// Server represents the HTTP server.
 type Server struct {
 	logger     logger.Logger
 	router     *gin.Engine
@@ -22,7 +22,7 @@ type Server struct {
 
 // NewServer creates a new API server.
 func NewServer(config config.ServerConfig, logger logger.Logger) *Server {
-	// Set Gin mode
+	// Set Gin mode.
 	switch config.Mode {
 	case "release":
 		gin.SetMode(gin.ReleaseMode)
@@ -32,10 +32,10 @@ func NewServer(config config.ServerConfig, logger logger.Logger) *Server {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	// Create router
+	// Create router.
 	router := gin.New()
 
-	// Create HTTP server
+	// Create HTTP server.
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
 	httpServer := &http.Server{
 		Addr:           addr,
@@ -55,36 +55,36 @@ func NewServer(config config.ServerConfig, logger logger.Logger) *Server {
 	}
 }
 
-// Start starts the HTTP server
+// Start starts the HTTP server.
 func (s *Server) Start() error {
 	s.logger.Info("Starting API server",
 		logger.String("address", s.httpServer.Addr),
 		logger.Bool("tls", s.config.TLS.Enabled))
 
-	// Start the server
+	// Start the server.
 	if s.config.TLS.Enabled {
 		return s.httpServer.ListenAndServeTLS(s.certFile, s.keyFile)
 	}
 	return s.httpServer.ListenAndServe()
 }
 
-// Stop stops the HTTP server gracefully
+// Stop stops the HTTP server gracefully.
 func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("Stopping API server")
 	return s.httpServer.Shutdown(ctx)
 }
 
-// Router returns the Gin router
+// Router returns the Gin router.
 func (s *Server) Router() *gin.Engine {
 	return s.router
 }
 
-// ConfigureMiddleware configures the middleware for the router
+// ConfigureMiddleware configures the middleware for the router.
 func (s *Server) ConfigureMiddleware(middlewares ...gin.HandlerFunc) {
 	s.router.Use(middlewares...)
 }
 
-// Address returns the server's address
+// Address returns the server's address.
 func (s *Server) Address() string {
 	return s.httpServer.Addr
 }

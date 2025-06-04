@@ -29,13 +29,13 @@ type JWTValidator struct {
 	// Slice fields (24 bytes each)
 	secretKey []byte
 	audience  []string
+	// String fields (16 bytes each)
+	issuer        string
+	signingMethod string
 	// Interface fields (16 bytes)
 	algorithm jwt.SigningMethod
 	// Pointer fields (8 bytes)
 	publicKey *rsa.PublicKey
-	// String fields (16 bytes each)
-	issuer        string
-	signingMethod string
 }
 
 // NewJWTValidator creates a new JWTValidator.

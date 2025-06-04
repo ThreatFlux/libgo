@@ -17,7 +17,7 @@ type NetworkHandlers struct {
 	Start  Handler
 	Stop   Handler
 
-	// Bridge network handlers
+	// Bridge network handlers.
 	ListBridges  Handler
 	CreateBridge Handler
 	GetBridge    Handler

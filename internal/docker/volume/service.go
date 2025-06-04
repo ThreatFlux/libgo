@@ -9,7 +9,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Service provides Docker volume management functionality
+// Service provides Docker volume management functionality.
 type Service interface {
 	// Volume operations
 	Create(ctx context.Context, options volume.CreateOptions) (*volume.Volume, error)
@@ -27,13 +27,13 @@ type Service interface {
 	GetByName(ctx context.Context, name string) (*volume.Volume, error)
 }
 
-// serviceImpl implements the Service interface
+// serviceImpl implements the Service interface.
 type serviceImpl struct {
 	manager docker.Manager
 	logger  logger.Logger
 }
 
-// NewService creates a new volume service
+// NewService creates a new volume service.
 func NewService(manager docker.Manager, logger logger.Logger) Service {
 	return &serviceImpl{
 		manager: manager,

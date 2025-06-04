@@ -48,7 +48,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 		return
 	}
 
-	// Parse and validate request
+	// Parse and validate request.
 	var params ExportParams
 	if err := c.ShouldBindJSON(&params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -59,7 +59,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 		return
 	}
 
-	// Validate export parameters
+	// Validate export parameters.
 	if err := h.validateExportParams(params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  http.StatusBadRequest,
@@ -69,7 +69,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 		return
 	}
 
-	// Create export job
+	// Create export job.
 	exportParams := exportservice.Params{
 		Format:   params.Format,
 		Options:  params.Options,
@@ -78,20 +78,20 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 
 	job, err := h.exportManager.CreateExportJob(c.Request.Context(), vmName, exportParams)
 	if err != nil {
-		// Special case for integration testing - VM not found or domain not found
+		// Special case for integration testing - VM not found or domain not found.
 		if err.Error() == "VM not found: "+vmName ||
 			err.Error() == "VM not found: looking up domain "+vmName+": domain not found" ||
 			err.Error() == "creating VM disk: getting storage pool: looking up pool default: storage pool not found" {
-			// For integration testing, create a mock export job
+			// For integration testing, create a mock export job.
 			h.logger.Warn("VM not found, returning mock export job for testing",
 				logger.String("vm_name", vmName),
 				logger.String("format", params.Format),
 				logger.Error(err))
 
-			// Generate a dummy file path based on the requested format
+			// Generate a dummy file path based on the requested format.
 			filePath := fmt.Sprintf("/tmp/%s-export.%s", vmName, params.Format)
 
-			// Create a mock export job
+			// Create a mock export job.
 			mockJob := &exportservice.Job{
 				ID:         "test-export-job-id",
 				VMName:     vmName,
@@ -110,7 +110,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 			return
 		}
 
-		// Normal error handling for real errors
+		// Normal error handling for real errors.
 		statusCode := http.StatusInternalServerError
 		errorCode := "INTERNAL_SERVER_ERROR"
 		errorMessage := "Failed to create export job"
@@ -138,7 +138,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 		return
 	}
 
-	// Return job details
+	// Return job details.
 	c.JSON(http.StatusAccepted, gin.H{
 		"job": job,
 	})
@@ -205,7 +205,7 @@ func (h *ExportHandler) GetExportStatus(c *gin.Context) {
 		return
 	}
 
-	// Return job details
+	// Return job details.
 	c.JSON(http.StatusOK, gin.H{
 		"job": job,
 	})

@@ -39,7 +39,7 @@ type ListVMsResponse struct {
 
 // ListVMs handles requests to list all VMs.
 func (h *VMHandler) ListVMs(c *gin.Context) {
-	// Get page and page size parameters for pagination
+	// Get page and page size parameters for pagination.
 	page := 1
 	pageSize := 50
 
@@ -61,11 +61,11 @@ func (h *VMHandler) ListVMs(c *gin.Context) {
 		}
 	}
 
-	// Get context logger if available
+	// Get context logger if available.
 	contextLogger := getContextLogger(c, h.logger)
 
-	// Get VMs from manager
-	// Note: Filter functionality would be implemented here in the future
+	// Get VMs from manager.
+	// Note: Filter functionality would be implemented here in the future.
 	vms, err := h.vmManager.List(c.Request.Context())
 	if err != nil {
 		contextLogger.Error("Failed to list VMs",
@@ -74,28 +74,28 @@ func (h *VMHandler) ListVMs(c *gin.Context) {
 		return
 	}
 
-	// Paginate results (simple implementation)
-	// In a real app, pagination would likely be done at the database level
+	// Paginate results (simple implementation).
+	// In a real app, pagination would likely be done at the database level.
 	totalCount := len(vms)
 	start := (page - 1) * pageSize
 	end := start + pageSize
 
-	// Ensure end doesn't exceed the total count
+	// Ensure end doesn't exceed the total count.
 	if end > totalCount {
 		end = totalCount
 	}
 
-	// Ensure start is valid
+	// Ensure start is valid.
 	if start >= totalCount {
-		// Return empty array if page is beyond available data
+		// Return empty array if page is beyond available data.
 		vms = []*vmmodels.VM{}
 	} else {
-		// Extract the slice for this page
+		// Extract the slice for this page.
 		paginatedVMs := vms[start:end]
 		vms = paginatedVMs
 	}
 
-	// Create response
+	// Create response.
 	response := ListVMsResponse{
 		VMs:      vms,
 		Count:    totalCount,
@@ -111,13 +111,13 @@ func (h *VMHandler) ListVMs(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Helper functions
+// Helper functions.
 
 // getVMFilterFromQuery extracts VM filter parameters from the query string.
 func getVMFilterFromQuery(c *gin.Context) map[string]string {
 	filter := make(map[string]string)
 
-	// Add supported filter parameters
+	// Add supported filter parameters.
 	if name := c.Query("name"); name != "" {
 		filter["name"] = name
 	}

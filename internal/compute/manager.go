@@ -29,14 +29,14 @@ type ComputeManager struct {
 
 // ManagerConfig holds configuration for the compute manager.
 type ManagerConfig struct {
+	// Struct fields (largest first)
+	ResourceLimits ComputeResources
 	// Duration fields (8 bytes)
 	HealthCheckInterval time.Duration
 	MetricsInterval     time.Duration
-	// Struct fields
-	ResourceLimits ComputeResources
-	// Enum fields
+	// Enum fields (4 bytes)
 	DefaultBackend ComputeBackend
-	// Bool fields (1 byte)
+	// Bool fields (1 byte each)
 	AllowMixedWorkloads bool
 	EnableQuotas        bool
 }

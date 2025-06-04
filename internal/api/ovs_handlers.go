@@ -4,7 +4,7 @@ import (
 	"github.com/threatflux/libgo/internal/api/handlers"
 )
 
-// OVSHandlers holds all OVS-related handlers
+// OVSHandlers holds all OVS-related handlers.
 type OVSHandlers struct {
 	// Bridge handlers
 	CreateBridge *handlers.OVSBridgeCreateHandler

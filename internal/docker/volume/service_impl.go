@@ -57,7 +57,7 @@ func (s *serviceImpl) Remove(ctx context.Context, volumeID string, force bool) e
 	return nil
 }
 
-// Inspect returns detailed information about a volume
+// Inspect returns detailed information about a volume.
 func (s *serviceImpl) Inspect(ctx context.Context, volumeID string) (*volume.Volume, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -77,7 +77,7 @@ func (s *serviceImpl) Inspect(ctx context.Context, volumeID string) (*volume.Vol
 	return &vol, nil
 }
 
-// List returns a list of volumes
+// List returns a list of volumes.
 func (s *serviceImpl) List(ctx context.Context, options volume.ListOptions) (*volume.ListResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {

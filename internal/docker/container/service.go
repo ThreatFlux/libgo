@@ -10,7 +10,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Service provides Docker container management functionality
+// Service provides Docker container management functionality.
 type Service interface {
 	// Container lifecycle
 	Create(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, name string) (string, error)
@@ -61,13 +61,13 @@ type Service interface {
 	Prune(ctx context.Context, pruneFilters container.ListOptions) (container.PruneReport, error)
 }
 
-// serviceImpl implements the Service interface
+// serviceImpl implements the Service interface.
 type serviceImpl struct {
 	manager docker.Manager
 	logger  logger.Logger
 }
 
-// NewService creates a new container service
+// NewService creates a new container service.
 func NewService(manager docker.Manager, logger logger.Logger) Service {
 	return &serviceImpl{
 		manager: manager,

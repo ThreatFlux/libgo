@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// BridgeNetworkGetHandler handles getting bridge network details
+// BridgeNetworkGetHandler handles getting bridge network details.
 type BridgeNetworkGetHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewBridgeNetworkGetHandler creates a new BridgeNetworkGetHandler
+// NewBridgeNetworkGetHandler creates a new BridgeNetworkGetHandler.
 func NewBridgeNetworkGetHandler(networkManager network.Manager, logger logger.Logger) *BridgeNetworkGetHandler {
 	return &BridgeNetworkGetHandler{
 		networkManager: networkManager,
@@ -22,7 +22,7 @@ func NewBridgeNetworkGetHandler(networkManager network.Manager, logger logger.Lo
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *BridgeNetworkGetHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 	name := c.Param("name")
@@ -34,7 +34,7 @@ func (h *BridgeNetworkGetHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Get network details
+	// Get network details.
 	details, err := h.networkManager.GetInfo(ctx, name)
 	if err != nil {
 		h.logger.Error("Failed to get network details",
@@ -46,7 +46,7 @@ func (h *BridgeNetworkGetHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Check if it's a bridge network
+	// Check if it's a bridge network.
 	if details.Forward.Mode != "bridge" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Network is not a bridge network",

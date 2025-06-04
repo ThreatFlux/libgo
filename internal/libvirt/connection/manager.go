@@ -14,18 +14,18 @@ import (
 
 // ConnectionManager implements Manager for libvirt connections.
 type ConnectionManager struct {
-	// Mutex (sync.Mutex is typically 8 bytes)
-	mu sync.Mutex
-	// Channel (24 bytes)
+	// Channel (8 bytes)
 	connPool chan *libvirtConnection
 	// Interface fields (16 bytes each)
 	logger logger.Logger
-	// Duration (8 bytes)
-	timeout time.Duration
 	// String (16 bytes)
 	uri string
-	// Int (8 bytes on 64-bit)
+	// Duration (8 bytes)
+	timeout time.Duration
+	// Int (8 bytes)
 	maxConnections int
+	// Mutex (8 bytes)
+	mu sync.Mutex
 }
 
 // libvirtConnection implements Connection interface.

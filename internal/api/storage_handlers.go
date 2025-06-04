@@ -1,8 +1,8 @@
 package api
 
-// StorageHandlers holds all storage-related handlers
+// StorageHandlers holds all storage-related handlers.
 type StorageHandlers struct {
-	// Pool handlers
+	// Pool handlers.
 	ListPools  Handler
 	CreatePool Handler
 	GetPool    Handler
@@ -10,7 +10,7 @@ type StorageHandlers struct {
 	StartPool  Handler
 	StopPool   Handler
 
-	// Volume handlers
+	// Volume handlers.
 	ListVolumes  Handler
 	CreateVolume Handler
 	DeleteVolume Handler

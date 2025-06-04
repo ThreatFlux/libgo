@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// BridgeNetworkDeleteHandler handles deleting bridge networks
+// BridgeNetworkDeleteHandler handles deleting bridge networks.
 type BridgeNetworkDeleteHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewBridgeNetworkDeleteHandler creates a new BridgeNetworkDeleteHandler
+// NewBridgeNetworkDeleteHandler creates a new BridgeNetworkDeleteHandler.
 func NewBridgeNetworkDeleteHandler(networkManager network.Manager, logger logger.Logger) *BridgeNetworkDeleteHandler {
 	return &BridgeNetworkDeleteHandler{
 		networkManager: networkManager,
@@ -22,7 +22,7 @@ func NewBridgeNetworkDeleteHandler(networkManager network.Manager, logger logger
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 	name := c.Param("name")
@@ -34,7 +34,7 @@ func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Get network details first to verify it's a bridge network
+	// Get network details first to verify it's a bridge network.
 	details, err := h.networkManager.GetInfo(ctx, name)
 	if err != nil {
 		h.logger.Error("Failed to get network details",
@@ -46,7 +46,7 @@ func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Check if it's a bridge network
+	// Check if it's a bridge network.
 	if details.Forward.Mode != "bridge" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Network is not a bridge network",
@@ -54,7 +54,7 @@ func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Stop the network first if it's active
+	// Stop the network first if it's active.
 	if details.Active {
 		if err := h.networkManager.Stop(ctx, name); err != nil {
 			h.logger.Error("Failed to stop network before deletion",
@@ -67,7 +67,7 @@ func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 		}
 	}
 
-	// Delete the network
+	// Delete the network.
 	if err := h.networkManager.Delete(ctx, name); err != nil {
 		h.logger.Error("Failed to delete bridge network",
 			logger.String("name", name),

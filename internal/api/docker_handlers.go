@@ -2,7 +2,7 @@ package api
 
 import "github.com/threatflux/libgo/internal/api/handlers"
 
-// DockerHandlers groups all Docker-related handlers
+// DockerHandlers groups all Docker-related handlers.
 type DockerHandlers struct {
 	// Container handlers
 	CreateContainer   *handlers.DockerContainerHandler

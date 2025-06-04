@@ -555,19 +555,19 @@ func (m *ClientManager) Close() error {
 	return nil
 }
 
-// IsInitialized checks if the client manager has successfully initialized
+// IsInitialized checks if the client manager has successfully initialized.
 func (m *ClientManager) IsInitialized() bool {
 	return m.initialized.Load()
 }
 
-// IsClosed checks if the client manager has been closed
+// IsClosed checks if the client manager has been closed.
 func (m *ClientManager) IsClosed() bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.closed
 }
 
-// GetConfig returns a copy of the current client configuration
+// GetConfig returns a copy of the current client configuration.
 func (m *ClientManager) GetConfig() ClientConfig {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -581,7 +581,7 @@ func (m *ClientManager) GetConfig() ClientConfig {
 	return configCopy
 }
 
-// Wrapper methods for thread-safe access - only implementing essential ones for brevity
+// Wrapper methods for thread-safe access - only implementing essential ones for brevity.
 func (w *lockedClientWrapper) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()

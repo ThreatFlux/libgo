@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// BridgeNetworkCreateHandler handles creating libvirt bridge networks
+// BridgeNetworkCreateHandler handles creating libvirt bridge networks.
 type BridgeNetworkCreateHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewBridgeNetworkCreateHandler creates a new BridgeNetworkCreateHandler
+// NewBridgeNetworkCreateHandler creates a new BridgeNetworkCreateHandler.
 func NewBridgeNetworkCreateHandler(networkManager network.Manager, logger logger.Logger) *BridgeNetworkCreateHandler {
 	return &BridgeNetworkCreateHandler{
 		networkManager: networkManager,
@@ -22,14 +22,14 @@ func NewBridgeNetworkCreateHandler(networkManager network.Manager, logger logger
 	}
 }
 
-// CreateBridgeNetworkParams represents the request parameters for creating a bridge network
+// CreateBridgeNetworkParams represents the request parameters for creating a bridge network.
 type CreateBridgeNetworkParams struct {
 	Name       string `json:"name" binding:"required"`
 	BridgeName string `json:"bridge_name" binding:"required"`
 	AutoStart  bool   `json:"auto_start,omitempty"`
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *BridgeNetworkCreateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 	var params CreateBridgeNetworkParams
@@ -42,7 +42,7 @@ func (h *BridgeNetworkCreateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Create bridge network parameters
+	// Create bridge network parameters.
 	networkParams := &network.CreateNetworkParams{
 		Name:       params.Name,
 		BridgeName: params.BridgeName,
@@ -52,7 +52,7 @@ func (h *BridgeNetworkCreateHandler) Handle(c *gin.Context) {
 		Autostart: params.AutoStart,
 	}
 
-	// Create the network
+	// Create the network.
 	if _, err := h.networkManager.Create(ctx, networkParams); err != nil {
 		h.logger.Error("Failed to create bridge network",
 			logger.String("name", params.Name),

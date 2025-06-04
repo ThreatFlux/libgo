@@ -12,7 +12,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Error types
+// Error types.
 var (
 	ErrNotFound      = errors.New("resource not found")
 	ErrInvalidInput  = errors.New("invalid input")
@@ -22,16 +22,16 @@ var (
 	ErrInternalError = errors.New("internal server error")
 )
 
-// ErrorResponse represents a standardized error response
+// ErrorResponse represents a standardized error response.
 type ErrorResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Status  int    `json:"status"`
 }
 
-// HandleError handles errors and returns appropriate HTTP responses
+// HandleError handles errors and returns appropriate HTTP responses.
 func HandleError(c *gin.Context, err error) {
-	// Get the logger from context if available
+	// Get the logger from context if available.
 	var log logger.Logger
 	if loggerInstance, exists := c.Get("logger"); exists {
 		if l, ok := loggerInstance.(logger.Logger); ok {
@@ -39,7 +39,7 @@ func HandleError(c *gin.Context, err error) {
 		}
 	}
 
-	// If no context logger available, use default
+	// If no context logger available, use default.
 	if log == nil {
 		if l, exists := c.Get("defaultLogger"); exists {
 			if defaultLogger, ok := l.(logger.Logger); ok {
@@ -48,18 +48,18 @@ func HandleError(c *gin.Context, err error) {
 		}
 	}
 
-	// Fallback to a no-op logger if none available
+	// Fallback to a no-op logger if none available.
 	if log == nil {
 		log = &noopLogger{}
 	}
 
-	// Determine status code and error code
+	// Determine status code and error code.
 	statusCode, errorCode := mapErrorToStatusAndCode(err)
 
-	// Create sanitized message
+	// Create sanitized message.
 	message := sanitizeErrorMessage(err, statusCode)
 
-	// Log the error with context
+	// Log the error with context.
 	log.Error("API error",
 		logger.String("path", c.Request.URL.Path),
 		logger.String("method", c.Request.Method),
@@ -67,7 +67,7 @@ func HandleError(c *gin.Context, err error) {
 		logger.String("code", errorCode),
 		logger.Error(err))
 
-	// Send response
+	// Send response.
 	c.JSON(statusCode, ErrorResponse{
 		Status:  statusCode,
 		Code:    errorCode,
@@ -75,9 +75,9 @@ func HandleError(c *gin.Context, err error) {
 	})
 }
 
-// mapErrorToStatusAndCode maps domain errors to HTTP status codes and error codes
+// mapErrorToStatusAndCode maps domain errors to HTTP status codes and error codes.
 func mapErrorToStatusAndCode(err error) (int, string) {
-	// Check each error category
+	// Check each error category.
 	if status, code := checkNotFoundErrors(err); status != 0 {
 		return status, code
 	}
@@ -97,7 +97,7 @@ func mapErrorToStatusAndCode(err error) (int, string) {
 		return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
 	}
 
-	// Default case
+	// Default case.
 	return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
 }
 
@@ -184,31 +184,31 @@ func checkConflictErrors(err error) (int, string) {
 	return 0, ""
 }
 
-// sanitizeErrorMessage creates a user-friendly error message
+// sanitizeErrorMessage creates a user-friendly error message.
 func sanitizeErrorMessage(err error, statusCode int) string {
-	// For internal server errors, don't expose details
+	// For internal server errors, don't expose details.
 	if statusCode == http.StatusInternalServerError {
 		return "An internal server error occurred"
 	}
 
-	// For validation errors, include details
+	// For validation errors, include details.
 	if statusCode == http.StatusBadRequest && strings.Contains(err.Error(), "validation") {
 		return err.Error()
 	}
 
-	// For other errors, use the error message but remove sensitive info
+	// For other errors, use the error message but remove sensitive info.
 	message := err.Error()
 
-	// Remove any potential sensitive information (paths, connections strings, etc.)
-	// This is a simple approach and might need enhancement
+	// Remove any potential sensitive information (paths, connections strings, etc.).
+	// This is a simple approach and might need enhancement.
 	message = sanitizeSensitiveInfo(message)
 
 	return message
 }
 
-// sanitizeSensitiveInfo removes sensitive information from error messages
+// sanitizeSensitiveInfo removes sensitive information from error messages.
 func sanitizeSensitiveInfo(message string) string {
-	// List of patterns to sanitize
+	// List of patterns to sanitize.
 	patterns := []string{
 		"password",
 		"token",
@@ -222,10 +222,10 @@ func sanitizeSensitiveInfo(message string) string {
 		"C:\\",
 	}
 
-	// Check if message contains any sensitive pattern
+	// Check if message contains any sensitive pattern.
 	for _, pattern := range patterns {
 		if strings.Contains(strings.ToLower(message), strings.ToLower(pattern)) {
-			// If sensitive data detected, return a generic message
+			// If sensitive data detected, return a generic message.
 			return "An error occurred while processing your request"
 		}
 	}
@@ -233,7 +233,7 @@ func sanitizeSensitiveInfo(message string) string {
 	return message
 }
 
-// noopLogger provides a no-op implementation of logger.Logger
+// noopLogger provides a no-op implementation of logger.Logger.
 type noopLogger struct{}
 
 func (l *noopLogger) Debug(msg string, fields ...logger.Field)        {}
