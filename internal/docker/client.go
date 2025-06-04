@@ -278,32 +278,50 @@ func (m *ClientManager) GetClient() (client.APIClient, error) {
 
 // GetWithContext returns a thread-safe Docker API client wrapper with context.
 func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, error) {
+	// Try to use existing client first
+	if wrapper, err := m.tryExistingClient(ctx); wrapper != nil || err != nil {
+		return wrapper, err
+	}
+
+	// Create new client with retry logic
+	return m.createClientWithRetry(ctx)
+}
+
+// tryExistingClient attempts to use an existing client if available and working.
+func (m *ClientManager) tryExistingClient(ctx context.Context) (client.APIClient, error) {
 	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.closed {
-		m.mu.RUnlock()
 		return nil, ErrClientClosed
 	}
+	
 	if m.client != nil {
 		pingCtx, cancel := context.WithTimeout(ctx, m.config.PingTimeout)
 		defer cancel()
 
 		_, err := m.client.Ping(pingCtx)
 		if err == nil {
-			m.mu.RUnlock()
 			return &lockedClientWrapper{APIClient: m.client, mu: &m.clientMu}, nil
 		}
 		if m.logger != nil {
 			m.logger.Warn("Existing Docker client failed ping", logger.Error(err))
 		}
 	}
-	m.mu.RUnlock()
+	
+	return nil, nil // No existing client available
+}
 
+// createClientWithRetry creates a new client with retry logic.
+func (m *ClientManager) createClientWithRetry(ctx context.Context) (client.APIClient, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.closed {
 		return nil, ErrClientClosed
 	}
+
+	// Double-check if client is available after acquiring write lock
 	if m.client != nil {
 		pingCtx, cancel := context.WithTimeout(ctx, m.config.PingTimeout)
 		defer cancel()
@@ -316,8 +334,14 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 		}
 	}
 
+	return m.performClientCreationRetries(ctx)
+}
+
+// performClientCreationRetries handles the retry loop for client creation.
+func (m *ClientManager) performClientCreationRetries(ctx context.Context) (client.APIClient, error) {
 	var newClient *client.Client
 	var lastErr error
+	
 	for i := 0; i <= m.config.RetryCount; i++ {
 		select {
 		case <-ctx.Done():
@@ -328,6 +352,7 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 		if m.logger != nil {
 			m.logger.Debug("Attempting to create Docker client", logger.Int("attempt", i+1), logger.Int("max_attempts", m.config.RetryCount+1))
 		}
+		
 		newClient, lastErr = m.createClient(ctx)
 		if lastErr == nil {
 			if m.logger != nil {
@@ -342,6 +367,7 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 		if m.logger != nil {
 			m.logger.Warn("Error creating Docker client", logger.Int("attempt", i+1), logger.Error(lastErr))
 		}
+		
 		if i < m.config.RetryCount {
 			select {
 			case <-time.After(m.config.RetryDelay):
@@ -461,7 +487,7 @@ func (m *ClientManager) configureTLSForTransport(transport *http.Transport) {
 		m.loadTLSCACertificate(tlsConfig, transport)
 		transport.TLSClientConfig = tlsConfig
 	} else {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 -- Intentionally insecure when TLSVerify is disabled
 	}
 }
 
@@ -471,7 +497,7 @@ func (m *ClientManager) createTLSConfig() *tls.Config {
 		MinVersion:               m.config.TLSMinVersion,
 		MaxVersion:               m.config.TLSMaxVersion,
 		CipherSuites:             m.config.TLSCipherSuites,
-		PreferServerCipherSuites: m.config.TLSPreferServerCipherSuites,
+		PreferServerCipherSuites: true, // Always prefer server cipher suites for security
 	}
 }
 

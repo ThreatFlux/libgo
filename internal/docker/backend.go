@@ -592,43 +592,26 @@ func (s *BackendService) convertRuntimeInfo(containerJSON container.InspectRespo
 	return runtimeInfo
 }
 
+// safeUint64ToInt64 safely converts uint64 to int64, preventing overflow.
+func (s *BackendService) safeUint64ToInt64(value uint64) int64 {
+	if value > uint64(math.MaxInt64) {
+		return math.MaxInt64
+	}
+	return int64(value)
+}
+
 func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *compute.ResourceUsage {
 	usage := &compute.ResourceUsage{
 		Timestamp: stats.Read,
 		CPU: compute.CPUUsage{
-			UsageNanos: func() int64 {
-				if stats.CPUStats.CPUUsage.TotalUsage > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(stats.CPUStats.CPUUsage.TotalUsage)
-			}(),
-			SystemUsage: func() int64 {
-				if stats.CPUStats.SystemUsage > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(stats.CPUStats.SystemUsage)
-			}(),
-			OnlineCPUs: int(stats.CPUStats.OnlineCPUs),
+			UsageNanos:  s.safeUint64ToInt64(stats.CPUStats.CPUUsage.TotalUsage),
+			SystemUsage: s.safeUint64ToInt64(stats.CPUStats.SystemUsage),
+			OnlineCPUs:  int(stats.CPUStats.OnlineCPUs),
 		},
 		Memory: compute.MemoryUsage{
-			Usage: func() int64 {
-				if stats.MemoryStats.Usage > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(stats.MemoryStats.Usage)
-			}(),
-			MaxUsage: func() int64 {
-				if stats.MemoryStats.MaxUsage > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(stats.MemoryStats.MaxUsage)
-			}(),
-			Limit: func() int64 {
-				if stats.MemoryStats.Limit > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(stats.MemoryStats.Limit)
-			}(),
+			Usage:    s.safeUint64ToInt64(stats.MemoryStats.Usage),
+			MaxUsage: s.safeUint64ToInt64(stats.MemoryStats.MaxUsage),
+			Limit:    s.safeUint64ToInt64(stats.MemoryStats.Limit),
 		},
 	}
 
@@ -648,29 +631,19 @@ func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *co
 
 	// Network statistics
 	for _, netStats := range stats.Networks {
-		usage.Network.RxBytes += int64(netStats.RxBytes)
-		usage.Network.TxBytes += int64(netStats.TxBytes)
-		usage.Network.RxPackets += int64(netStats.RxPackets)
-		usage.Network.TxPackets += int64(netStats.TxPackets)
+		usage.Network.RxBytes += s.safeUint64ToInt64(netStats.RxBytes)
+		usage.Network.TxBytes += s.safeUint64ToInt64(netStats.TxBytes)
+		usage.Network.RxPackets += s.safeUint64ToInt64(netStats.RxPackets)
+		usage.Network.TxPackets += s.safeUint64ToInt64(netStats.TxPackets)
 	}
 
 	// Storage statistics
 	for _, bioStats := range stats.BlkioStats.IoServiceBytesRecursive {
 		switch strings.ToLower(bioStats.Op) {
 		case "read":
-			usage.Storage.ReadBytes += func() int64 {
-				if bioStats.Value > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(bioStats.Value)
-			}()
+			usage.Storage.ReadBytes += s.safeUint64ToInt64(bioStats.Value)
 		case "write":
-			usage.Storage.WriteBytes += func() int64 {
-				if bioStats.Value > uint64(math.MaxInt64) {
-					return math.MaxInt64
-				}
-				return int64(bioStats.Value)
-			}()
+			usage.Storage.WriteBytes += s.safeUint64ToInt64(bioStats.Value)
 		}
 	}
 

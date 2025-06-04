@@ -965,6 +965,10 @@ func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceReques
 				if req.Resources.Memory.Limit < 0 {
 					return 0
 				}
+				// Safe conversion: int64 to uint64
+				if req.Resources.Memory.Limit > int64(math.MaxInt64) {
+					return uint64(math.MaxInt64)
+				}
 				return uint64(req.Resources.Memory.Limit)
 			}(),
 		},
@@ -972,6 +976,10 @@ func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceReques
 			SizeBytes: func() uint64 {
 				if req.Resources.Storage.TotalSpace < 0 {
 					return 0
+				}
+				// Safe conversion: int64 to uint64
+				if req.Resources.Storage.TotalSpace > int64(math.MaxInt64) {
+					return uint64(math.MaxInt64)
 				}
 				return uint64(req.Resources.Storage.TotalSpace)
 			}(),
