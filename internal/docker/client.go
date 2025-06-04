@@ -408,24 +408,20 @@ func (m *ClientManager) createClient(ctx context.Context) (*client.Client, error
 
 // createSecureHTTPClient creates an *http.Client with TLS and timeout settings.
 func (m *ClientManager) createSecureHTTPClient() *http.Client {
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			dialerFunc := m.config.DialContext
-			if dialerFunc == nil {
-				dialerFunc = (&net.Dialer{
-					Timeout:   m.config.ConnectionTimeout,
-					KeepAlive: m.config.KeepAlive,
-				}).DialContext
-			}
+	transport := m.createHTTPTransport()
+	m.configureTLSForTransport(transport)
 
-			if strings.HasPrefix(m.config.Host, "unix://") {
-				socketPath := strings.TrimPrefix(m.config.Host, "unix://")
-				return dialerFunc(ctx, "unix", socketPath)
-			}
+	return &http.Client{
+		Transport: transport,
+		Timeout:   m.config.RequestTimeout,
+	}
+}
 
-			return dialerFunc(ctx, network, addr)
-		},
+// createHTTPTransport creates the base HTTP transport with connection settings.
+func (m *ClientManager) createHTTPTransport() *http.Transport {
+	return &http.Transport{
+		Proxy:       http.ProxyFromEnvironment,
+		DialContext: m.createDialContextFunc(),
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          m.config.MaxIdleConns,
 		IdleConnTimeout:       m.config.IdleConnTimeout,
@@ -435,52 +431,82 @@ func (m *ClientManager) createSecureHTTPClient() *http.Client {
 		MaxConnsPerHost:       m.config.MaxConnsPerHost,
 		ResponseHeaderTimeout: m.config.ResponseHeaderTimeout,
 	}
+}
 
+// createDialContextFunc creates the dial context function for the transport.
+func (m *ClientManager) createDialContextFunc() func(context.Context, string, string) (net.Conn, error) {
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		dialerFunc := m.config.DialContext
+		if dialerFunc == nil {
+			dialerFunc = (&net.Dialer{
+				Timeout:   m.config.ConnectionTimeout,
+				KeepAlive: m.config.KeepAlive,
+			}).DialContext
+		}
+
+		if strings.HasPrefix(m.config.Host, "unix://") {
+			socketPath := strings.TrimPrefix(m.config.Host, "unix://")
+			return dialerFunc(ctx, "unix", socketPath)
+		}
+
+		return dialerFunc(ctx, network, addr)
+	}
+}
+
+// configureTLSForTransport configures TLS settings for the HTTP transport.
+func (m *ClientManager) configureTLSForTransport(transport *http.Transport) {
 	if m.config.TLSVerify {
-		tlsConfig := &tls.Config{
-			MinVersion:               m.config.TLSMinVersion,
-			MaxVersion:               m.config.TLSMaxVersion,
-			CipherSuites:             m.config.TLSCipherSuites,
-			PreferServerCipherSuites: m.config.TLSPreferServerCipherSuites,
-		}
-
-		if m.config.TLSCertPath != "" && m.config.TLSKeyPath != "" {
-			cert, err := tls.LoadX509KeyPair(m.config.TLSCertPath, m.config.TLSKeyPath)
-			if err != nil {
-				if m.logger != nil {
-					m.logger.Error("Failed to load TLS key pair", logger.Error(err))
-				}
-				return &http.Client{Transport: transport}
-			}
-			tlsConfig.Certificates = []tls.Certificate{cert}
-		}
-
-		if m.config.TLSCAPath != "" {
-			caCert, err := os.ReadFile(m.config.TLSCAPath)
-			if err != nil {
-				if m.logger != nil {
-					m.logger.Error("Failed to read CA certificate", logger.Error(err))
-				}
-				return &http.Client{Transport: transport}
-			}
-			caCertPool := x509.NewCertPool()
-			if !caCertPool.AppendCertsFromPEM(caCert) {
-				if m.logger != nil {
-					m.logger.Error("Failed to append CA certificate to pool")
-				}
-				return &http.Client{Transport: transport}
-			}
-			tlsConfig.RootCAs = caCertPool
-		}
-
+		tlsConfig := m.createTLSConfig()
+		m.loadTLSCertificates(tlsConfig, transport)
+		m.loadTLSCACertificate(tlsConfig, transport)
 		transport.TLSClientConfig = tlsConfig
 	} else {
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
+}
 
-	return &http.Client{
-		Transport: transport,
-		Timeout:   m.config.RequestTimeout,
+// createTLSConfig creates the base TLS configuration.
+func (m *ClientManager) createTLSConfig() *tls.Config {
+	return &tls.Config{
+		MinVersion:               m.config.TLSMinVersion,
+		MaxVersion:               m.config.TLSMaxVersion,
+		CipherSuites:             m.config.TLSCipherSuites,
+		PreferServerCipherSuites: m.config.TLSPreferServerCipherSuites,
+	}
+}
+
+// loadTLSCertificates loads client certificates for mutual TLS.
+func (m *ClientManager) loadTLSCertificates(tlsConfig *tls.Config, transport *http.Transport) {
+	if m.config.TLSCertPath != "" && m.config.TLSKeyPath != "" {
+		cert, err := tls.LoadX509KeyPair(m.config.TLSCertPath, m.config.TLSKeyPath)
+		if err != nil {
+			if m.logger != nil {
+				m.logger.Error("Failed to load TLS key pair", logger.Error(err))
+			}
+			return
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+}
+
+// loadTLSCACertificate loads CA certificate for server verification.
+func (m *ClientManager) loadTLSCACertificate(tlsConfig *tls.Config, transport *http.Transport) {
+	if m.config.TLSCAPath != "" {
+		caCert, err := os.ReadFile(m.config.TLSCAPath)
+		if err != nil {
+			if m.logger != nil {
+				m.logger.Error("Failed to read CA certificate", logger.Error(err))
+			}
+			return
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			if m.logger != nil {
+				m.logger.Error("Failed to append CA certificate to pool")
+			}
+			return
+		}
+		tlsConfig.RootCAs = caCertPool
 	}
 }
 
