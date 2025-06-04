@@ -18,7 +18,7 @@ type DockerContainerHandler struct {
 	logger           logger.Logger
 }
 
-// NewDockerContainerHandler creates a new Docker container handler
+// NewDockerContainerHandler creates a new Docker container handler.
 func NewDockerContainerHandler(containerService containerSvc.Service, logger logger.Logger) *DockerContainerHandler {
 	return &DockerContainerHandler{
 		containerService: containerService,
@@ -26,7 +26,7 @@ func NewDockerContainerHandler(containerService containerSvc.Service, logger log
 	}
 }
 
-// CreateContainerRequest represents the request to create a container
+// CreateContainerRequest represents the request to create a container.
 type CreateContainerRequest struct {
 	// Struct fields (need to be first for alignment)
 	HostConfig container.HostConfig `json:"host_config,omitempty"`
@@ -44,7 +44,7 @@ type CreateContainerRequest struct {
 	User       string `json:"user,omitempty"`
 }
 
-// ContainerResponse represents a container in responses
+// ContainerResponse represents a container in responses.
 type ContainerResponse struct {
 	// Slice fields (24 bytes)
 	Ports []PortMapping `json:"ports,omitempty"`
@@ -60,7 +60,7 @@ type ContainerResponse struct {
 	Status string `json:"status"`
 }
 
-// PortMapping represents a port mapping
+// PortMapping represents a port mapping.
 type PortMapping struct {
 	Type    string `json:"type"`
 	IP      string `json:"ip,omitempty"`
@@ -68,7 +68,7 @@ type PortMapping struct {
 	Public  uint16 `json:"public"`
 }
 
-// CreateContainer creates a new Docker container
+// CreateContainer creates a new Docker container.
 func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_create"),
@@ -113,7 +113,7 @@ func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 	})
 }
 
-// ListContainers lists Docker containers
+// ListContainers lists Docker containers.
 func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_list"),

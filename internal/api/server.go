@@ -20,7 +20,7 @@ type Server struct {
 	config     config.ServerConfig
 }
 
-// NewServer creates a new API server
+// NewServer creates a new API server.
 func NewServer(config config.ServerConfig, logger logger.Logger) *Server {
 	// Set Gin mode
 	switch config.Mode {

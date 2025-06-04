@@ -9,10 +9,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Ensure the docker package is used (this prevents import errors)
+// Ensure the docker package is used (this prevents import errors).
 var _ docker.Manager
 
-// Create creates a new network
+// Create creates a new network.
 func (s *serviceImpl) Create(ctx context.Context, name string, options network.CreateOptions) (network.CreateResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *serviceImpl) Create(ctx context.Context, name string, options network.C
 	return response, nil
 }
 
-// Remove removes a network
+// Remove removes a network.
 func (s *serviceImpl) Remove(ctx context.Context, networkID string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *serviceImpl) Remove(ctx context.Context, networkID string) error {
 	return nil
 }
 
-// Connect connects a container to a network
+// Connect connects a container to a network.
 func (s *serviceImpl) Connect(ctx context.Context, networkID, containerID string, config *network.EndpointSettings) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -77,7 +77,7 @@ func (s *serviceImpl) Connect(ctx context.Context, networkID, containerID string
 	return nil
 }
 
-// Disconnect disconnects a container from a network
+// Disconnect disconnects a container from a network.
 func (s *serviceImpl) Disconnect(ctx context.Context, networkID, containerID string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *serviceImpl) Disconnect(ctx context.Context, networkID, containerID str
 	return nil
 }
 
-// Inspect returns detailed information about a network
+// Inspect returns detailed information about a network.
 func (s *serviceImpl) Inspect(ctx context.Context, networkID string, options network.InspectOptions) (*network.Inspect, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *serviceImpl) Inspect(ctx context.Context, networkID string, options net
 	return &inspect, nil
 }
 
-// List returns a list of networks
+// List returns a list of networks.
 func (s *serviceImpl) List(ctx context.Context, options network.ListOptions) ([]network.Summary, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -139,7 +139,7 @@ func (s *serviceImpl) List(ctx context.Context, options network.ListOptions) ([]
 	return networks, nil
 }
 
-// Prune removes unused networks
+// Prune removes unused networks.
 func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (network.PruneReport, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -158,7 +158,7 @@ func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (netw
 	return report, nil
 }
 
-// Exists checks if a network exists
+// Exists checks if a network exists.
 func (s *serviceImpl) Exists(ctx context.Context, networkID string) (bool, error) {
 	_, err := s.Inspect(ctx, networkID, network.InspectOptions{})
 	if err != nil {
@@ -167,7 +167,7 @@ func (s *serviceImpl) Exists(ctx context.Context, networkID string) (bool, error
 	return true, nil
 }
 
-// GetByName returns a network by name
+// GetByName returns a network by name.
 func (s *serviceImpl) GetByName(ctx context.Context, name string) (*network.Inspect, error) {
 	return s.Inspect(ctx, name, network.InspectOptions{})
 }

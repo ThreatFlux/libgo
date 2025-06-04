@@ -9,7 +9,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Service provides Docker network management functionality
+// Service provides Docker network management functionality.
 type Service interface {
 	// Network operations
 	Create(ctx context.Context, name string, options network.CreateOptions) (network.CreateResponse, error)
@@ -29,13 +29,13 @@ type Service interface {
 	GetByName(ctx context.Context, name string) (*network.Inspect, error)
 }
 
-// serviceImpl implements the Service interface
+// serviceImpl implements the Service interface.
 type serviceImpl struct {
 	manager docker.Manager
 	logger  logger.Logger
 }
 
-// NewService creates a new network service
+// NewService creates a new network service.
 func NewService(manager docker.Manager, logger logger.Logger) Service {
 	return &serviceImpl{
 		manager: manager,

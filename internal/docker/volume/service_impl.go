@@ -9,10 +9,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Ensure the docker package is used (this prevents import errors)
+// Ensure the docker package is used (this prevents import errors).
 var _ docker.Manager
 
-// Create creates a new volume
+// Create creates a new volume.
 func (s *serviceImpl) Create(ctx context.Context, options volume.CreateOptions) (*volume.Volume, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *serviceImpl) Create(ctx context.Context, options volume.CreateOptions) 
 	return &vol, nil
 }
 
-// Remove removes a volume
+// Remove removes a volume.
 func (s *serviceImpl) Remove(ctx context.Context, volumeID string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -95,7 +95,7 @@ func (s *serviceImpl) List(ctx context.Context, options volume.ListOptions) (*vo
 	return &response, nil
 }
 
-// Prune removes unused volumes
+// Prune removes unused volumes.
 func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (volume.PruneReport, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -115,7 +115,7 @@ func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (volu
 	return report, nil
 }
 
-// Exists checks if a volume exists
+// Exists checks if a volume exists.
 func (s *serviceImpl) Exists(ctx context.Context, volumeID string) (bool, error) {
 	_, err := s.Inspect(ctx, volumeID)
 	if err != nil {
@@ -124,7 +124,7 @@ func (s *serviceImpl) Exists(ctx context.Context, volumeID string) (bool, error)
 	return true, nil
 }
 
-// GetByName returns a volume by name
+// GetByName returns a volume by name.
 func (s *serviceImpl) GetByName(ctx context.Context, name string) (*volume.Volume, error) {
 	return s.Inspect(ctx, name)
 }
