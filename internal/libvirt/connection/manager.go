@@ -14,12 +14,12 @@ import (
 
 // ConnectionManager implements Manager for libvirt connections.
 type ConnectionManager struct {
-	uri            string
 	connPool       chan *libvirtConnection
 	logger         logger.Logger
 	mu             sync.Mutex
-	maxConnections int
 	timeout        time.Duration
+	uri            string
+	maxConnections int
 }
 
 // libvirtConnection implements Connection interface.

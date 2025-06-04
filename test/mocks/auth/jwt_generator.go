@@ -20,9 +20,9 @@ import (
 
 // MockGenerator is a mock of Generator interface.
 type MockGenerator struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockGeneratorMockRecorder
-	isgomock struct{}
 }
 
 // MockGeneratorMockRecorder is the mock recorder for MockGenerator.

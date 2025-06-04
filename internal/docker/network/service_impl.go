@@ -5,8 +5,12 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
+	"github.com/threatflux/libgo/internal/docker"
 	"github.com/threatflux/libgo/pkg/logger"
 )
+
+// Ensure the docker package is used (this prevents import errors)
+var _ docker.Manager
 
 // Create creates a new network
 func (s *serviceImpl) Create(ctx context.Context, name string, options network.CreateOptions) (network.CreateResponse, error) {

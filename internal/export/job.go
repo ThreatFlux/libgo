@@ -7,20 +7,20 @@ import (
 	"github.com/google/uuid"
 )
 
-// jobStore provides thread-safe storage for export jobs
+// jobStore provides thread-safe storage for export jobs.
 type jobStore struct {
 	jobs map[string]*Job
 	mu   sync.RWMutex
 }
 
-// newJobStore creates a new job store
+// newJobStore creates a new job store.
 func newJobStore() *jobStore {
 	return &jobStore{
 		jobs: make(map[string]*Job),
 	}
 }
 
-// createJob creates a new export job
+// createJob creates a new export job.
 func (s *jobStore) createJob(vmName string, format string, options map[string]string) *Job {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -40,7 +40,7 @@ func (s *jobStore) createJob(vmName string, format string, options map[string]st
 	return job
 }
 
-// getJob gets a job by ID
+// getJob gets a job by ID.
 func (s *jobStore) getJob(id string) (*Job, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -49,7 +49,7 @@ func (s *jobStore) getJob(id string) (*Job, bool) {
 	return job, exists
 }
 
-// listJobs returns all jobs
+// listJobs returns all jobs.
 func (s *jobStore) listJobs() []*Job {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -62,7 +62,7 @@ func (s *jobStore) listJobs() []*Job {
 	return jobs
 }
 
-// updateJobStatus updates a job's status
+// updateJobStatus updates a job's status.
 func (s *jobStore) updateJobStatus(id string, status Status, progress int, err error) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -86,7 +86,7 @@ func (s *jobStore) updateJobStatus(id string, status Status, progress int, err e
 	return true
 }
 
-// setJobOutputPath sets the output path for a job
+// setJobOutputPath sets the output path for a job.
 func (s *jobStore) setJobOutputPath(id string, path string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

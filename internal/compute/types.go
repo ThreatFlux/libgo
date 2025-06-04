@@ -39,93 +39,63 @@ const (
 
 // ComputeInstance represents a unified compute resource (VM or Container).
 type ComputeInstance struct {
-	// Identity
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	UUID   string `json:"uuid,omitempty"`
-	UserID uint   `json:"user_id"`
-
-	// Type and Backend
-	Type    ComputeInstanceType `json:"type"`
-	Backend ComputeBackend      `json:"backend"`
-
-	// State
-	State       ComputeInstanceState `json:"state"`
-	Status      string               `json:"status"` // Detailed status message
-	HealthState string               `json:"health_state,omitempty"`
-
-	// Configuration
-	Config ComputeInstanceConfig `json:"config"`
-
-	// Resources
-	Resources ComputeResources `json:"resources"`
-	Limits    ComputeResources `json:"limits,omitempty"`
-
-	// Networking
-	Networks []NetworkAttachment `json:"networks"`
-
-	// Storage
-	Storage []StorageAttachment `json:"storage"`
-
-	// Metadata
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-
-	// Runtime Information
-	RuntimeInfo RuntimeInfo `json:"runtime_info"`
-
-	// Timestamps
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
-	StartedAt  *time.Time `json:"started_at,omitempty"`
-	FinishedAt *time.Time `json:"finished_at,omitempty"`
-
-	// Backend-specific data (opaque)
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+	Labels      map[string]string      `json:"labels,omitempty"`
+	Annotations map[string]string      `json:"annotations,omitempty"`
+	StartedAt   *time.Time             `json:"started_at,omitempty"`
+	FinishedAt  *time.Time             `json:"finished_at,omitempty"`
 	BackendData map[string]interface{} `json:"backend_data,omitempty"`
+	HealthState string                 `json:"health_state,omitempty"`
+	Name        string                 `json:"name"`
+	Backend     ComputeBackend         `json:"backend"`
+	Type        ComputeInstanceType    `json:"type"`
+	State       ComputeInstanceState   `json:"state"`
+	Status      string                 `json:"status"`
+	UUID        string                 `json:"uuid,omitempty"`
+	ID          string                 `json:"id"`
+	Storage     []StorageAttachment    `json:"storage"`
+	Networks    []NetworkAttachment    `json:"networks"`
+	Config      ComputeInstanceConfig  `json:"config"`
+	Resources   ComputeResources       `json:"resources"`
+	Limits      ComputeResources       `json:"limits,omitempty"`
+	RuntimeInfo RuntimeInfo            `json:"runtime_info"`
+	UserID      uint                   `json:"user_id"`
 }
 
 // ComputeInstanceConfig holds instance configuration.
 type ComputeInstanceConfig struct {
-	// Common configuration
-	Image       string            `json:"image"`
-	Command     []string          `json:"command,omitempty"`
-	Args        []string          `json:"args,omitempty"`
-	Environment map[string]string `json:"environment,omitempty"`
-	WorkingDir  string            `json:"working_dir,omitempty"`
-	User        string            `json:"user,omitempty"`
-
-	// VM-specific configuration
-	Firmware   string           `json:"firmware,omitempty"`
-	SecureBoot bool             `json:"secure_boot,omitempty"`
-	TPMEnabled bool             `json:"tpm_enabled,omitempty"`
-	CloudInit  *CloudInitConfig `json:"cloud_init,omitempty"`
-
-	// Container-specific configuration
-	Privileged      bool             `json:"privileged,omitempty"`
-	Capabilities    []string         `json:"capabilities,omitempty"`
-	SecurityContext *SecurityContext `json:"security_context,omitempty"`
-
-	// Restart policy
-	RestartPolicy RestartPolicy `json:"restart_policy"`
-
-	// Health check
-	HealthCheck *HealthCheck `json:"health_check,omitempty"`
+	CloudInit       *CloudInitConfig  `json:"cloud_init,omitempty"`
+	SecurityContext *SecurityContext  `json:"security_context,omitempty"`
+	Environment     map[string]string `json:"environment,omitempty"`
+	HealthCheck     *HealthCheck      `json:"health_check,omitempty"`
+	WorkingDir      string            `json:"working_dir,omitempty"`
+	User            string            `json:"user,omitempty"`
+	Firmware        string            `json:"firmware,omitempty"`
+	Image           string            `json:"image"`
+	Args            []string          `json:"args,omitempty"`
+	Command         []string          `json:"command,omitempty"`
+	RestartPolicy   RestartPolicy     `json:"restart_policy"`
+	Capabilities    []string          `json:"capabilities,omitempty"`
+	Privileged      bool              `json:"privileged,omitempty"`
+	SecureBoot      bool              `json:"secure_boot,omitempty"`
+	TPMEnabled      bool              `json:"tpm_enabled,omitempty"`
 }
 
 // CloudInitConfig holds cloud-init configuration for VMs.
 type CloudInitConfig struct {
-	Enabled     bool             `json:"enabled"`
 	UserData    string           `json:"user_data,omitempty"`
 	MetaData    string           `json:"meta_data,omitempty"`
 	NetworkData string           `json:"network_data,omitempty"`
 	VendorData  string           `json:"vendor_data,omitempty"`
-	KeyPairs    []string         `json:"key_pairs,omitempty"`
 	Hostname    string           `json:"hostname,omitempty"`
+	KeyPairs    []string         `json:"key_pairs,omitempty"`
 	Users       []CloudInitUser  `json:"users,omitempty"`
 	Packages    []string         `json:"packages,omitempty"`
 	RunCommands []string         `json:"run_commands,omitempty"`
 	WriteFiles  []CloudInitFile  `json:"write_files,omitempty"`
 	MountPoints []CloudInitMount `json:"mount_points,omitempty"`
+	Enabled     bool             `json:"enabled"`
 }
 
 // CloudInitUser represents a user in cloud-init.
@@ -211,22 +181,22 @@ type HealthCheck struct {
 
 // ComputeResources represents resource allocation.
 type ComputeResources struct {
-	CPU     CPUResources     `json:"cpu"`
 	Memory  MemoryResources  `json:"memory"`
 	Storage StorageResources `json:"storage,omitempty"`
-	Network NetworkResources `json:"network,omitempty"`
 	GPU     []GPUResources   `json:"gpu,omitempty"`
+	CPU     CPUResources     `json:"cpu"`
+	Network NetworkResources `json:"network,omitempty"`
 }
 
 // CPUResources represents CPU allocation.
 type CPUResources struct {
-	Cores    float64     `json:"cores"`              // Number of CPU cores (can be fractional)
-	Shares   int64       `json:"shares,omitempty"`   // CPU shares (relative weight)
-	Quota    int64       `json:"quota,omitempty"`    // CPU quota in microseconds
-	Period   int64       `json:"period,omitempty"`   // CPU period in microseconds
-	SetCPUs  string      `json:"set_cpus,omitempty"` // CPU affinity (e.g., "0-3,8-11")
-	SetMems  string      `json:"set_mems,omitempty"` // Memory node affinity
-	Topology CPUTopology `json:"topology,omitempty"` // CPU topology for VMs
+	SetCPUs  string      `json:"set_cpus,omitempty"`
+	SetMems  string      `json:"set_mems,omitempty"`
+	Topology CPUTopology `json:"topology,omitempty"`
+	Cores    float64     `json:"cores"`
+	Shares   int64       `json:"shares,omitempty"`
+	Quota    int64       `json:"quota,omitempty"`
+	Period   int64       `json:"period,omitempty"`
 }
 
 // CPUTopology defines CPU topology for VMs.
@@ -238,18 +208,18 @@ type CPUTopology struct {
 
 // MemoryResources represents memory allocation.
 type MemoryResources struct {
-	Limit       int64 `json:"limit"`                 // Memory limit in bytes
-	Request     int64 `json:"request,omitempty"`     // Memory request in bytes
-	Swap        int64 `json:"swap,omitempty"`        // Swap limit in bytes
-	Reservation int64 `json:"reservation,omitempty"` // Memory reservation in bytes
-	Swappiness  *int  `json:"swappiness,omitempty"`  // Swappiness (0-100)
+	Swappiness  *int  `json:"swappiness,omitempty"`
+	Limit       int64 `json:"limit"`
+	Request     int64 `json:"request,omitempty"`
+	Swap        int64 `json:"swap,omitempty"`
+	Reservation int64 `json:"reservation,omitempty"`
 }
 
 // StorageResources represents storage allocation.
 type StorageResources struct {
-	TotalSpace int64       `json:"total_space,omitempty"` // Total storage space in bytes
-	UsedSpace  int64       `json:"used_space,omitempty"`  // Used storage space in bytes
-	IOPS       *IOPSLimits `json:"iops,omitempty"`        // IOPS limits
+	IOPS       *IOPSLimits `json:"iops,omitempty"`
+	TotalSpace int64       `json:"total_space,omitempty"`
+	UsedSpace  int64       `json:"used_space,omitempty"`
 }
 
 // IOPSLimits represents IOPS limitations.
@@ -276,19 +246,19 @@ type GPUResources struct {
 
 // NetworkAttachment represents a network interface attachment.
 type NetworkAttachment struct {
-	Name        string            `json:"name"`
-	Interface   string            `json:"interface"`
-	Network     string            `json:"network"`
+	Options     map[string]string `json:"options,omitempty"`
+	Firewall    *FirewallConfig   `json:"firewall,omitempty"`
+	IPAddress   string            `json:"ip_address,omitempty"`
 	NetworkID   string            `json:"network_id,omitempty"`
 	Driver      string            `json:"driver,omitempty"`
 	MacAddress  string            `json:"mac_address,omitempty"`
-	IPAddress   string            `json:"ip_address,omitempty"`
+	Name        string            `json:"name"`
 	IPv6Address string            `json:"ipv6_address,omitempty"`
 	Gateway     string            `json:"gateway,omitempty"`
+	Network     string            `json:"network"`
+	Interface   string            `json:"interface"`
 	DNS         []string          `json:"dns,omitempty"`
 	Routes      []Route           `json:"routes,omitempty"`
-	Options     map[string]string `json:"options,omitempty"`
-	Firewall    *FirewallConfig   `json:"firewall,omitempty"`
 }
 
 // Route represents a network route.
@@ -301,8 +271,8 @@ type Route struct {
 
 // FirewallConfig represents firewall configuration for a network interface.
 type FirewallConfig struct {
-	Enabled bool           `json:"enabled"`
 	Rules   []FirewallRule `json:"rules,omitempty"`
+	Enabled bool           `json:"enabled"`
 }
 
 // FirewallRule represents a firewall rule.
@@ -317,60 +287,49 @@ type FirewallRule struct {
 
 // StorageAttachment represents a storage volume attachment.
 type StorageAttachment struct {
+	Encryption *EncryptionConfig `json:"encryption,omitempty"`
+	Mode       string            `json:"mode,omitempty"`
+	IOMode     string            `json:"io_mode,omitempty"`
+	VolumeID   string            `json:"volume_id,omitempty"`
+	Driver     string            `json:"driver,omitempty"`
+	Type       string            `json:"type"`
 	Name       string            `json:"name"`
 	Source     string            `json:"source"`
 	Target     string            `json:"target"`
-	VolumeID   string            `json:"volume_id,omitempty"`
-	Driver     string            `json:"driver,omitempty"`
-	Type       string            `json:"type"`           // bind, volume, tmpfs
-	Mode       string            `json:"mode,omitempty"` // ro, rw
+	Format     string            `json:"format,omitempty"`
+	Cache      string            `json:"cache,omitempty"`
 	Options    []string          `json:"options,omitempty"`
 	Size       int64             `json:"size,omitempty"`
-	Format     string            `json:"format,omitempty"`  // qcow2, raw, etc.
-	Cache      string            `json:"cache,omitempty"`   // none, writethrough, writeback
-	IOMode     string            `json:"io_mode,omitempty"` // native, threads
 	Backup     bool              `json:"backup,omitempty"`
 	Snapshot   bool              `json:"snapshot,omitempty"`
-	Encryption *EncryptionConfig `json:"encryption,omitempty"`
 }
 
 // EncryptionConfig represents storage encryption configuration.
 type EncryptionConfig struct {
-	Enabled   bool   `json:"enabled"`
 	Algorithm string `json:"algorithm,omitempty"`
 	KeyID     string `json:"key_id,omitempty"`
+	Enabled   bool   `json:"enabled"`
 }
 
 // RuntimeInfo holds runtime information about a compute instance.
 type RuntimeInfo struct {
-	// Process information
-	ProcessID int `json:"process_id,omitempty"`
-	ExitCode  int `json:"exit_code,omitempty"`
-
-	// Resource usage
-	ResourceUsage ResourceUsage `json:"resource_usage"`
-
-	// Network information
-	Networks map[string]NetworkRuntimeInfo `json:"networks,omitempty"`
-
-	// Storage information
-	Storage map[string]StorageRuntimeInfo `json:"storage,omitempty"`
-
-	// Performance metrics
-	Performance PerformanceMetrics `json:"performance,omitempty"`
-
-	// Host information
-	HostInfo HostInfo `json:"host_info"`
+	Networks      map[string]NetworkRuntimeInfo `json:"networks,omitempty"`
+	Storage       map[string]StorageRuntimeInfo `json:"storage,omitempty"`
+	HostInfo      HostInfo                      `json:"host_info"`
+	ResourceUsage ResourceUsage                 `json:"resource_usage"`
+	Performance   PerformanceMetrics            `json:"performance,omitempty"`
+	ProcessID     int                           `json:"process_id,omitempty"`
+	ExitCode      int                           `json:"exit_code,omitempty"`
 }
 
 // ResourceUsage represents current resource usage.
 type ResourceUsage struct {
-	CPU       CPUUsage     `json:"cpu"`
+	Timestamp time.Time    `json:"timestamp"`
+	GPU       []GPUUsage   `json:"gpu,omitempty"`
 	Memory    MemoryUsage  `json:"memory"`
 	Network   NetworkUsage `json:"network"`
 	Storage   StorageUsage `json:"storage"`
-	GPU       []GPUUsage   `json:"gpu,omitempty"`
-	Timestamp time.Time    `json:"timestamp"`
+	CPU       CPUUsage     `json:"cpu"`
 }
 
 // CPUUsage represents CPU usage statistics.
@@ -434,9 +393,9 @@ type NetworkRuntimeInfo struct {
 	IPAddress     string `json:"ip_address"`
 	IPv6Address   string `json:"ipv6_address,omitempty"`
 	MacAddress    string `json:"mac_address"`
+	State         string `json:"state"`
 	MTU           int    `json:"mtu"`
-	State         string `json:"state"`           // up, down, unknown
-	Speed         int64  `json:"speed,omitempty"` // Link speed in bps
+	Speed         int64  `json:"speed,omitempty"`
 }
 
 // StorageRuntimeInfo represents runtime storage information.
@@ -473,25 +432,25 @@ type HostInfo struct {
 	KernelVersion string `json:"kernel_version"`
 	OSType        string `json:"os_type"`
 	Architecture  string `json:"architecture"`
+	Hypervisor    string `json:"hypervisor"`
 	CPUCount      int    `json:"cpu_count"`
 	TotalMemory   int64  `json:"total_memory"`
-	Hypervisor    string `json:"hypervisor"` // kvm, docker
 }
 
 // ComputeInstanceRequest represents a request to create a compute instance.
 type ComputeInstanceRequest struct {
-	Name        string                `json:"name" validate:"required"`
-	UUID        string                `json:"uuid,omitempty"`
-	UserID      uint                  `json:"user_id,omitempty"`
-	Type        ComputeInstanceType   `json:"type" validate:"required"`
-	Backend     ComputeBackend        `json:"backend,omitempty"`
-	Config      ComputeInstanceConfig `json:"config" validate:"required"`
-	Resources   ComputeResources      `json:"resources" validate:"required"`
 	Limits      *ComputeResources     `json:"limits,omitempty"`
-	Networks    []NetworkAttachment   `json:"networks,omitempty"`
-	Storage     []StorageAttachment   `json:"storage,omitempty"`
 	Labels      map[string]string     `json:"labels,omitempty"`
 	Annotations map[string]string     `json:"annotations,omitempty"`
+	Backend     ComputeBackend        `json:"backend,omitempty"`
+	UUID        string                `json:"uuid,omitempty"`
+	Type        ComputeInstanceType   `json:"type" validate:"required"`
+	Name        string                `json:"name" validate:"required"`
+	Storage     []StorageAttachment   `json:"storage,omitempty"`
+	Networks    []NetworkAttachment   `json:"networks,omitempty"`
+	Config      ComputeInstanceConfig `json:"config" validate:"required"`
+	Resources   ComputeResources      `json:"resources" validate:"required"`
+	UserID      uint                  `json:"user_id,omitempty"`
 	AutoStart   bool                  `json:"auto_start,omitempty"`
 }
 
@@ -506,13 +465,13 @@ type ComputeInstanceUpdate struct {
 
 // ComputeInstanceListOptions represents options for listing compute instances.
 type ComputeInstanceListOptions struct {
+	Labels    map[string]string    `json:"labels,omitempty"`
 	Backend   ComputeBackend       `json:"backend,omitempty"`
 	Type      ComputeInstanceType  `json:"type,omitempty"`
 	State     ComputeInstanceState `json:"state,omitempty"`
-	Labels    map[string]string    `json:"labels,omitempty"`
+	SortBy    string               `json:"sort_by,omitempty"`
+	SortOrder string               `json:"sort_order,omitempty"`
 	UserID    uint                 `json:"user_id,omitempty"`
 	Limit     int                  `json:"limit,omitempty"`
 	Offset    int                  `json:"offset,omitempty"`
-	SortBy    string               `json:"sort_by,omitempty"`
-	SortOrder string               `json:"sort_order,omitempty"`
 }

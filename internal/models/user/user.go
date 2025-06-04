@@ -8,13 +8,13 @@ import (
 
 // User represents a user in the system.
 type User struct {
-	Roles     []string  `json:"roles"`
-	ID        string    `json:"id"`
-	Username  string    `json:"username"`
-	Password  string    `json:"-"` // Hashed password, not exposed in JSON.
-	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Password  string    `json:"-"`
+	Email     string    `json:"email"`
+	Roles     []string  `json:"roles"`
 	Active    bool      `json:"active"`
 }
 

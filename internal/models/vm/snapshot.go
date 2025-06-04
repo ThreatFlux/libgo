@@ -24,32 +24,15 @@ const (
 
 // Snapshot represents a VM snapshot.
 type Snapshot struct {
-	// Name is the snapshot name.
-	Name string `json:"name"`
-
-	// Description is an optional description.
-	Description string `json:"description,omitempty"`
-
-	// State is the domain state at time of snapshot.
-	State SnapshotState `json:"state"`
-
-	// Parent is the parent snapshot name (if any).
-	Parent string `json:"parent,omitempty"`
-
-	// CreatedAt is when the snapshot was created.
-	CreatedAt time.Time `json:"created_at"`
-
-	// IsCurrent indicates if this is the current snapshot.
-	IsCurrent bool `json:"is_current"`
-
-	// HasMetadata indicates if the snapshot has metadata.
-	HasMetadata bool `json:"has_metadata"`
-
-	// HasMemory indicates if memory state is included.
-	HasMemory bool `json:"has_memory"`
-
-	// HasDisk indicates if disk state is included.
-	HasDisk bool `json:"has_disk"`
+	CreatedAt   time.Time     `json:"created_at"`
+	Name        string        `json:"name"`
+	Description string        `json:"description,omitempty"`
+	State       SnapshotState `json:"state"`
+	Parent      string        `json:"parent,omitempty"`
+	IsCurrent   bool          `json:"is_current"`
+	HasMetadata bool          `json:"has_metadata"`
+	HasMemory   bool          `json:"has_memory"`
+	HasDisk     bool          `json:"has_disk"`
 }
 
 // SnapshotParams represents parameters for creating a snapshot.

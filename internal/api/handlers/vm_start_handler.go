@@ -9,8 +9,8 @@ import (
 
 // StartVMResponse represents the response for a VM start request
 type StartVMResponse struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 // StartVM handles requests to start a VM

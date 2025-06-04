@@ -26,19 +26,19 @@ const (
 
 // Job represents an export job.
 type Job struct {
+	Options    map[string]string `json:"options,omitempty"`
+	StartTime  time.Time         `json:"startTime"`
+	EndTime    time.Time         `json:"endTime,omitempty"`
 	ID         string            `json:"id"`
 	VMName     string            `json:"vmName"`
 	Format     string            `json:"format"`
-	Status     Status            `json:"status"`
-	Progress   int               `json:"progress"`
-	StartTime  time.Time         `json:"startTime"`
-	EndTime    time.Time         `json:"endTime,omitempty"`
 	Error      string            `json:"error,omitempty"`
 	OutputPath string            `json:"outputPath,omitempty"`
-	Options    map[string]string `json:"options,omitempty"`
+	Status     Status            `json:"status"`
+	Progress   int               `json:"progress"`
 }
 
-// Manager defines interface for export management
+// Manager defines interface for export management.
 type Manager interface {
 	// CreateExportJob creates a new export job
 	CreateExportJob(ctx context.Context, vmName string, params Params) (*Job, error)

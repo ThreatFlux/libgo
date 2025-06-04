@@ -26,9 +26,9 @@ func NewBridgeNetworkListHandler(networkManager network.Manager, logger logger.L
 type BridgeNetworkInfo struct {
 	Name        string `json:"name"`
 	BridgeName  string `json:"bridge_name"`
+	ForwardMode string `json:"forward_mode"`
 	Active      bool   `json:"active"`
 	AutoStart   bool   `json:"auto_start"`
-	ForwardMode string `json:"forward_mode"`
 }
 
 // Handle implements Handler interface

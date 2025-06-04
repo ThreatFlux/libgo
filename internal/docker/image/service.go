@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
@@ -18,12 +18,12 @@ type Service interface {
 	// Image operations
 	Pull(ctx context.Context, refStr string, options image.PullOptions) (io.ReadCloser, error)
 	Push(ctx context.Context, refStr string, options image.PushOptions) (io.ReadCloser, error)
-	Build(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
+	Build(ctx context.Context, buildContext io.Reader, options build.ImageBuildOptions) (build.ImageBuildResponse, error)
 	Tag(ctx context.Context, source, target string) error
 	Remove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error)
 
 	// Image inspection
-	Inspect(ctx context.Context, imageID string) (*types.ImageInspect, error)
+	Inspect(ctx context.Context, imageID string) (*image.InspectResponse, error)
 	List(ctx context.Context, options image.ListOptions) ([]image.Summary, error)
 	History(ctx context.Context, imageID string) ([]image.HistoryResponseItem, error)
 

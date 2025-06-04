@@ -2,23 +2,41 @@ package image
 
 import (
 	"context"
-	"fmt"
 	"io"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
+	"github.com/threatflux/libgo/internal/docker"
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Pull pulls an image from a registry
+// Ensure the docker package is used (this prevents import errors).
+var _ docker.Manager
+
+// Pull pulls an image from a registry.
 func (s *serviceImpl) Pull(ctx context.Context, refStr string, options image.PullOptions) (io.ReadCloser, error) {
-	return nil, fmt.Errorf("Pull method not yet implemented")
+	client, err := s.manager.GetWithContext(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get Docker client", logger.Error(err))
+		return nil, err
+	}
+
+	reader, err := client.ImagePull(ctx, refStr, options)
+	if err != nil {
+		s.logger.Error("Failed to pull image",
+			logger.String("image", refStr),
+			logger.Error(err))
+		return nil, err
+	}
+
+	s.logger.Info("Started image pull", logger.String("image", refStr))
+	return reader, nil
 }
 
-// Push pushes an image to a registry
+// Push pushes an image to a registry.
 func (s *serviceImpl) Push(ctx context.Context, refStr string, options image.PushOptions) (io.ReadCloser, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -38,25 +56,25 @@ func (s *serviceImpl) Push(ctx context.Context, refStr string, options image.Pus
 	return reader, nil
 }
 
-// Build builds an image from a Dockerfile
-func (s *serviceImpl) Build(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error) {
+// Build builds an image from a Dockerfile.
+func (s *serviceImpl) Build(ctx context.Context, buildContext io.Reader, options build.ImageBuildOptions) (build.ImageBuildResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
 		s.logger.Error("Failed to get Docker client", logger.Error(err))
-		return types.ImageBuildResponse{}, err
+		return build.ImageBuildResponse{}, err
 	}
 
 	response, err := client.ImageBuild(ctx, buildContext, options)
 	if err != nil {
 		s.logger.Error("Failed to build image", logger.Error(err))
-		return types.ImageBuildResponse{}, err
+		return build.ImageBuildResponse{}, err
 	}
 
 	s.logger.Info("Started image build")
 	return response, nil
 }
 
-// Tag tags an image
+// Tag tags an image.
 func (s *serviceImpl) Tag(ctx context.Context, source, target string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -79,7 +97,7 @@ func (s *serviceImpl) Tag(ctx context.Context, source, target string) error {
 	return nil
 }
 
-// Remove removes one or more images
+// Remove removes one or more images.
 func (s *serviceImpl) Remove(ctx context.Context, imageID string, options image.RemoveOptions) ([]image.DeleteResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -101,15 +119,15 @@ func (s *serviceImpl) Remove(ctx context.Context, imageID string, options image.
 	return deleteResponses, nil
 }
 
-// Inspect returns detailed information about an image
-func (s *serviceImpl) Inspect(ctx context.Context, imageID string) (*types.ImageInspect, error) {
+// Inspect returns detailed information about an image.
+func (s *serviceImpl) Inspect(ctx context.Context, imageID string) (*image.InspectResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
 		s.logger.Error("Failed to get Docker client", logger.Error(err))
 		return nil, err
 	}
 
-	inspectResponse, _, err := client.ImageInspectWithRaw(ctx, imageID)
+	inspectResponse, err := client.ImageInspect(ctx, imageID)
 	if err != nil {
 		s.logger.Error("Failed to inspect image",
 			logger.String("image_id", imageID),
@@ -121,7 +139,7 @@ func (s *serviceImpl) Inspect(ctx context.Context, imageID string) (*types.Image
 	return &inspectResponse, nil
 }
 
-// List returns a list of images
+// List returns a list of images.
 func (s *serviceImpl) List(ctx context.Context, options image.ListOptions) ([]image.Summary, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -139,7 +157,7 @@ func (s *serviceImpl) List(ctx context.Context, options image.ListOptions) ([]im
 	return images, nil
 }
 
-// History returns the history of an image
+// History returns the history of an image.
 func (s *serviceImpl) History(ctx context.Context, imageID string) ([]image.HistoryResponseItem, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -161,7 +179,7 @@ func (s *serviceImpl) History(ctx context.Context, imageID string) ([]image.Hist
 	return history, nil
 }
 
-// Import imports an image
+// Import imports an image.
 func (s *serviceImpl) Import(ctx context.Context, source image.ImportSource, ref string, options image.ImportOptions) (io.ReadCloser, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -181,7 +199,7 @@ func (s *serviceImpl) Import(ctx context.Context, source image.ImportSource, ref
 	return reader, nil
 }
 
-// Save saves images to a tar archive
+// Save saves images to a tar archive.
 func (s *serviceImpl) Save(ctx context.Context, imageIDs []string) (io.ReadCloser, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -201,7 +219,7 @@ func (s *serviceImpl) Save(ctx context.Context, imageIDs []string) (io.ReadClose
 	return reader, nil
 }
 
-// Load loads images from a tar archive
+// Load loads images from a tar archive.
 func (s *serviceImpl) Load(ctx context.Context, input io.Reader, options ...client.ImageLoadOption) (image.LoadResponse, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -219,7 +237,7 @@ func (s *serviceImpl) Load(ctx context.Context, input io.Reader, options ...clie
 	return response, nil
 }
 
-// Search searches for images in Docker Hub
+// Search searches for images in Docker Hub.
 func (s *serviceImpl) Search(ctx context.Context, term string, options registry.SearchOptions) ([]registry.SearchResult, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -241,7 +259,7 @@ func (s *serviceImpl) Search(ctx context.Context, term string, options registry.
 	return results, nil
 }
 
-// Prune removes unused images
+// Prune removes unused images.
 func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (image.PruneReport, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -261,7 +279,7 @@ func (s *serviceImpl) Prune(ctx context.Context, pruneFilter filters.Args) (imag
 	return report, nil
 }
 
-// Exists checks if an image exists
+// Exists checks if an image exists.
 func (s *serviceImpl) Exists(ctx context.Context, imageID string) (bool, error) {
 	_, err := s.Inspect(ctx, imageID)
 	if err != nil {
@@ -270,7 +288,7 @@ func (s *serviceImpl) Exists(ctx context.Context, imageID string) (bool, error) 
 	return true, nil
 }
 
-// GetDigest returns the digest of an image
+// GetDigest returns the digest of an image.
 func (s *serviceImpl) GetDigest(ctx context.Context, imageID string) (string, error) {
 	inspect, err := s.Inspect(ctx, imageID)
 	if err != nil {

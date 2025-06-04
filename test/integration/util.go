@@ -28,9 +28,9 @@ type LoginRequest struct {
 
 // LoginResponse represents a login response
 type LoginResponse struct {
-	Token     string           `json:"token"`
-	User      *usermodels.User `json:"user"`
 	ExpiresAt time.Time        `json:"expiresAt"`
+	User      *usermodels.User `json:"user"`
+	Token     string           `json:"token"`
 }
 
 // CreateVMResponse holds the create VM response
@@ -113,17 +113,17 @@ type ExportJobResponse struct {
 
 // ExportJob represents a VM export job
 type ExportJob struct {
-	ID           string            `json:"id"`
-	VMID         string            `json:"vmId"`
-	VMName       string            `json:"vmName"`
+	EndTime      time.Time         `json:"endTime,omitempty"`
+	StartTime    time.Time         `json:"startTime"`
+	Options      map[string]string `json:"options,omitempty"`
 	Format       string            `json:"format"`
 	Status       string            `json:"status"`
 	FilePath     string            `json:"filePath,omitempty"`
 	Error        string            `json:"error,omitempty"`
 	DownloadLink string            `json:"downloadLink,omitempty"`
-	Options      map[string]string `json:"options,omitempty"`
-	StartTime    time.Time         `json:"startTime"`
-	EndTime      time.Time         `json:"endTime,omitempty"`
+	ID           string            `json:"id"`
+	VMName       string            `json:"vmName"`
+	VMID         string            `json:"vmId"`
 	FileSize     int64             `json:"fileSize,omitempty"`
 	Progress     int               `json:"progress"`
 }

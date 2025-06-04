@@ -45,13 +45,13 @@ func (s VMStatus) IsActive() bool {
 
 // StatusInfo contains detailed status information.
 type StatusInfo struct {
-	Status          VMStatus     `json:"status"`
 	LastStateChange time.Time    `json:"lastStateChange,omitempty"`
-	Uptime          int64        `json:"uptime,omitempty"`         // Uptime in seconds
-	CPUUtilization  float64      `json:"cpuUtilization,omitempty"` // CPU usage percentage
-	MemoryUsage     uint64       `json:"memoryUsage,omitempty"`    // Memory usage in bytes
+	Status          VMStatus     `json:"status"`
 	NetworkUsage    NetworkUsage `json:"networkUsage,omitempty"`
 	DiskUsage       DiskUsage    `json:"diskUsage,omitempty"`
+	Uptime          int64        `json:"uptime,omitempty"`
+	CPUUtilization  float64      `json:"cpuUtilization,omitempty"`
+	MemoryUsage     uint64       `json:"memoryUsage,omitempty"`
 }
 
 // NetworkUsage contains network utilization information.

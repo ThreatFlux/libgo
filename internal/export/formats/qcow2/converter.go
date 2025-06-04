@@ -30,7 +30,7 @@ func NewQCOW2Converter(logger logger.Logger) *QCOW2Converter {
 	}
 }
 
-// Convert implements Converter.Convert
+// Convert implements Converter.Convert.
 func (c *QCOW2Converter) Convert(ctx context.Context, sourcePath string, destPath string, options map[string]string) error {
 	// Get compression level from options
 	compression := DefaultCompression
@@ -90,12 +90,12 @@ func (c *QCOW2Converter) Convert(ctx context.Context, sourcePath string, destPat
 	return nil
 }
 
-// GetFormatName implements Converter.GetFormatName
+// GetFormatName implements Converter.GetFormatName.
 func (c *QCOW2Converter) GetFormatName() string {
 	return "qcow2"
 }
 
-// ValidateOptions implements Converter.ValidateOptions
+// ValidateOptions implements Converter.ValidateOptions.
 func (c *QCOW2Converter) ValidateOptions(options map[string]string) error {
 	// Validate compression level if provided
 	if compressionStr, ok := options["compression"]; ok {

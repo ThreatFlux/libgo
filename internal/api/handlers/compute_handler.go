@@ -545,6 +545,6 @@ func (h *ComputeHandler) performLifecycleAction(c *gin.Context, action string, a
 		logger.String("action", action))
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": strings.Title(action) + " operation completed successfully",
+		"message": action + " operation completed successfully",
 	})
 }

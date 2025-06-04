@@ -24,9 +24,9 @@ var (
 
 // ErrorResponse represents a standardized error response
 type ErrorResponse struct {
-	Status  int    `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Status  int    `json:"status"`
 }
 
 // HandleError handles errors and returns appropriate HTTP responses

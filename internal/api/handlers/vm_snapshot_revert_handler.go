@@ -9,8 +9,8 @@ import (
 
 // RevertSnapshotResponse represents the response for a VM snapshot revert request
 type RevertSnapshotResponse struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 // RevertSnapshot handles requests to revert a VM to a snapshot

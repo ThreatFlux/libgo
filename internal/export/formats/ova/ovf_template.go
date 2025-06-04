@@ -25,13 +25,13 @@ type OVFTemplateData struct {
 	VMName          string
 	VMID            string
 	DiskPath        string
-	DiskSizeBytes   uint64
-	DiskSizeMB      uint64
-	CPUCount        int
-	MemorySizeMB    uint64
 	TimeStamp       string
 	HardwareVersion string
 	OSType          string
+	DiskSizeBytes   uint64
+	DiskSizeMB      uint64
+	MemorySizeMB    uint64
+	CPUCount        int
 }
 
 // NewOVFTemplateGenerator creates a new OVFTemplateGenerator.

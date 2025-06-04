@@ -13,17 +13,10 @@ import (
 
 // RouterConfig holds the configuration for the router.
 type RouterConfig struct {
-	// LoggingConfig is the configuration for request logging
-	LoggingConfig logging.Config
-
-	// RecoveryConfig is the configuration for panic recovery
 	RecoveryConfig recovery.Config
-
-	// BasePath is the base path for all API routes (e.g., "/api/v1")
-	BasePath string
-
-	// EnableCORS determines if CORS support is enabled
-	EnableCORS bool
+	BasePath       string
+	LoggingConfig  logging.Config
+	EnableCORS     bool
 }
 
 // DefaultRouterConfig returns the default router configuration.

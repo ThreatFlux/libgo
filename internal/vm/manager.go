@@ -17,13 +17,15 @@ import (
 
 // VMManager implements Manager interface.
 type VMManager struct {
+	// Group interfaces together (8 bytes each on 64-bit)
 	domainManager    domain.Manager
 	storageManager   storage.VolumeManager
 	networkManager   network.Manager
 	templateManager  template.Manager
 	cloudInitManager cloudinit.Manager
-	config           Config
 	logger           logger.Logger
+	// Group struct (potentially smaller than interfaces)
+	config Config
 }
 
 // Config holds VM manager configuration.

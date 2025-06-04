@@ -59,13 +59,13 @@ type XMLBuilder interface {
 
 // NetworkInfo represents detailed information about a network.
 type NetworkInfo struct {
+	IP         *NetworkIP             `json:"ip,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Forward    NetworkForward         `json:"forward"`
 	UUID       string                 `json:"uuid"`
 	Name       string                 `json:"name"`
 	BridgeName string                 `json:"bridge_name"`
-	IP         *NetworkIP             `json:"ip,omitempty"`
 	DHCPLeases []NetworkDHCPLease     `json:"dhcp_leases,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty"`
-	Forward    NetworkForward         `json:"forward"`
 	Active     bool                   `json:"active"`
 	Persistent bool                   `json:"persistent"`
 	Autostart  bool                   `json:"autostart"`
@@ -79,9 +79,9 @@ type NetworkForward struct {
 
 // NetworkIP represents network IP configuration.
 type NetworkIP struct {
+	DHCP    *NetworkDHCPInfo `json:"dhcp,omitempty"`
 	Address string           `json:"address"`
 	Netmask string           `json:"netmask"`
-	DHCP    *NetworkDHCPInfo `json:"dhcp,omitempty"`
 }
 
 // NetworkDHCPInfo represents DHCP configuration.
@@ -110,11 +110,11 @@ type NetworkDHCPLease struct {
 
 // CreateNetworkParams represents parameters for creating a network.
 type CreateNetworkParams struct {
-	Name       string                 `json:"name" binding:"required"`
-	BridgeName string                 `json:"bridge_name,omitempty"`
 	Forward    *NetworkForward        `json:"forward,omitempty"`
 	IP         *NetworkIP             `json:"ip,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Name       string                 `json:"name" binding:"required"`
+	BridgeName string                 `json:"bridge_name,omitempty"`
 	Autostart  bool                   `json:"autostart"`
 }
 

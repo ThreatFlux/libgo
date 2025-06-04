@@ -20,9 +20,9 @@ import (
 
 // MockManager is a mock of Manager interface.
 type MockManager struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockManagerMockRecorder
-	isgomock struct{}
 }
 
 // MockManagerMockRecorder is the mock recorder for MockManager.
@@ -87,9 +87,9 @@ func (mr *MockManagerMockRecorder) Release(conn any) *gomock.Call {
 
 // MockConnection is a mock of Connection interface.
 type MockConnection struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockConnectionMockRecorder
-	isgomock struct{}
 }
 
 // MockConnectionMockRecorder is the mock recorder for MockConnection.

@@ -31,8 +31,8 @@ type Logger interface {
 
 // Field represents a structured log field.
 type Field struct {
-	Key   string
 	Value interface{}
+	Key   string
 }
 
 // String creates a string Field.

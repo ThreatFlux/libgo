@@ -11,8 +11,8 @@ import (
 
 // TemplateLoader handles loading and rendering XML templates.
 type TemplateLoader struct {
-	TemplateDir string
 	templates   map[string]*template.Template
+	TemplateDir string
 	mu          sync.RWMutex
 }
 

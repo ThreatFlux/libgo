@@ -111,17 +111,17 @@ func (m *MockAPIClient) ContainerUnpause(ctx context.Context, containerID string
 	return args.Error(0)
 }
 
-func (m *MockAPIClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (m *MockAPIClient) ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error) {
 	args := m.Called(ctx, containerID)
-	return args.Get(0).(types.ContainerJSON), args.Error(1)
+	return args.Get(0).(container.InspectResponse), args.Error(1)
 }
 
-func (m *MockAPIClient) ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error) {
+func (m *MockAPIClient) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	args := m.Called(ctx, options)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]types.Container), args.Error(1)
+	return args.Get(0).([]container.Summary), args.Error(1)
 }
 
 func (m *MockAPIClient) ContainerLogs(ctx context.Context, containerID string, options container.LogsOptions) (io.ReadCloser, error) {
@@ -356,7 +356,7 @@ func TestContainerService_List(t *testing.T) {
 
 	service := NewService(mockManager, mockLog)
 
-	expectedContainers := []types.Container{
+	expectedContainers := []container.Summary{
 		{
 			ID:    "abc123",
 			Names: []string{"/test1"},
@@ -373,7 +373,7 @@ func TestContainerService_List(t *testing.T) {
 		name          string
 		options       container.ListOptions
 		setupMocks    func()
-		expected      []types.Container
+		expected      []container.Summary
 		expectedError bool
 	}{
 		{

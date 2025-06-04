@@ -125,3 +125,63 @@ websocket:
   pongWait: 60s
   # VM metrics sampling interval in seconds
   metricsInterval: 5s
+
+# Docker daemon settings
+docker:
+  # Enable Docker support
+  enabled: false
+  # Docker daemon socket or host
+  host: "unix:///var/run/docker.sock"
+  # Docker API version
+  apiVersion: "1.41"
+  # Enable TLS verification
+  tlsVerify: false
+  # TLS certificate path
+  tlsCertPath: ""
+  # TLS key path
+  tlsKeyPath: ""
+  # TLS CA certificate path
+  tlsCaPath: ""
+  # Request timeout
+  requestTimeout: 30s
+  # Connection timeout
+  connectionTimeout: 10s
+  # Maximum retry attempts
+  maxRetries: 3
+  # Retry delay
+  retryDelay: 1s
+
+# Unified compute settings
+compute:
+  # Default backend (kvm or docker)
+  defaultBackend: "kvm"
+  # Allow mixed KVM and Docker workloads
+  allowMixedDeployments: true
+  # Resource limits
+  resourceLimits:
+    # Maximum number of compute instances
+    maxInstances: 100
+    # Maximum CPU cores
+    maxCPUCores: 64
+    # Maximum memory in GB
+    maxMemoryGB: 256
+    # Maximum storage in GB
+    maxStorageGB: 2000
+    # Maximum network bandwidth in Mbps
+    maxNetworkMbps: 10000
+    # CPU overcommit ratio
+    cpuOvercommitRatio: 2.0
+    # Memory overcommit ratio
+    memoryOvercommitRatio: 1.5
+  # Health check interval
+  healthCheckInterval: 30s
+  # Metrics collection interval
+  metricsCollectionInterval: 15s
+
+# Default users for initial setup
+auth:
+  defaultUsers:
+    - username: "admin"
+      password: "change-me-in-production"
+      email: "admin@example.com"
+      roles: ["admin"]

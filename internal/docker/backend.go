@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
@@ -15,13 +14,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// BackendService implements the compute.BackendService interface for Docker
+// BackendService implements the compute.BackendService interface for Docker.
 type BackendService struct {
 	manager Manager
 	logger  logger.Logger
 }
 
-// NewBackendService creates a new Docker backend service
+// NewBackendService creates a new Docker backend service.
 func NewBackendService(manager Manager, logger logger.Logger) compute.BackendService {
 	return &BackendService{
 		manager: manager,
@@ -29,7 +28,7 @@ func NewBackendService(manager Manager, logger logger.Logger) compute.BackendSer
 	}
 }
 
-// Create creates a new Docker container
+// Create creates a new Docker container.
 func (s *BackendService) Create(ctx context.Context, req compute.ComputeInstanceRequest) (*compute.ComputeInstance, error) {
 	if req.Type != compute.InstanceTypeContainer {
 		return nil, fmt.Errorf("unsupported instance type %s for Docker backend", req.Type)
@@ -71,7 +70,7 @@ func (s *BackendService) Create(ctx context.Context, req compute.ComputeInstance
 	return instance, nil
 }
 
-// Get retrieves a Docker container by ID
+// Get retrieves a Docker container by ID.
 func (s *BackendService) Get(ctx context.Context, id string) (*compute.ComputeInstance, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -86,7 +85,7 @@ func (s *BackendService) Get(ctx context.Context, id string) (*compute.ComputeIn
 	return s.convertFromDockerContainer(containerJSON), nil
 }
 
-// List retrieves Docker containers based on options
+// List retrieves Docker containers based on options.
 func (s *BackendService) List(ctx context.Context, opts compute.ComputeInstanceListOptions) ([]*compute.ComputeInstance, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -117,7 +116,7 @@ func (s *BackendService) List(ctx context.Context, opts compute.ComputeInstanceL
 	return instances, nil
 }
 
-// Update updates a Docker container
+// Update updates a Docker container.
 func (s *BackendService) Update(ctx context.Context, id string, update compute.ComputeInstanceUpdate) (*compute.ComputeInstance, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -137,7 +136,7 @@ func (s *BackendService) Update(ctx context.Context, id string, update compute.C
 	return s.Get(ctx, id)
 }
 
-// Delete removes a Docker container
+// Delete removes a Docker container.
 func (s *BackendService) Delete(ctx context.Context, id string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -152,7 +151,7 @@ func (s *BackendService) Delete(ctx context.Context, id string, force bool) erro
 	return client.ContainerRemove(ctx, id, removeOptions)
 }
 
-// Start starts a Docker container
+// Start starts a Docker container.
 func (s *BackendService) Start(ctx context.Context, id string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -162,7 +161,7 @@ func (s *BackendService) Start(ctx context.Context, id string) error {
 	return client.ContainerStart(ctx, id, container.StartOptions{})
 }
 
-// Stop stops a Docker container
+// Stop stops a Docker container.
 func (s *BackendService) Stop(ctx context.Context, id string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -178,7 +177,7 @@ func (s *BackendService) Stop(ctx context.Context, id string, force bool) error 
 	return client.ContainerStop(ctx, id, container.StopOptions{Timeout: timeout})
 }
 
-// Restart restarts a Docker container
+// Restart restarts a Docker container.
 func (s *BackendService) Restart(ctx context.Context, id string, force bool) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -194,7 +193,7 @@ func (s *BackendService) Restart(ctx context.Context, id string, force bool) err
 	return client.ContainerRestart(ctx, id, container.StopOptions{Timeout: timeout})
 }
 
-// Pause pauses a Docker container
+// Pause pauses a Docker container.
 func (s *BackendService) Pause(ctx context.Context, id string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -204,7 +203,7 @@ func (s *BackendService) Pause(ctx context.Context, id string) error {
 	return client.ContainerPause(ctx, id)
 }
 
-// Unpause unpauses a Docker container
+// Unpause unpauses a Docker container.
 func (s *BackendService) Unpause(ctx context.Context, id string) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -214,7 +213,7 @@ func (s *BackendService) Unpause(ctx context.Context, id string) error {
 	return client.ContainerUnpause(ctx, id)
 }
 
-// GetResourceUsage gets current resource usage for a container
+// GetResourceUsage gets current resource usage for a container.
 func (s *BackendService) GetResourceUsage(ctx context.Context, id string) (*compute.ResourceUsage, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -227,7 +226,7 @@ func (s *BackendService) GetResourceUsage(ctx context.Context, id string) (*comp
 	}
 	defer stats.Body.Close()
 
-	var dockerStats container.Stats
+	var dockerStats container.StatsResponse
 	if err := json.NewDecoder(stats.Body).Decode(&dockerStats); err != nil {
 		return nil, fmt.Errorf("failed to decode stats: %w", err)
 	}
@@ -235,7 +234,7 @@ func (s *BackendService) GetResourceUsage(ctx context.Context, id string) (*comp
 	return s.convertResourceUsage(dockerStats), nil
 }
 
-// UpdateResourceLimits updates resource limits for a container
+// UpdateResourceLimits updates resource limits for a container.
 func (s *BackendService) UpdateResourceLimits(ctx context.Context, id string, resources compute.ComputeResources) error {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -258,7 +257,7 @@ func (s *BackendService) UpdateResourceLimits(ctx context.Context, id string, re
 	return err
 }
 
-// GetBackendInfo returns information about the Docker backend
+// GetBackendInfo returns information about the Docker backend.
 func (s *BackendService) GetBackendInfo(ctx context.Context) (*compute.BackendInfo, error) {
 	client, err := s.manager.GetWithContext(ctx)
 	if err != nil {
@@ -312,7 +311,7 @@ func (s *BackendService) GetBackendInfo(ctx context.Context) (*compute.BackendIn
 	}, nil
 }
 
-// ValidateConfig validates a compute instance configuration for Docker
+// ValidateConfig validates a compute instance configuration for Docker.
 func (s *BackendService) ValidateConfig(ctx context.Context, config compute.ComputeInstanceConfig) error {
 	if config.Image == "" {
 		return fmt.Errorf("image is required for Docker containers")
@@ -326,12 +325,12 @@ func (s *BackendService) ValidateConfig(ctx context.Context, config compute.Comp
 	return nil
 }
 
-// GetBackendType returns the backend type
+// GetBackendType returns the backend type.
 func (s *BackendService) GetBackendType() compute.ComputeBackend {
 	return compute.BackendDocker
 }
 
-// GetSupportedInstanceTypes returns supported instance types
+// GetSupportedInstanceTypes returns supported instance types.
 func (s *BackendService) GetSupportedInstanceTypes() []compute.ComputeInstanceType {
 	return []compute.ComputeInstanceType{compute.InstanceTypeContainer}
 }
@@ -401,7 +400,7 @@ func (s *BackendService) convertToDockerConfig(req compute.ComputeInstanceReques
 	return config, hostConfig, networkConfig, nil
 }
 
-func (s *BackendService) convertFromDockerContainer(containerJSON types.ContainerJSON) *compute.ComputeInstance {
+func (s *BackendService) convertFromDockerContainer(containerJSON container.InspectResponse) *compute.ComputeInstance {
 	instance := &compute.ComputeInstance{
 		ID:      containerJSON.ID,
 		Name:    strings.TrimPrefix(containerJSON.Name, "/"),
@@ -470,7 +469,7 @@ func (s *BackendService) convertFromDockerContainer(containerJSON types.Containe
 	return instance
 }
 
-func (s *BackendService) convertContainerState(state *types.ContainerState) compute.ComputeInstanceState {
+func (s *BackendService) convertContainerState(state *container.State) compute.ComputeInstanceState {
 	if state == nil {
 		return compute.StateUnknown
 	}
@@ -566,7 +565,7 @@ func (s *BackendService) convertUpdateConfig(update compute.ComputeInstanceUpdat
 	return config
 }
 
-func (s *BackendService) convertRuntimeInfo(containerJSON types.ContainerJSON) compute.RuntimeInfo {
+func (s *BackendService) convertRuntimeInfo(containerJSON container.InspectResponse) compute.RuntimeInfo {
 	runtimeInfo := compute.RuntimeInfo{
 		ProcessID: containerJSON.State.Pid,
 		ExitCode:  containerJSON.State.ExitCode,
@@ -592,7 +591,7 @@ func (s *BackendService) convertRuntimeInfo(containerJSON types.ContainerJSON) c
 	return runtimeInfo
 }
 
-func (s *BackendService) convertResourceUsage(stats container.Stats) *compute.ResourceUsage {
+func (s *BackendService) convertResourceUsage(stats container.StatsResponse) *compute.ResourceUsage {
 	usage := &compute.ResourceUsage{
 		Timestamp: stats.Read,
 		CPU: compute.CPUUsage{

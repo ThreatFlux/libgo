@@ -5,8 +5,12 @@ import (
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
+	"github.com/threatflux/libgo/internal/docker"
 	"github.com/threatflux/libgo/pkg/logger"
 )
+
+// Ensure the docker package is used (this prevents import errors)
+var _ docker.Manager
 
 // Create creates a new volume
 func (s *serviceImpl) Create(ctx context.Context, options volume.CreateOptions) (*volume.Volume, error) {

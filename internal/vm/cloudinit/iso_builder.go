@@ -10,15 +10,15 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// CloudInitConfig holds cloud-init configuration data
+// CloudInitConfig holds cloud-init configuration data.
 type CloudInitConfig struct {
 	UserData      string
 	MetaData      string
 	NetworkConfig string
 }
 
-// GenerateISO implements Manager.GenerateISO
-// Creates a cloud-init ISO image with user-data, meta-data, and network-config
+// GenerateISO implements Manager.GenerateISO.
+// Creates a cloud-init ISO image with user-data, meta-data, and network-config.
 func (g *CloudInitGenerator) GenerateISO(ctx context.Context, config CloudInitConfig, outputPath string) error {
 	g.logger.Debug("Generating cloud-init ISO",
 		logger.String("outputPath", outputPath))

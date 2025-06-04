@@ -13,32 +13,35 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ComputeManager implements the unified compute management interface
+// ComputeManager implements the unified compute management interface.
 type ComputeManager struct {
+	// Map fields (8 bytes)
 	backends map[ComputeBackend]BackendService
-	config   ManagerConfig
-	logger   logger.Logger
-	mu       sync.RWMutex
-
-	// Resource tracking
+	// Pointer fields (8 bytes)
 	resourceTracker *ResourceTracker
 	quotaManager    *QuotaManager
-
-	// Event handling
-	eventBus *EventBus
+	eventBus        *EventBus
+	logger          logger.Logger
+	// Struct fields
+	config ManagerConfig
+	mu     sync.RWMutex
 }
 
-// ManagerConfig holds configuration for the compute manager
+// ManagerConfig holds configuration for the compute manager.
 type ManagerConfig struct {
-	DefaultBackend      ComputeBackend
-	AllowMixedWorkloads bool
-	ResourceLimits      ComputeResources
+	// Duration fields (8 bytes)
 	HealthCheckInterval time.Duration
 	MetricsInterval     time.Duration
+	// Struct fields
+	ResourceLimits ComputeResources
+	// Enum fields
+	DefaultBackend ComputeBackend
+	// Bool fields (1 byte)
+	AllowMixedWorkloads bool
 	EnableQuotas        bool
 }
 
-// NewComputeManager creates a new unified compute manager
+// NewComputeManager creates a new unified compute manager.
 func NewComputeManager(config ManagerConfig, logger logger.Logger) Manager {
 	manager := &ComputeManager{
 		backends:        make(map[ComputeBackend]BackendService),
@@ -52,7 +55,7 @@ func NewComputeManager(config ManagerConfig, logger logger.Logger) Manager {
 	return manager
 }
 
-// RegisterBackend registers a compute backend
+// RegisterBackend registers a compute backend.
 func (m *ComputeManager) RegisterBackend(backend ComputeBackend, service BackendService) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -67,7 +70,7 @@ func (m *ComputeManager) RegisterBackend(backend ComputeBackend, service Backend
 	return nil
 }
 
-// CreateInstance creates a new compute instance
+// CreateInstance creates a new compute instance.
 func (m *ComputeManager) CreateInstance(ctx context.Context, req ComputeInstanceRequest) (*ComputeInstance, error) {
 	// Determine backend
 	backend := req.Backend
@@ -83,14 +86,14 @@ func (m *ComputeManager) CreateInstance(ctx context.Context, req ComputeInstance
 
 	// Check quotas
 	if m.config.EnableQuotas {
-		if err := m.quotaManager.CheckQuota(ctx, req); err != nil {
-			return nil, fmt.Errorf("quota exceeded: %w", err)
+		if quotaErr := m.quotaManager.CheckQuota(ctx, req); quotaErr != nil {
+			return nil, fmt.Errorf("quota exceeded: %w", quotaErr)
 		}
 	}
 
 	// Validate configuration
-	if err := backendService.ValidateConfig(ctx, req.Config); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+	if configErr := backendService.ValidateConfig(ctx, req.Config); configErr != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", configErr)
 	}
 
 	// Generate UUID for instance
@@ -127,7 +130,7 @@ func (m *ComputeManager) CreateInstance(ctx context.Context, req ComputeInstance
 	return instance, nil
 }
 
-// GetInstance retrieves a compute instance by ID
+// GetInstance retrieves a compute instance by ID.
 func (m *ComputeManager) GetInstance(ctx context.Context, id string) (*ComputeInstance, error) {
 	// Try each backend to find the instance
 	m.mu.RLock()
@@ -149,7 +152,7 @@ func (m *ComputeManager) GetInstance(ctx context.Context, id string) (*ComputeIn
 	return nil, fmt.Errorf("instance %s not found in any backend", id)
 }
 
-// GetInstanceByName retrieves a compute instance by name
+// GetInstanceByName retrieves a compute instance by name.
 func (m *ComputeManager) GetInstanceByName(ctx context.Context, name string) (*ComputeInstance, error) {
 	instances, err := m.ListAllInstances(ctx, ComputeInstanceListOptions{
 		Limit: 100, // Reasonable limit for name search
@@ -167,7 +170,7 @@ func (m *ComputeManager) GetInstanceByName(ctx context.Context, name string) (*C
 	return nil, fmt.Errorf("instance with name %s not found", name)
 }
 
-// ListInstances lists instances from a specific backend
+// ListInstances lists instances from a specific backend.
 func (m *ComputeManager) ListInstances(ctx context.Context, opts ComputeInstanceListOptions) ([]*ComputeInstance, error) {
 	backend := opts.Backend
 	if backend == "" {
@@ -182,7 +185,7 @@ func (m *ComputeManager) ListInstances(ctx context.Context, opts ComputeInstance
 	return backendService.List(ctx, opts)
 }
 
-// ListAllInstances lists instances from all backends
+// ListAllInstances lists instances from all backends.
 func (m *ComputeManager) ListAllInstances(ctx context.Context, opts ComputeInstanceListOptions) ([]*ComputeInstance, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -221,7 +224,7 @@ func (m *ComputeManager) ListAllInstances(ctx context.Context, opts ComputeInsta
 	return allInstances, nil
 }
 
-// UpdateInstance updates a compute instance
+// UpdateInstance updates a compute instance.
 func (m *ComputeManager) UpdateInstance(ctx context.Context, id string, update ComputeInstanceUpdate) (*ComputeInstance, error) {
 	// Find the instance first to determine its backend
 	instance, err := m.GetInstance(ctx, id)
@@ -256,7 +259,7 @@ func (m *ComputeManager) UpdateInstance(ctx context.Context, id string, update C
 	return updatedInstance, nil
 }
 
-// DeleteInstance deletes a compute instance
+// DeleteInstance deletes a compute instance.
 func (m *ComputeManager) DeleteInstance(ctx context.Context, id string, force bool) error {
 	// Find the instance first to determine its backend
 	instance, err := m.GetInstance(ctx, id)
@@ -297,7 +300,7 @@ func (m *ComputeManager) DeleteInstance(ctx context.Context, id string, force bo
 
 // Lifecycle operations
 
-// StartInstance starts a compute instance
+// StartInstance starts a compute instance.
 func (m *ComputeManager) StartInstance(ctx context.Context, id string) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -325,7 +328,7 @@ func (m *ComputeManager) StartInstance(ctx context.Context, id string) error {
 	return nil
 }
 
-// StopInstance stops a compute instance
+// StopInstance stops a compute instance.
 func (m *ComputeManager) StopInstance(ctx context.Context, id string, force bool) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -353,7 +356,7 @@ func (m *ComputeManager) StopInstance(ctx context.Context, id string, force bool
 	return nil
 }
 
-// RestartInstance restarts a compute instance
+// RestartInstance restarts a compute instance.
 func (m *ComputeManager) RestartInstance(ctx context.Context, id string, force bool) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -381,7 +384,7 @@ func (m *ComputeManager) RestartInstance(ctx context.Context, id string, force b
 	return nil
 }
 
-// PauseInstance pauses a compute instance
+// PauseInstance pauses a compute instance.
 func (m *ComputeManager) PauseInstance(ctx context.Context, id string) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -409,7 +412,7 @@ func (m *ComputeManager) PauseInstance(ctx context.Context, id string) error {
 	return nil
 }
 
-// UnpauseInstance unpauses a compute instance
+// UnpauseInstance unpauses a compute instance.
 func (m *ComputeManager) UnpauseInstance(ctx context.Context, id string) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -439,7 +442,7 @@ func (m *ComputeManager) UnpauseInstance(ctx context.Context, id string) error {
 
 // Resource management
 
-// GetResourceUsage gets current resource usage for an instance
+// GetResourceUsage gets current resource usage for an instance.
 func (m *ComputeManager) GetResourceUsage(ctx context.Context, id string) (*ResourceUsage, error) {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -454,13 +457,13 @@ func (m *ComputeManager) GetResourceUsage(ctx context.Context, id string) (*Reso
 	return backendService.GetResourceUsage(ctx, id)
 }
 
-// GetResourceUsageHistory gets historical resource usage (placeholder)
+// GetResourceUsageHistory gets historical resource usage (placeholder).
 func (m *ComputeManager) GetResourceUsageHistory(ctx context.Context, id string, opts ResourceHistoryOptions) ([]*ResourceUsage, error) {
 	// This would be implemented with a metrics storage backend
 	return nil, fmt.Errorf("resource usage history not implemented yet")
 }
 
-// UpdateResourceLimits updates resource limits for an instance
+// UpdateResourceLimits updates resource limits for an instance.
 func (m *ComputeManager) UpdateResourceLimits(ctx context.Context, id string, resources ComputeResources) error {
 	instance, err := m.GetInstance(ctx, id)
 	if err != nil {
@@ -475,7 +478,7 @@ func (m *ComputeManager) UpdateResourceLimits(ctx context.Context, id string, re
 	return backendService.UpdateResourceLimits(ctx, id, resources)
 }
 
-// GetClusterStatus returns the overall cluster status
+// GetClusterStatus returns the overall cluster status.
 func (m *ComputeManager) GetClusterStatus(ctx context.Context) (*ClusterStatus, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -518,17 +521,17 @@ func (m *ComputeManager) GetClusterStatus(ctx context.Context) (*ClusterStatus, 
 	return status, nil
 }
 
-// GetResourceQuotas gets resource quotas for a user
+// GetResourceQuotas gets resource quotas for a user.
 func (m *ComputeManager) GetResourceQuotas(ctx context.Context, userID uint) (*ResourceQuotas, error) {
 	return m.quotaManager.GetQuotas(userID), nil
 }
 
-// SetResourceQuotas sets resource quotas for a user
+// SetResourceQuotas sets resource quotas for a user.
 func (m *ComputeManager) SetResourceQuotas(ctx context.Context, userID uint, quotas ResourceQuotas) error {
 	return m.quotaManager.SetQuotas(userID, quotas)
 }
 
-// GetBackendInfo gets information about a specific backend
+// GetBackendInfo gets information about a specific backend.
 func (m *ComputeManager) GetBackendInfo(ctx context.Context, backend ComputeBackend) (*BackendInfo, error) {
 	backendService, err := m.getBackend(backend)
 	if err != nil {
@@ -538,7 +541,7 @@ func (m *ComputeManager) GetBackendInfo(ctx context.Context, backend ComputeBack
 	return backendService.GetBackendInfo(ctx)
 }
 
-// ValidateInstanceConfig validates an instance configuration
+// ValidateInstanceConfig validates an instance configuration.
 func (m *ComputeManager) ValidateInstanceConfig(ctx context.Context, config ComputeInstanceConfig, backend ComputeBackend) error {
 	backendService, err := m.getBackend(backend)
 	if err != nil {
@@ -550,22 +553,22 @@ func (m *ComputeManager) ValidateInstanceConfig(ctx context.Context, config Comp
 
 // Stub implementations for unimplemented methods
 
-// AttachConsole attaches to an instance console
+// AttachConsole attaches to an instance console.
 func (m *ComputeManager) AttachConsole(ctx context.Context, id string, opts ConsoleOptions) (io.ReadWriteCloser, error) {
 	return nil, fmt.Errorf("console attachment not implemented yet")
 }
 
-// ExecuteCommand executes a command in an instance
+// ExecuteCommand executes a command in an instance.
 func (m *ComputeManager) ExecuteCommand(ctx context.Context, id string, cmd ExecRequest) (*ExecResult, error) {
 	return nil, fmt.Errorf("command execution not implemented yet")
 }
 
-// GetLogs gets logs from an instance
+// GetLogs gets logs from an instance.
 func (m *ComputeManager) GetLogs(ctx context.Context, id string, opts LogOptions) (io.ReadCloser, error) {
 	return nil, fmt.Errorf("log retrieval not implemented yet")
 }
 
-// Snapshot operations (stubs)
+// Snapshot operations (stubs).
 func (m *ComputeManager) CreateSnapshot(ctx context.Context, id, name, description string) (*Snapshot, error) {
 	return nil, fmt.Errorf("snapshots not implemented yet")
 }
@@ -582,7 +585,7 @@ func (m *ComputeManager) DeleteSnapshot(ctx context.Context, id, snapshotID stri
 	return fmt.Errorf("snapshots not implemented yet")
 }
 
-// Migration and export (stubs)
+// Migration and export (stubs).
 func (m *ComputeManager) MigrateInstance(ctx context.Context, id, targetHost string, opts MigrationOptions) error {
 	return fmt.Errorf("migration not implemented yet")
 }
@@ -595,7 +598,7 @@ func (m *ComputeManager) ImportInstance(ctx context.Context, source string, opts
 	return nil, fmt.Errorf("import not implemented yet")
 }
 
-// Network and storage attachment (stubs)
+// Network and storage attachment (stubs).
 func (m *ComputeManager) AttachNetwork(ctx context.Context, id string, network NetworkAttachment) error {
 	return fmt.Errorf("network attachment not implemented yet")
 }
@@ -620,7 +623,7 @@ func (m *ComputeManager) ListStorageAttachments(ctx context.Context, id string) 
 	return nil, fmt.Errorf("storage listing not implemented yet")
 }
 
-// Monitoring (stubs)
+// Monitoring (stubs).
 func (m *ComputeManager) StreamMetrics(ctx context.Context, id string, opts MetricsOptions) (<-chan ResourceUsage, error) {
 	return nil, fmt.Errorf("metrics streaming not implemented yet")
 }
@@ -633,12 +636,12 @@ func (m *ComputeManager) StreamInstanceEvents(ctx context.Context, id string, op
 	return m.eventBus.StreamEvents(id, opts), nil
 }
 
-// Bulk operations (stubs)
+// Bulk operations (stubs).
 func (m *ComputeManager) BulkAction(ctx context.Context, action string, ids []string, opts BulkActionOptions) ([]*BulkActionResult, error) {
 	return nil, fmt.Errorf("bulk operations not implemented yet")
 }
 
-// Template management (stubs)
+// Template management (stubs).
 func (m *ComputeManager) CreateTemplate(ctx context.Context, instanceID string, template InstanceTemplate) (*InstanceTemplate, error) {
 	return nil, fmt.Errorf("templates not implemented yet")
 }
@@ -659,7 +662,7 @@ func (m *ComputeManager) CloneFromTemplate(ctx context.Context, templateID strin
 	return nil, fmt.Errorf("templates not implemented yet")
 }
 
-// Compose operations (stubs)
+// Compose operations (stubs).
 func (m *ComputeManager) DeployCompose(ctx context.Context, composeData []byte, opts ComposeDeployOptions) (*ComposeDeployment, error) {
 	return nil, fmt.Errorf("compose not implemented yet")
 }
@@ -680,7 +683,7 @@ func (m *ComputeManager) DeleteComposeDeployment(ctx context.Context, deployment
 	return fmt.Errorf("compose not implemented yet")
 }
 
-// Health and maintenance
+// Health and maintenance.
 func (m *ComputeManager) HealthCheck(ctx context.Context) (*HealthStatus, error) {
 	// Check all backends
 	m.mu.RLock()

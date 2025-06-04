@@ -28,13 +28,13 @@ func NewDockerContainerHandler(containerService containerSvc.Service, logger log
 
 // CreateContainerRequest represents the request to create a container
 type CreateContainerRequest struct {
-	Name       string               `json:"name" binding:"required"`
-	Image      string               `json:"image" binding:"required"`
 	Cmd        []string             `json:"cmd,omitempty"`
 	Entrypoint []string             `json:"entrypoint,omitempty"`
 	Env        []string             `json:"env,omitempty"`
 	Labels     map[string]string    `json:"labels,omitempty"`
 	Volumes    map[string]struct{}  `json:"volumes,omitempty"`
+	Name       string               `json:"name" binding:"required"`
+	Image      string               `json:"image" binding:"required"`
 	WorkingDir string               `json:"working_dir,omitempty"`
 	User       string               `json:"user,omitempty"`
 	HostConfig container.HostConfig `json:"host_config,omitempty"`
@@ -42,22 +42,22 @@ type CreateContainerRequest struct {
 
 // ContainerResponse represents a container in responses
 type ContainerResponse struct {
+	Ports   []PortMapping     `json:"ports,omitempty"`
+	Labels  map[string]string `json:"labels,omitempty"`
 	ID      string            `json:"id"`
 	Name    string            `json:"name"`
 	Image   string            `json:"image"`
 	State   string            `json:"state"`
 	Status  string            `json:"status"`
 	Created int64             `json:"created"`
-	Ports   []PortMapping     `json:"ports,omitempty"`
-	Labels  map[string]string `json:"labels,omitempty"`
 }
 
 // PortMapping represents a port mapping
 type PortMapping struct {
-	Private uint16 `json:"private"`
-	Public  uint16 `json:"public"`
 	Type    string `json:"type"`
 	IP      string `json:"ip,omitempty"`
+	Private uint16 `json:"private"`
+	Public  uint16 `json:"public"`
 }
 
 // CreateContainer creates a new Docker container

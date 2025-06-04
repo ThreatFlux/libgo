@@ -1,16 +1,36 @@
-# KVM VM Management API - Overview
+# LibGo Unified Compute Management API - Overview
 
-The KVM VM Management API provides a RESTful interface for creating, managing, and exporting virtual machines running on KVM. This document provides an overview of the API's capabilities, design principles, and general usage information.
+The LibGo API provides a unified RESTful interface for managing both KVM virtual machines and Docker containers through a single, consistent API. This document provides an overview of the API's capabilities, design principles, and general usage information.
 
 ## API Features
 
+### Unified Compute Management
+- **Unified Instance API**: Single API for managing both VMs and containers
+- **Backend Abstraction**: Seamless switching between KVM and Docker backends
+- **Resource Management**: Consistent resource allocation and limits across backends
+- **Mixed Workloads**: Support for running VMs and containers side-by-side
+
+### KVM Virtual Machine Features
 - **VM Lifecycle Management**: Create, start, stop, and delete virtual machines
 - **VM Configuration**: Configure CPU, memory, storage, and networking
 - **Cloud-Init Integration**: Customize VM deployments using cloud-init
 - **VM Export**: Export VMs to various formats (QCOW2, VMDK, VDI, OVA, RAW)
+- **Snapshot Management**: Create, revert, and manage VM snapshots
+- **OVS Integration**: Advanced networking with OpenVSwitch
+
+### Docker Container Features
+- **Container Lifecycle**: Create, start, stop, pause, unpause, and remove containers
+- **Image Management**: Pull, push, build, tag, and manage Docker images
+- **Network Management**: Create and manage Docker networks
+- **Volume Management**: Persistent storage with Docker volumes
+- **Container Operations**: Execute commands, view logs, and monitor stats
+
+### Common Features
 - **Authentication**: JWT-based authentication with role-based access control
 - **Monitoring**: Metrics endpoint for Prometheus integration
 - **Health Checking**: API health status for monitoring
+- **WebSocket Support**: Real-time monitoring and console access
+- **Audit Logging**: Comprehensive operation logging
 
 ## API Design Principles
 

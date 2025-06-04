@@ -9,8 +9,8 @@ import (
 
 // StopVMResponse represents the response for a VM stop request
 type StopVMResponse struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 // StopVM handles requests to stop a VM

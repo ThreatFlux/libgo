@@ -7,41 +7,41 @@ import (
 	"time"
 )
 
-// ResourceTracker tracks resource usage across all instances
+// ResourceTracker tracks resource usage across all instances.
 type ResourceTracker struct {
 	mu        sync.RWMutex
 	instances map[string]*ComputeInstance
 }
 
-// NewResourceTracker creates a new resource tracker
+// NewResourceTracker creates a new resource tracker.
 func NewResourceTracker() *ResourceTracker {
 	return &ResourceTracker{
 		instances: make(map[string]*ComputeInstance),
 	}
 }
 
-// AddInstance adds an instance to tracking
+// AddInstance adds an instance to tracking.
 func (rt *ResourceTracker) AddInstance(instance *ComputeInstance) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	rt.instances[instance.ID] = instance
 }
 
-// UpdateInstance updates an instance in tracking
+// UpdateInstance updates an instance in tracking.
 func (rt *ResourceTracker) UpdateInstance(instance *ComputeInstance) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	rt.instances[instance.ID] = instance
 }
 
-// RemoveInstance removes an instance from tracking
+// RemoveInstance removes an instance from tracking.
 func (rt *ResourceTracker) RemoveInstance(id string) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	delete(rt.instances, id)
 }
 
-// GetTotalResources returns total allocated resources
+// GetTotalResources returns total allocated resources.
 func (rt *ResourceTracker) GetTotalResources() ComputeResources {
 	rt.mu.RLock()
 	defer rt.mu.RUnlock()
@@ -57,20 +57,20 @@ func (rt *ResourceTracker) GetTotalResources() ComputeResources {
 	return total
 }
 
-// QuotaManager manages resource quotas for users
+// QuotaManager manages resource quotas for users.
 type QuotaManager struct {
 	mu     sync.RWMutex
 	quotas map[uint]*ResourceQuotas
 }
 
-// NewQuotaManager creates a new quota manager
+// NewQuotaManager creates a new quota manager.
 func NewQuotaManager() *QuotaManager {
 	return &QuotaManager{
 		quotas: make(map[uint]*ResourceQuotas),
 	}
 }
 
-// SetQuotas sets quotas for a user
+// SetQuotas sets quotas for a user.
 func (qm *QuotaManager) SetQuotas(userID uint, quotas ResourceQuotas) error {
 	qm.mu.Lock()
 	defer qm.mu.Unlock()
@@ -78,7 +78,7 @@ func (qm *QuotaManager) SetQuotas(userID uint, quotas ResourceQuotas) error {
 	return nil
 }
 
-// GetQuotas gets quotas for a user
+// GetQuotas gets quotas for a user.
 func (qm *QuotaManager) GetQuotas(userID uint) *ResourceQuotas {
 	qm.mu.RLock()
 	defer qm.mu.RUnlock()
@@ -102,7 +102,7 @@ func (qm *QuotaManager) GetQuotas(userID uint) *ResourceQuotas {
 	}
 }
 
-// CheckQuota checks if a request would exceed quotas
+// CheckQuota checks if a request would exceed quotas.
 func (qm *QuotaManager) CheckQuota(ctx context.Context, req ComputeInstanceRequest) error {
 	quota := qm.GetQuotas(req.UserID)
 
@@ -136,14 +136,14 @@ func (qm *QuotaManager) CheckQuota(ctx context.Context, req ComputeInstanceReque
 	return nil
 }
 
-// EventBus handles instance events
+// EventBus handles instance events.
 type EventBus struct {
 	mu          sync.RWMutex
 	events      []InstanceEvent
 	subscribers map[string][]chan InstanceEvent
 }
 
-// NewEventBus creates a new event bus
+// NewEventBus creates a new event bus.
 func NewEventBus() *EventBus {
 	return &EventBus{
 		events:      make([]InstanceEvent, 0),
@@ -151,7 +151,7 @@ func NewEventBus() *EventBus {
 	}
 }
 
-// Emit emits an event
+// Emit emits an event.
 func (eb *EventBus) Emit(event InstanceEvent) {
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
@@ -187,7 +187,7 @@ func (eb *EventBus) Emit(event InstanceEvent) {
 	}
 }
 
-// GetEvents gets historical events for an instance
+// GetEvents gets historical events for an instance.
 func (eb *EventBus) GetEvents(instanceID string, opts EventOptions) []*InstanceEvent {
 	eb.mu.RLock()
 	defer eb.mu.RUnlock()
@@ -235,7 +235,7 @@ func (eb *EventBus) GetEvents(instanceID string, opts EventOptions) []*InstanceE
 	return filtered
 }
 
-// StreamEvents streams events for an instance
+// StreamEvents streams events for an instance.
 func (eb *EventBus) StreamEvents(instanceID string, opts EventOptions) <-chan InstanceEvent {
 	ch := make(chan InstanceEvent, 100) // Buffer events
 

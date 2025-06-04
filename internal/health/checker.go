@@ -17,21 +17,21 @@ const (
 
 // Check represents a health check.
 type Check struct {
+	Details map[string]string `json:"details,omitempty"`
 	Name    string            `json:"name"`
 	Status  Status            `json:"status"`
-	Details map[string]string `json:"details,omitempty"`
 }
 
 // Result represents health check result.
 type Result struct {
 	Status    Status  `json:"status"`
-	Checks    []Check `json:"checks"`
 	Version   string  `json:"version"`
 	BuildTime string  `json:"buildTime,omitempty"`
 	GoVersion string  `json:"goVersion"`
 	GOOS      string  `json:"os"`
 	GOARCH    string  `json:"arch"`
 	Uptime    string  `json:"uptime"`
+	Checks    []Check `json:"checks"`
 }
 
 // CheckFunction represents a health check function.
@@ -39,10 +39,10 @@ type CheckFunction func() Check
 
 // Checker performs health checks.
 type Checker struct {
-	checks    []CheckFunction
+	startTime time.Time
 	version   string
 	buildTime string
-	startTime time.Time
+	checks    []CheckFunction
 	mu        sync.RWMutex
 }
 

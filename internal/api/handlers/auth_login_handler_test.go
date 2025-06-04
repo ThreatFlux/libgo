@@ -52,11 +52,11 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
 		requestBody    map[string]interface{}
 		setupMocks     func()
-		expectedStatus int
 		checkResponse  func(t *testing.T, response *httptest.ResponseRecorder)
+		name           string
+		expectedStatus int
 	}{
 		{
 			name: "Valid credentials",
@@ -267,11 +267,11 @@ func TestAuthHandler_Refresh(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
 		requestBody    map[string]interface{}
 		setupMocks     func()
-		expectedStatus int
 		checkResponse  func(t *testing.T, response *httptest.ResponseRecorder)
+		name           string
+		expectedStatus int
 	}{
 		{
 			name: "Valid token refresh",

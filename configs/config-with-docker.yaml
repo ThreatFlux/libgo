@@ -1,0 +1,158 @@
+# LibGo Unified Hypervisor Configuration
+# Single-node KVM + Docker management (Proxmox/KubeVirt style)
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "release"
+  readTimeout: "30s"
+  writeTimeout: "30s"
+  maxHeaderBytes: 1048576
+  tls:
+    enabled: false
+
+database:
+  driver: "sqlite"
+  dsn: "./libgo.db"
+  maxOpenConns: 25
+  maxIdleConns: 10
+  connMaxLifetime: "1h"
+  autoMigrate: true
+
+# KVM/libvirt configuration
+libvirt:
+  uri: "qemu:///system"
+  connectionTimeout: "30s"
+  maxConnections: 10
+  poolName: "default"
+  networkName: "default"
+
+# Docker daemon configuration
+docker:
+  enabled: true
+  host: "unix:///var/run/docker.sock"
+  apiVersion: ""  # Auto-negotiate
+  tlsVerify: false
+  tlsCertPath: ""
+  tlsKeyPath: ""
+  tlsCaPath: ""
+  requestTimeout: "30s"
+  connectionTimeout: "15s"
+  maxRetries: 3
+  retryDelay: "500ms"
+
+# Unified compute management
+compute:
+  defaultBackend: "kvm"  # or "docker"
+  allowMixedDeployments: true
+  resourceLimits:
+    maxInstances: 50
+    maxCPUCores: 32
+    maxMemoryGB: 128
+    maxStorageGB: 2000
+    maxNetworkMbps: 1000
+    cpuOvercommitRatio: 2.0
+    memoryOvercommitRatio: 1.5
+  autoScaling:
+    enabled: false
+    cpuThreshold: 80.0
+    memoryThreshold: 85.0
+    scaleUpCooldown: "5m"
+    scaleDownCooldown: "10m"
+  healthCheckInterval: "30s"
+  metricsCollectionInterval: "10s"
+
+# Authentication configuration
+auth:
+  enabled: true
+  jwtSecretKey: "your-super-secret-jwt-key-change-this-in-production"
+  issuer: "libgo-hypervisor"
+  audience: "libgo-users"
+  tokenExpiration: "24h"
+  signingMethod: "HS256"
+  defaultUsers:
+    - username: "admin"
+      password: "admin123"
+      email: "admin@localhost"
+      roles: ["admin"]
+    - username: "user"
+      password: "user123"
+      email: "user@localhost"
+      roles: ["user"]
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  filePath: ""
+  maxSize: 100
+  maxBackups: 3
+  maxAge: 30
+  compress: true
+
+# Storage configuration
+storage:
+  defaultPool: "default"
+  poolPath: "/var/lib/libgo/storage"
+  templates:
+    ubuntu-22.04: "/var/lib/libgo/templates/ubuntu-22.04.qcow2"
+    debian-12: "/var/lib/libgo/templates/debian-12.qcow2"
+
+# Unified network configuration
+network:
+  defaultProvider: "libvirt"  # or "docker"
+  bridgeNetwork:
+    defaultBridge: "virbr0"
+    ipRange: "192.168.122.0/24"
+    gateway: "192.168.122.1"
+    dns: ["8.8.8.8", "8.8.4.4"]
+  dockerNetworks:
+    defaultDriver: "bridge"
+    ipamDriver: "default"
+    options: {}
+  crossPlatformNAT: true
+  ipam:
+    driver: "default"
+    subnet: "10.10.0.0/16"
+    gateway: "10.10.0.1"
+    ipRange: "10.10.1.0/24"
+    dnsServer: ["8.8.8.8", "8.8.4.4"]
+
+# Export configuration
+export:
+  outputDir: "/var/lib/libgo/exports"
+  tempDir: "/tmp/libgo"
+  defaultFormat: "qcow2"
+  retention: "168h"  # 7 days
+
+# Feature flags
+features:
+  cloudInit: true
+  export: true
+  metrics: true
+  rbacEnabled: true
+  storageCleanup: true
+  ovsEnabled: false
+
+# OpenVSwitch configuration (optional)
+ovs:
+  enabled: false
+  defaultBridges: []
+  libvirtIntegration: false
+  commandTimeout: "30s"
+
+# Monitoring and metrics
+monitoring:
+  enabled: true
+  metricsInterval: "15s"
+  prometheusEnabled: true
+  prometheusPort: 9090
+  alertingEnabled: false
+  resourceAlerts:
+    cpuThreshold: 85.0
+    memoryThreshold: 90.0
+    diskThreshold: 85.0
+    networkThreshold: 80.0
+
+# Template paths
+templatesPath: "./configs/templates"

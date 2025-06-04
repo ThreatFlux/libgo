@@ -61,13 +61,13 @@ const (
 
 // DiskParams contains disk parameters for VM creation.
 type DiskParams struct {
-	SizeBytes   uint64     `json:"sizeBytes" validate:"required,min=1073741824"` // Minimum 1GB
-	SizeMB      uint64     `json:"sizeMB,omitempty"`                             // Size in MB (optional, calculated from SizeBytes if not provided)
-	Format      DiskFormat `json:"format" validate:"required,oneof=qcow2 raw"`
 	SourceImage string     `json:"sourceImage,omitempty"`
 	StoragePool string     `json:"storagePool,omitempty"`
-	Bus         DiskBus    `json:"bus,omitempty" validate:"omitempty,oneof=virtio ide sata scsi"`
 	CacheMode   string     `json:"cacheMode,omitempty" validate:"omitempty,oneof=none writeback writethrough directsync unsafe"`
+	Format      DiskFormat `json:"format" validate:"required,oneof=qcow2 raw"`
+	Bus         DiskBus    `json:"bus,omitempty" validate:"omitempty,oneof=virtio ide sata scsi"`
+	SizeBytes   uint64     `json:"sizeBytes" validate:"required,min=1073741824"`
+	SizeMB      uint64     `json:"sizeMB,omitempty"`
 	Shareable   bool       `json:"shareable,omitempty"`
 	ReadOnly    bool       `json:"readOnly,omitempty"`
 }
@@ -75,17 +75,17 @@ type DiskParams struct {
 // DiskInfo contains information about a VM's disk.
 type DiskInfo struct {
 	Path        string     `json:"path"`
-	Format      DiskFormat `json:"format"`
-	SizeBytes   uint64     `json:"sizeBytes"`
-	Bus         DiskBus    `json:"bus"`
-	ReadOnly    bool       `json:"readOnly,omitempty"`
-	Bootable    bool       `json:"bootable,omitempty"`
-	Shareable   bool       `json:"shareable,omitempty"`
 	Serial      string     `json:"serial,omitempty"`
 	StoragePool string     `json:"storagePool,omitempty"`
 	Device      string     `json:"device,omitempty"`
 	PoolName    string     `json:"poolName,omitempty"`
 	VolumeName  string     `json:"volumeName,omitempty"`
+	Format      DiskFormat `json:"format"`
+	Bus         DiskBus    `json:"bus"`
+	SizeBytes   uint64     `json:"sizeBytes"`
+	ReadOnly    bool       `json:"readOnly,omitempty"`
+	Bootable    bool       `json:"bootable,omitempty"`
+	Shareable   bool       `json:"shareable,omitempty"`
 }
 
 // Validate validates the disk parameters.

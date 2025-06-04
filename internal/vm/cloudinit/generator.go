@@ -11,9 +11,9 @@ import (
 
 // CloudInitGenerator implements Manager for cloud-init.
 type CloudInitGenerator struct {
-	templateDir string
-	logger      logger.Logger
 	templates   map[string]*template.Template
+	logger      logger.Logger
+	templateDir string
 }
 
 // NewCloudInitGenerator creates a new CloudInitGenerator.

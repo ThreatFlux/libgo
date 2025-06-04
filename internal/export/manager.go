@@ -19,17 +19,17 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ExportManager implements Manager
+// ExportManager implements Manager.
 type ExportManager struct {
 	jobStore       *jobStore
 	formatManagers map[string]formats.Converter
 	storageManager storage.VolumeManager
 	domainManager  domain.Manager
-	baseExportDir  string
 	logger         logger.Logger
+	baseExportDir  string
 }
 
-// NewExportManager creates a new ExportManager
+// NewExportManager creates a new ExportManager.
 func NewExportManager(
 	storageManager storage.VolumeManager,
 	domainManager domain.Manager,
@@ -68,7 +68,7 @@ func NewExportManager(
 	return manager, nil
 }
 
-// CreateExportJob implements Manager.CreateExportJob
+// CreateExportJob implements Manager.CreateExportJob.
 func (m *ExportManager) CreateExportJob(ctx context.Context, vmName string, params Params) (*Job, error) {
 	// Check if VM exists
 	_, err := m.domainManager.Get(ctx, vmName)
@@ -103,7 +103,7 @@ func (m *ExportManager) CreateExportJob(ctx context.Context, vmName string, para
 	return job, nil
 }
 
-// GetJob implements Manager.GetJob
+// GetJob implements Manager.GetJob.
 func (m *ExportManager) GetJob(ctx context.Context, jobID string) (*Job, error) {
 	job, exists := m.jobStore.getJob(jobID)
 	if !exists {
@@ -112,7 +112,7 @@ func (m *ExportManager) GetJob(ctx context.Context, jobID string) (*Job, error) 
 	return job, nil
 }
 
-// CancelJob implements Manager.CancelJob
+// CancelJob implements Manager.CancelJob.
 func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 	// Get job
 	job, exists := m.jobStore.getJob(jobID)
@@ -147,12 +147,12 @@ func (m *ExportManager) CancelJob(ctx context.Context, jobID string) error {
 	return nil
 }
 
-// ListJobs implements Manager.ListJobs
+// ListJobs implements Manager.ListJobs.
 func (m *ExportManager) ListJobs(ctx context.Context) ([]*Job, error) {
 	return m.jobStore.listJobs(), nil
 }
 
-// processExportJob processes an export job
+// processExportJob processes an export job.
 func (m *ExportManager) processExportJob(job *Job, fileName string) {
 	// Update job status to running
 	m.jobStore.updateJobStatus(job.ID, StatusRunning, 5, nil)

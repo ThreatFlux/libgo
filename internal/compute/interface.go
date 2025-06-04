@@ -137,35 +137,46 @@ type ConsoleOptions struct {
 
 // ExecRequest represents a command execution request.
 type ExecRequest struct {
+	// Slice and map fields (8 bytes)
 	Command []string          `json:"command"`
 	Env     map[string]string `json:"env,omitempty"`
-	WorkDir string            `json:"work_dir,omitempty"`
-	User    string            `json:"user,omitempty"`
-	TTY     bool              `json:"tty,omitempty"`
-	Stdin   bool              `json:"stdin,omitempty"`
-	Stdout  bool              `json:"stdout,omitempty"`
-	Stderr  bool              `json:"stderr,omitempty"`
-	Timeout int               `json:"timeout,omitempty"` // seconds
+	// String fields (8 bytes)
+	WorkDir string `json:"work_dir,omitempty"`
+	User    string `json:"user,omitempty"`
+	// Int fields (4 bytes)
+	Timeout int `json:"timeout,omitempty"` // seconds
+	// Bool fields (1 byte)
+	TTY    bool `json:"tty,omitempty"`
+	Stdin  bool `json:"stdin,omitempty"`
+	Stdout bool `json:"stdout,omitempty"`
+	Stderr bool `json:"stderr,omitempty"`
 }
 
 // ExecResult represents the result of command execution.
 type ExecResult struct {
-	ExitCode int    `json:"exit_code"`
-	Stdout   string `json:"stdout,omitempty"`
-	Stderr   string `json:"stderr,omitempty"`
-	Error    string `json:"error,omitempty"`
-	Duration int64  `json:"duration"` // milliseconds
-	Timeout  bool   `json:"timeout"`
+	// String fields (8 bytes)
+	Stdout string `json:"stdout,omitempty"`
+	Stderr string `json:"stderr,omitempty"`
+	Error  string `json:"error,omitempty"`
+	// Int64 fields (8 bytes)
+	Duration int64 `json:"duration"` // milliseconds
+	// Int fields (4 bytes)
+	ExitCode int `json:"exit_code"`
+	// Bool fields (1 byte)
+	Timeout bool `json:"timeout"`
 }
 
 // LogOptions represents options for log retrieval.
 type LogOptions struct {
-	Follow     bool       `json:"follow,omitempty"`
-	Tail       int        `json:"tail,omitempty"`
-	Since      *TimeStamp `json:"since,omitempty"`
-	Until      *TimeStamp `json:"until,omitempty"`
-	Timestamps bool       `json:"timestamps,omitempty"`
-	Details    bool       `json:"details,omitempty"`
+	// Pointer fields (8 bytes)
+	Since *TimeStamp `json:"since,omitempty"`
+	Until *TimeStamp `json:"until,omitempty"`
+	// Int fields (4 bytes)
+	Tail int `json:"tail,omitempty"`
+	// Bool fields (1 byte)
+	Follow     bool `json:"follow,omitempty"`
+	Timestamps bool `json:"timestamps,omitempty"`
+	Details    bool `json:"details,omitempty"`
 }
 
 // TimeStamp represents a timestamp that can be parsed from various formats.
@@ -175,206 +186,279 @@ type TimeStamp struct {
 
 // Snapshot represents a compute instance snapshot.
 type Snapshot struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	InstanceID  string            `json:"instance_id"`
-	State       string            `json:"state"`
-	Size        int64             `json:"size,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
-	Parent      string            `json:"parent,omitempty"`
-	Children    []string          `json:"children,omitempty"`
-	Metadata    map[string]string `json:"metadata,omitempty"`
+	// String fields (8 bytes)
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	InstanceID  string `json:"instance_id"`
+	State       string `json:"state"`
+	Parent      string `json:"parent,omitempty"`
+	// Slice and map fields (8 bytes)
+	Children []string          `json:"children,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+	// Int64 fields (8 bytes)
+	Size int64 `json:"size,omitempty"`
+	// Time fields (8 bytes)
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // ResourceHistoryOptions represents options for resource usage history.
 type ResourceHistoryOptions struct {
-	Start    *TimeStamp `json:"start,omitempty"`
-	End      *TimeStamp `json:"end,omitempty"`
-	Interval string     `json:"interval,omitempty"` // 1m, 5m, 1h, etc.
-	Metrics  []string   `json:"metrics,omitempty"`  // cpu, memory, network, storage
+	// Pointer fields (8 bytes)
+	Start *TimeStamp `json:"start,omitempty"`
+	End   *TimeStamp `json:"end,omitempty"`
+	// String fields (8 bytes)
+	Interval string `json:"interval,omitempty"` // 1m, 5m, 1h, etc.
+	// Slice fields (8 bytes)
+	Metrics []string `json:"metrics,omitempty"` // cpu, memory, network, storage
 }
 
 // MigrationOptions represents options for instance migration.
 type MigrationOptions struct {
-	Live       bool              `json:"live,omitempty"`
-	Offline    bool              `json:"offline,omitempty"`
-	Persistent bool              `json:"persistent,omitempty"`
-	Undefine   bool              `json:"undefine,omitempty"`
-	Compressed bool              `json:"compressed,omitempty"`
-	Bandwidth  int64             `json:"bandwidth,omitempty"` // MB/s
-	Timeout    int               `json:"timeout,omitempty"`   // seconds
+	// Slice and map fields (8 bytes)
 	Flags      []string          `json:"flags,omitempty"`
 	Parameters map[string]string `json:"parameters,omitempty"`
+	// Int64 fields (8 bytes)
+	Bandwidth int64 `json:"bandwidth,omitempty"` // MB/s
+	// Int fields (4 bytes)
+	Timeout int `json:"timeout,omitempty"` // seconds
+	// Bool fields (1 byte)
+	Live       bool `json:"live,omitempty"`
+	Offline    bool `json:"offline,omitempty"`
+	Persistent bool `json:"persistent,omitempty"`
+	Undefine   bool `json:"undefine,omitempty"`
+	Compressed bool `json:"compressed,omitempty"`
 }
 
 // ExportOptions represents options for instance export.
 type ExportOptions struct {
-	Format      string            `json:"format"`      // ova, qcow2, vmdk, tar
-	Destination string            `json:"destination"` // local path or remote URL
-	Compress    bool              `json:"compress,omitempty"`
-	Metadata    bool              `json:"metadata,omitempty"`
-	Snapshots   bool              `json:"snapshots,omitempty"`
-	Parameters  map[string]string `json:"parameters,omitempty"`
+	// String fields (8 bytes)
+	Format      string `json:"format"`      // ova, qcow2, vmdk, tar
+	Destination string `json:"destination"` // local path or remote URL
+	// Map fields (8 bytes)
+	Parameters map[string]string `json:"parameters,omitempty"`
+	// Bool fields (1 byte)
+	Compress  bool `json:"compress,omitempty"`
+	Metadata  bool `json:"metadata,omitempty"`
+	Snapshots bool `json:"snapshots,omitempty"`
 }
 
 // ImportOptions represents options for instance import.
 type ImportOptions struct {
-	Name       string              `json:"name"`
-	Backend    ComputeBackend      `json:"backend,omitempty"`
+	// String fields (8 bytes)
+	Name string `json:"name"`
+	// Slice and map fields (8 bytes)
 	Networks   []NetworkAttachment `json:"networks,omitempty"`
 	Storage    []StorageAttachment `json:"storage,omitempty"`
-	Resources  *ComputeResources   `json:"resources,omitempty"`
-	AutoStart  bool                `json:"auto_start,omitempty"`
 	Parameters map[string]string   `json:"parameters,omitempty"`
+	// Pointer fields (8 bytes)
+	Resources *ComputeResources `json:"resources,omitempty"`
+	// Enum fields (typically 4 bytes)
+	Backend ComputeBackend `json:"backend,omitempty"`
+	// Bool fields (1 byte)
+	AutoStart bool `json:"auto_start,omitempty"`
 }
 
 // ExportJob represents an export operation.
 type ExportJob struct {
-	ID          string     `json:"id"`
-	InstanceID  string     `json:"instance_id"`
-	Format      string     `json:"format"`
-	Destination string     `json:"destination"`
-	State       string     `json:"state"`
-	Progress    float64    `json:"progress"`
-	Error       string     `json:"error,omitempty"`
-	StartedAt   time.Time  `json:"started_at"`
+	// String fields (8 bytes)
+	ID          string `json:"id"`
+	InstanceID  string `json:"instance_id"`
+	Format      string `json:"format"`
+	Destination string `json:"destination"`
+	State       string `json:"state"`
+	Error       string `json:"error,omitempty"`
+	Checksum    string `json:"checksum,omitempty"`
+	// Pointer fields (8 bytes)
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Size        int64      `json:"size,omitempty"`
-	Checksum    string     `json:"checksum,omitempty"`
+	// Float64 fields (8 bytes)
+	Progress float64 `json:"progress"`
+	// Int64 fields (8 bytes)
+	Size int64 `json:"size,omitempty"`
+	// Time fields (8 bytes)
+	StartedAt time.Time `json:"started_at"`
 }
 
 // MetricsOptions represents options for metrics streaming.
 type MetricsOptions struct {
+	// Slice fields (8 bytes)
+	Metrics []string `json:"metrics,omitempty"`
+	// Duration fields (8 bytes)
 	Interval time.Duration `json:"interval,omitempty"`
-	Metrics  []string      `json:"metrics,omitempty"`
-	Buffer   int           `json:"buffer,omitempty"`
+	// Int fields (4 bytes)
+	Buffer int `json:"buffer,omitempty"`
 }
 
 // EventOptions represents options for event retrieval.
 type EventOptions struct {
-	Types  []string   `json:"types,omitempty"`
-	Since  *TimeStamp `json:"since,omitempty"`
-	Until  *TimeStamp `json:"until,omitempty"`
-	Follow bool       `json:"follow,omitempty"`
-	Limit  int        `json:"limit,omitempty"`
+	// Slice fields (8 bytes)
+	Types []string `json:"types,omitempty"`
+	// Pointer fields (8 bytes)
+	Since *TimeStamp `json:"since,omitempty"`
+	Until *TimeStamp `json:"until,omitempty"`
+	// Int fields (4 bytes)
+	Limit int `json:"limit,omitempty"`
+	// Bool fields (1 byte)
+	Follow bool `json:"follow,omitempty"`
 }
 
 // InstanceEvent represents an instance event.
 type InstanceEvent struct {
-	ID         string                 `json:"id"`
-	InstanceID string                 `json:"instance_id"`
-	Type       string                 `json:"type"`
-	Action     string                 `json:"action"`
-	Status     string                 `json:"status"`
-	Message    string                 `json:"message,omitempty"`
-	Details    map[string]interface{} `json:"details,omitempty"`
-	Timestamp  time.Time              `json:"timestamp"`
-	User       string                 `json:"user,omitempty"`
+	// String fields (8 bytes)
+	ID         string `json:"id"`
+	InstanceID string `json:"instance_id"`
+	Type       string `json:"type"`
+	Action     string `json:"action"`
+	Status     string `json:"status"`
+	Message    string `json:"message,omitempty"`
+	User       string `json:"user,omitempty"`
+	// Map fields (8 bytes)
+	Details map[string]interface{} `json:"details,omitempty"`
+	// Time fields (8 bytes)
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // BulkActionOptions represents options for bulk operations.
 type BulkActionOptions struct {
-	Force      bool              `json:"force,omitempty"`
-	Parallel   bool              `json:"parallel,omitempty"`
-	BatchSize  int               `json:"batch_size,omitempty"`
-	Timeout    int               `json:"timeout,omitempty"` // seconds
+	// Map fields (8 bytes)
 	Parameters map[string]string `json:"parameters,omitempty"`
+	// Int fields (4 bytes)
+	BatchSize int `json:"batch_size,omitempty"`
+	Timeout   int `json:"timeout,omitempty"` // seconds
+	// Bool fields (1 byte)
+	Force    bool `json:"force,omitempty"`
+	Parallel bool `json:"parallel,omitempty"`
 }
 
 // BulkActionResult represents the result of a bulk action on an instance.
 type BulkActionResult struct {
-	InstanceID  string     `json:"instance_id"`
-	Action      string     `json:"action"`
-	Success     bool       `json:"success"`
-	Error       string     `json:"error,omitempty"`
-	StartedAt   time.Time  `json:"started_at"`
+	// String fields (8 bytes)
+	InstanceID string `json:"instance_id"`
+	Action     string `json:"action"`
+	Error      string `json:"error,omitempty"`
+	// Pointer fields (8 bytes)
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	// Time fields (8 bytes)
+	StartedAt time.Time `json:"started_at"`
+	// Bool fields (1 byte)
+	Success bool `json:"success"`
 }
 
 // BackendInfo represents information about a compute backend.
 type BackendInfo struct {
-	Type               ComputeBackend         `json:"type"`
-	Version            string                 `json:"version"`
-	APIVersion         string                 `json:"api_version"`
-	Status             string                 `json:"status"`
-	Capabilities       []string               `json:"capabilities"`
-	SupportedTypes     []ComputeInstanceType  `json:"supported_types"`
-	ResourceLimits     ComputeResources       `json:"resource_limits"`
-	AvailableResources ComputeResources       `json:"available_resources"`
-	Configuration      map[string]interface{} `json:"configuration,omitempty"`
-	HealthCheck        *HealthStatus          `json:"health_check,omitempty"`
+	// String fields (8 bytes)
+	Version    string `json:"version"`
+	APIVersion string `json:"api_version"`
+	Status     string `json:"status"`
+	// Slice and map fields (8 bytes)
+	Capabilities   []string               `json:"capabilities"`
+	SupportedTypes []ComputeInstanceType  `json:"supported_types"`
+	Configuration  map[string]interface{} `json:"configuration,omitempty"`
+	// Pointer fields (8 bytes)
+	HealthCheck *HealthStatus `json:"health_check,omitempty"`
+	// Struct fields
+	ResourceLimits     ComputeResources `json:"resource_limits"`
+	AvailableResources ComputeResources `json:"available_resources"`
+	// Enum fields
+	Type ComputeBackend `json:"type"`
 }
 
 // ClusterStatus represents the overall status of the compute cluster.
 type ClusterStatus struct {
-	TotalInstances   int                             `json:"total_instances"`
-	RunningInstances int                             `json:"running_instances"`
-	StoppedInstances int                             `json:"stopped_instances"`
-	ErrorInstances   int                             `json:"error_instances"`
-	Backends         map[ComputeBackend]*BackendInfo `json:"backends"`
-	ResourceUsage    ComputeResources                `json:"resource_usage"`
-	ResourceLimits   ComputeResources                `json:"resource_limits"`
-	Health           *HealthStatus                   `json:"health"`
-	Uptime           time.Duration                   `json:"uptime"`
-	LastUpdated      time.Time                       `json:"last_updated"`
+	// Map fields (8 bytes)
+	Backends map[ComputeBackend]*BackendInfo `json:"backends"`
+	// Pointer fields (8 bytes)
+	Health *HealthStatus `json:"health"`
+	// Duration fields (8 bytes)
+	Uptime time.Duration `json:"uptime"`
+	// Time fields (8 bytes)
+	LastUpdated time.Time `json:"last_updated"`
+	// Struct fields
+	ResourceUsage  ComputeResources `json:"resource_usage"`
+	ResourceLimits ComputeResources `json:"resource_limits"`
+	// Int fields (4 bytes)
+	TotalInstances   int `json:"total_instances"`
+	RunningInstances int `json:"running_instances"`
+	StoppedInstances int `json:"stopped_instances"`
+	ErrorInstances   int `json:"error_instances"`
 }
 
 // ResourceQuotas represents resource quotas for a user.
 type ResourceQuotas struct {
-	UserID          uint                  `json:"user_id"`
-	MaxInstances    int                   `json:"max_instances"`
-	MaxCPUCores     float64               `json:"max_cpu_cores"`
-	MaxMemoryGB     int                   `json:"max_memory_gb"`
-	MaxStorageGB    int                   `json:"max_storage_gb"`
-	MaxNetworks     int                   `json:"max_networks"`
+	// Slice fields (8 bytes)
 	AllowedBackends []ComputeBackend      `json:"allowed_backends"`
 	AllowedTypes    []ComputeInstanceType `json:"allowed_types"`
-	CreatedAt       time.Time             `json:"created_at"`
-	UpdatedAt       time.Time             `json:"updated_at"`
+	// Float64 fields (8 bytes)
+	MaxCPUCores float64 `json:"max_cpu_cores"`
+	// Time fields (8 bytes)
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	// Int fields (4 bytes)
+	MaxInstances int `json:"max_instances"`
+	MaxMemoryGB  int `json:"max_memory_gb"`
+	MaxStorageGB int `json:"max_storage_gb"`
+	MaxNetworks  int `json:"max_networks"`
+	// Uint fields (4 bytes)
+	UserID uint `json:"user_id"`
 }
 
 // InstanceTemplate represents a template for creating instances.
 type InstanceTemplate struct {
-	ID          string                `json:"id"`
-	Name        string                `json:"name"`
-	Description string                `json:"description"`
-	Type        ComputeInstanceType   `json:"type"`
-	Backend     ComputeBackend        `json:"backend"`
-	Config      ComputeInstanceConfig `json:"config"`
-	Resources   ComputeResources      `json:"resources"`
-	Networks    []NetworkAttachment   `json:"networks"`
-	Storage     []StorageAttachment   `json:"storage"`
-	Labels      map[string]string     `json:"labels,omitempty"`
-	UserID      uint                  `json:"user_id"`
-	Public      bool                  `json:"public"`
-	CreatedAt   time.Time             `json:"created_at"`
-	UpdatedAt   time.Time             `json:"updated_at"`
+	// String fields (8 bytes)
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Slice and map fields (8 bytes)
+	Networks []NetworkAttachment `json:"networks"`
+	Storage  []StorageAttachment `json:"storage"`
+	Labels   map[string]string   `json:"labels,omitempty"`
+	// Time fields (8 bytes)
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	// Struct fields
+	Config    ComputeInstanceConfig `json:"config"`
+	Resources ComputeResources      `json:"resources"`
+	// Enum fields
+	Type    ComputeInstanceType `json:"type"`
+	Backend ComputeBackend      `json:"backend"`
+	// Uint fields (4 bytes)
+	UserID uint `json:"user_id"`
+	// Bool fields (1 byte)
+	Public bool `json:"public"`
 }
 
 // TemplateListOptions represents options for listing templates.
 type TemplateListOptions struct {
-	Type      ComputeInstanceType `json:"type,omitempty"`
-	Backend   ComputeBackend      `json:"backend,omitempty"`
-	UserID    *uint               `json:"user_id,omitempty"`
-	Public    *bool               `json:"public,omitempty"`
-	Labels    map[string]string   `json:"labels,omitempty"`
-	Limit     int                 `json:"limit,omitempty"`
-	Offset    int                 `json:"offset,omitempty"`
-	SortBy    string              `json:"sort_by,omitempty"`
-	SortOrder string              `json:"sort_order,omitempty"`
+	// String fields (8 bytes)
+	SortBy    string `json:"sort_by,omitempty"`
+	SortOrder string `json:"sort_order,omitempty"`
+	// Map fields (8 bytes)
+	Labels map[string]string `json:"labels,omitempty"`
+	// Pointer fields (8 bytes)
+	UserID *uint `json:"user_id,omitempty"`
+	Public *bool `json:"public,omitempty"`
+	// Enum fields
+	Type    ComputeInstanceType `json:"type,omitempty"`
+	Backend ComputeBackend      `json:"backend,omitempty"`
+	// Int fields (4 bytes)
+	Limit  int `json:"limit,omitempty"`
+	Offset int `json:"offset,omitempty"`
 }
 
 // CloneRequest represents a request to clone from a template.
 type CloneRequest struct {
-	Name        string                 `json:"name"`
-	Resources   *ComputeResources      `json:"resources,omitempty"`
-	Networks    []NetworkAttachment    `json:"networks,omitempty"`
-	Storage     []StorageAttachment    `json:"storage,omitempty"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Annotations map[string]string      `json:"annotations,omitempty"`
-	AutoStart   bool                   `json:"auto_start,omitempty"`
-	Overrides   *ComputeInstanceConfig `json:"overrides,omitempty"`
+	// String fields (8 bytes)
+	Name string `json:"name"`
+	// Slice and map fields (8 bytes)
+	Networks    []NetworkAttachment `json:"networks,omitempty"`
+	Storage     []StorageAttachment `json:"storage,omitempty"`
+	Labels      map[string]string   `json:"labels,omitempty"`
+	Annotations map[string]string   `json:"annotations,omitempty"`
+	// Pointer fields (8 bytes)
+	Resources *ComputeResources      `json:"resources,omitempty"`
+	Overrides *ComputeInstanceConfig `json:"overrides,omitempty"`
+	// Bool fields (1 byte)
+	AutoStart bool `json:"auto_start,omitempty"`
 }
 
 // ComposeDeployment represents a Docker Compose deployment.

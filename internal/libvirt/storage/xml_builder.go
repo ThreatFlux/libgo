@@ -22,8 +22,8 @@ type PoolTemplate struct {
 // VolumeTemplate contains data for storage volume XML template.
 type VolumeTemplate struct {
 	Name          string
-	CapacityBytes uint64
 	Format        string
+	CapacityBytes uint64
 }
 
 // NewTemplateXMLBuilder creates a new TemplateXMLBuilder.

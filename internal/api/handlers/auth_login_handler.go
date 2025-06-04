@@ -42,9 +42,9 @@ type LoginRequest struct {
 
 // LoginResponse represents a login response
 type LoginResponse struct {
+	User      *usermodels.User `json:"user"`
 	Token     string           `json:"token"`
 	ExpiresAt time.Time        `json:"expiresAt"`
-	User      *usermodels.User `json:"user"`
 }
 
 // Login handles user login

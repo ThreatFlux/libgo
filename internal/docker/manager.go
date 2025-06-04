@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-// Manager is the interface for Docker client operations
+// Manager is the interface for Docker client operations.
 type Manager interface {
 	// GetClient returns a thread-safe Docker API client wrapper
 	GetClient() (client.APIClient, error)
@@ -32,28 +32,28 @@ type Manager interface {
 	GetConfig() ClientConfig
 }
 
-// Global default manager instance
+// Global default manager instance.
 var (
 	defaultManager     Manager
 	defaultManagerOnce sync.Once
 	defaultManagerMu   sync.RWMutex
 )
 
-// DefaultManager returns the singleton manager instance
+// DefaultManager returns the singleton manager instance.
 func DefaultManager() Manager {
 	defaultManagerMu.RLock()
 	defer defaultManagerMu.RUnlock()
 	return defaultManager
 }
 
-// SetDefaultManager sets the default manager instance
+// SetDefaultManager sets the default manager instance.
 func SetDefaultManager(m Manager) {
 	defaultManagerMu.Lock()
 	defer defaultManagerMu.Unlock()
 	defaultManager = m
 }
 
-// GetDefaultClient returns a client from the default manager
+// GetDefaultClient returns a client from the default manager.
 func GetDefaultClient() (client.APIClient, error) {
 	m := DefaultManager()
 	if m == nil {
@@ -62,7 +62,7 @@ func GetDefaultClient() (client.APIClient, error) {
 	return m.GetClient()
 }
 
-// GetDefaultClientWithContext returns a client from the default manager with context
+// GetDefaultClientWithContext returns a client from the default manager with context.
 func GetDefaultClientWithContext(ctx context.Context) (client.APIClient, error) {
 	m := DefaultManager()
 	if m == nil {

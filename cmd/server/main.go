@@ -407,8 +407,8 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	// Register KVM backend through VM manager wrapper
 	kvmBackend := NewKVMBackendAdapter(components.VMManager, log)
 	if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
-		if err := concreteManager.RegisterBackend(compute.BackendKVM, kvmBackend); err != nil {
-			return nil, fmt.Errorf("registering KVM backend: %w", err)
+		if kvmErr := concreteManager.RegisterBackend(compute.BackendKVM, kvmBackend); kvmErr != nil {
+			return nil, fmt.Errorf("registering KVM backend: %w", kvmErr)
 		}
 	} else {
 		return nil, fmt.Errorf("compute manager is not a concrete ComputeManager")
@@ -418,8 +418,8 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 	if cfg.Docker.Enabled && components.DockerManager != nil {
 		dockerBackend := docker.NewBackendService(components.DockerManager, log)
 		if concreteManager, ok := components.ComputeManager.(*compute.ComputeManager); ok {
-			if err := concreteManager.RegisterBackend(compute.BackendDocker, dockerBackend); err != nil {
-				return nil, fmt.Errorf("registering Docker backend: %w", err)
+			if dockerErr := concreteManager.RegisterBackend(compute.BackendDocker, dockerBackend); dockerErr != nil {
+				return nil, fmt.Errorf("registering Docker backend: %w", dockerErr)
 			}
 			log.Info("Docker backend registered with compute manager")
 		}
@@ -728,7 +728,7 @@ func performImageCopy(imagePath, destPath, templateName string, log logger.Logge
 	return nil
 }
 
-// convertConfigResourceLimits converts config resource limits to compute resource limits
+// convertConfigResourceLimits converts config resource limits to compute resource limits.
 func convertConfigResourceLimits(limits config.ResourceLimits) compute.ComputeResources {
 	return compute.ComputeResources{
 		CPU: compute.CPUResources{
@@ -746,7 +746,7 @@ func convertConfigResourceLimits(limits config.ResourceLimits) compute.ComputeRe
 	}
 }
 
-// NewKVMBackendAdapter creates an adapter that wraps the VM manager to implement the BackendService interface
+// NewKVMBackendAdapter creates an adapter that wraps the VM manager to implement the BackendService interface.
 func NewKVMBackendAdapter(vmManager vm.Manager, logger logger.Logger) compute.BackendService {
 	return &kvmBackendAdapter{
 		vmManager: vmManager,
@@ -754,13 +754,13 @@ func NewKVMBackendAdapter(vmManager vm.Manager, logger logger.Logger) compute.Ba
 	}
 }
 
-// kvmBackendAdapter adapts the VM manager to the compute backend interface
+// kvmBackendAdapter adapts the VM manager to the compute backend interface.
 type kvmBackendAdapter struct {
 	vmManager vm.Manager
 	logger    logger.Logger
 }
 
-// Create creates a new KVM instance
+// Create creates a new KVM instance.
 func (a *kvmBackendAdapter) Create(ctx context.Context, req compute.ComputeInstanceRequest) (*compute.ComputeInstance, error) {
 	// Convert compute request to VM request
 	vmReq := a.convertToVMRequest(req)
@@ -775,7 +775,7 @@ func (a *kvmBackendAdapter) Create(ctx context.Context, req compute.ComputeInsta
 	return a.convertFromVM(vmInstance), nil
 }
 
-// Get retrieves a KVM instance by ID
+// Get retrieves a KVM instance by ID.
 func (a *kvmBackendAdapter) Get(ctx context.Context, id string) (*compute.ComputeInstance, error) {
 	vmInstance, err := a.vmManager.Get(ctx, id)
 	if err != nil {
@@ -785,7 +785,7 @@ func (a *kvmBackendAdapter) Get(ctx context.Context, id string) (*compute.Comput
 	return a.convertFromVM(vmInstance), nil
 }
 
-// List retrieves KVM instances
+// List retrieves KVM instances.
 func (a *kvmBackendAdapter) List(ctx context.Context, opts compute.ComputeInstanceListOptions) ([]*compute.ComputeInstance, error) {
 	// VM manager List method doesn't take options - just list all VMs
 	vmInstances, err := a.vmManager.List(ctx)
@@ -801,55 +801,55 @@ func (a *kvmBackendAdapter) List(ctx context.Context, opts compute.ComputeInstan
 	return instances, nil
 }
 
-// Update updates a KVM instance
+// Update updates a KVM instance.
 func (a *kvmBackendAdapter) Update(ctx context.Context, id string, update compute.ComputeInstanceUpdate) (*compute.ComputeInstance, error) {
 	// For now, just return the current instance since VM updates are complex
 	return a.Get(ctx, id)
 }
 
-// Delete removes a KVM instance
+// Delete removes a KVM instance.
 func (a *kvmBackendAdapter) Delete(ctx context.Context, id string, force bool) error {
 	return a.vmManager.Delete(ctx, id)
 }
 
-// Start starts a KVM instance
+// Start starts a KVM instance.
 func (a *kvmBackendAdapter) Start(ctx context.Context, id string) error {
 	return a.vmManager.Start(ctx, id)
 }
 
-// Stop stops a KVM instance
+// Stop stops a KVM instance.
 func (a *kvmBackendAdapter) Stop(ctx context.Context, id string, force bool) error {
 	return a.vmManager.Stop(ctx, id)
 }
 
-// Restart restarts a KVM instance
+// Restart restarts a KVM instance.
 func (a *kvmBackendAdapter) Restart(ctx context.Context, id string, force bool) error {
 	return a.vmManager.Restart(ctx, id)
 }
 
-// Pause pauses a KVM instance
+// Pause pauses a KVM instance.
 func (a *kvmBackendAdapter) Pause(ctx context.Context, id string) error {
 	return fmt.Errorf("pause not implemented for KVM backend")
 }
 
-// Unpause unpauses a KVM instance
+// Unpause unpauses a KVM instance.
 func (a *kvmBackendAdapter) Unpause(ctx context.Context, id string) error {
 	return fmt.Errorf("unpause not implemented for KVM backend")
 }
 
-// GetResourceUsage gets current resource usage for a KVM instance
+// GetResourceUsage gets current resource usage for a KVM instance.
 func (a *kvmBackendAdapter) GetResourceUsage(ctx context.Context, id string) (*compute.ResourceUsage, error) {
 	// This would integrate with the VM manager's resource monitoring
 	return nil, fmt.Errorf("resource usage not implemented for KVM backend")
 }
 
-// UpdateResourceLimits updates resource limits for a KVM instance
+// UpdateResourceLimits updates resource limits for a KVM instance.
 func (a *kvmBackendAdapter) UpdateResourceLimits(ctx context.Context, id string, resources compute.ComputeResources) error {
 	// This would involve updating VM configuration
 	return fmt.Errorf("resource limit updates not implemented for KVM backend")
 }
 
-// GetBackendInfo returns information about the KVM backend
+// GetBackendInfo returns information about the KVM backend.
 func (a *kvmBackendAdapter) GetBackendInfo(ctx context.Context) (*compute.BackendInfo, error) {
 	return &compute.BackendInfo{
 		Type:           compute.BackendKVM,
@@ -865,7 +865,7 @@ func (a *kvmBackendAdapter) GetBackendInfo(ctx context.Context) (*compute.Backen
 	}, nil
 }
 
-// ValidateConfig validates a compute instance configuration for KVM
+// ValidateConfig validates a compute instance configuration for KVM.
 func (a *kvmBackendAdapter) ValidateConfig(ctx context.Context, config compute.ComputeInstanceConfig) error {
 	if config.Image == "" {
 		return fmt.Errorf("image is required for KVM VMs")
@@ -873,17 +873,17 @@ func (a *kvmBackendAdapter) ValidateConfig(ctx context.Context, config compute.C
 	return nil
 }
 
-// GetBackendType returns the backend type
+// GetBackendType returns the backend type.
 func (a *kvmBackendAdapter) GetBackendType() compute.ComputeBackend {
 	return compute.BackendKVM
 }
 
-// GetSupportedInstanceTypes returns supported instance types
+// GetSupportedInstanceTypes returns supported instance types.
 func (a *kvmBackendAdapter) GetSupportedInstanceTypes() []compute.ComputeInstanceType {
 	return []compute.ComputeInstanceType{compute.InstanceTypeVM}
 }
 
-// Helper conversion methods
+// Helper conversion methods.
 func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceRequest) vmmodels.VMParams {
 	return vmmodels.VMParams{
 		Name:     req.Name,

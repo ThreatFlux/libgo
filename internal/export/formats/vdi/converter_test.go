@@ -51,8 +51,8 @@ func TestVDIConverter_Convert(t *testing.T) {
 		options       map[string]string
 		execOutput    []byte
 		execError     error
-		expectedError bool
 		expectedArgs  []string
+		expectedError bool
 	}{
 		{
 			name:       "Success - Dynamic Allocation",

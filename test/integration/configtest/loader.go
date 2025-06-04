@@ -14,28 +14,31 @@ type TestConfig struct {
 	Test struct {
 		Name        string `yaml:"name"`
 		Description string `yaml:"description"`
-		Timeout     string `yaml:"timeout"` // Duration string e.g. "60m"
+		Timeout     string `yaml:"timeout"`
 	} `yaml:"test"`
-
+	Export struct {
+		Options map[ // Duration string e.g. "60m"
+		// Group map (8 bytes) before string (8 bytes) for better alignment
+		string]string `yaml:"options"`
+		Format string `yaml:"format"`
+	} `yaml:"export"`
 	VM struct {
-		Name        string                `yaml:"name"`
-		Template    string                `yaml:"template"`
-		Description string                `yaml:"description"`
-		CPU         vmmodels.CPUParams    `yaml:"cpu,omitempty"`
-		Memory      vmmodels.MemoryParams `yaml:"memory,omitempty"`
-		Disk        vmmodels.DiskParams   `yaml:"disk,omitempty"`
-		Network     vmmodels.NetParams    `yaml:"network,omitempty"`
-
+		Network      vmmodels.NetParams `yaml:"network,omitempty"`
+		Name         string             `yaml:"name"`
+		Template     string             `yaml:"template"`
+		Description  string             `yaml:"description"`
 		Provisioning struct {
-			Method        string `yaml:"method"` // cloudinit, unattended, preconfigured
+			Method        string `yaml:"method"`
 			UnattendedXml string `yaml:"unattendedXml,omitempty"`
 			Scripts       []struct {
 				Name    string `yaml:"name"`
 				Content string `yaml:"content"`
 			} `yaml:"scripts,omitempty"`
 		} `yaml:"provisioning"`
+		Disk   vmmodels.DiskParams   `yaml:"disk,omitempty"`
+		CPU    vmmodels.CPUParams    `yaml:"cpu,omitempty"`
+		Memory vmmodels.MemoryParams `yaml:"memory,omitempty"`
 	} `yaml:"vm"`
-
 	Verification struct {
 		Services []struct {
 			Name            string `yaml:"name"`
@@ -44,12 +47,8 @@ type TestConfig struct {
 			Port            int    `yaml:"port"`
 			Timeout         int    `yaml:"timeout"`
 		} `yaml:"services"`
-	} `yaml:"verification"`
-
-	Export struct {
-		Options map[string]string `yaml:"options"`
-		Format  string            `yaml:"format"`
-	} `yaml:"export"`
+	} `yaml:"verification"` // Group strings together
+	// Group ints together (4 bytes each)
 }
 
 // GetTimeout returns the test timeout duration with a default fallback

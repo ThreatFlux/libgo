@@ -24,7 +24,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// Common errors with detailed descriptions for better error handling
+// Common errors with detailed descriptions for better error handling.
 var (
 	ErrNilOption              = errors.New("nil option provided to client configuration")
 	ErrInvalidHost            = errors.New("invalid Docker host specification")
@@ -36,68 +36,68 @@ var (
 	ErrClientNotInitialized   = errors.New("Docker client not initialized")
 	ErrClientClosed           = errors.New("Docker client manager has been closed")
 	ErrInvalidAPIVersion      = errors.New("invalid Docker API version format")
-	ErrContextCancelled       = errors.New("context was cancelled while operating Docker client")
+	ErrContextCanceled        = errors.New("context was canceled while operating Docker client")
 	ErrEmptyOption            = errors.New("empty value provided for required option")
 	ErrTLSConfigValidation    = errors.New("TLS configuration validation failed")
 	ErrCertificateExpired     = errors.New("TLS certificate has expired")
 	ErrCertificateNotYetValid = errors.New("TLS certificate is not yet valid")
 )
 
-// ClientOption represents a functional option for configuring the Docker client
+// ClientOption represents a functional option for configuring the Docker client.
 type ClientOption func(*ClientConfig) error
 
-// ClientConfig represents the configuration for the Docker client
+// ClientConfig represents the configuration for the Docker client.
 type ClientConfig struct {
-	Host                        string
-	APIVersion                  string
-	TLSVerify                   bool
-	TLSCertPath                 string
-	TLSKeyPath                  string
-	TLSCAPath                   string
-	RequestTimeout              time.Duration
-	ConnectionTimeout           time.Duration
-	ConnectionIdleTimeout       time.Duration
-	TLSHandshakeTimeout         time.Duration
-	KeepAlive                   time.Duration
-	MaxIdleConns                int
-	MaxIdleConnsPerHost         int
-	MaxConnsPerHost             int
-	IdleConnTimeout             time.Duration
-	ResponseHeaderTimeout       time.Duration
-	ExpectContinueTimeout       time.Duration
 	Logger                      logger.Logger
 	Headers                     map[string]string
 	DialContext                 func(ctx context.Context, network, addr string) (net.Conn, error)
+	Host                        string
+	APIVersion                  string
+	TLSCertPath                 string
+	TLSKeyPath                  string
+	TLSCAPath                   string
+	TLSCipherSuites             []uint16
+	KeepAlive                   time.Duration
+	MaxIdleConns                int
+	TLSHandshakeTimeout         time.Duration
+	ConnectionTimeout           time.Duration
+	IdleConnTimeout             time.Duration
+	ResponseHeaderTimeout       time.Duration
+	ExpectContinueTimeout       time.Duration
 	PingTimeout                 time.Duration
-	RetryCount                  int
 	RetryDelay                  time.Duration
+	ConnectionIdleTimeout       time.Duration
+	MaxIdleConnsPerHost         int
+	MaxConnsPerHost             int
+	RetryCount                  int
+	RequestTimeout              time.Duration
 	TLSMinVersion               uint16
 	TLSMaxVersion               uint16
-	TLSCipherSuites             []uint16
+	TLSVerify                   bool
 	TLSPreferServerCipherSuites bool
 }
 
-// ClientManager manages Docker clients
+// ClientManager manages Docker clients.
 type ClientManager struct {
-	config      ClientConfig
+	lastPing    time.Time
+	logger      logger.Logger
 	client      *client.Client
+	config      ClientConfig
+	createCount int64
 	mu          sync.RWMutex
 	clientMu    sync.Mutex
-	logger      logger.Logger
-	closed      bool
-	initialized atomic.Bool
-	lastPing    time.Time
 	pingMutex   sync.Mutex
-	createCount int64
+	initialized atomic.Bool
+	closed      bool
 }
 
-// lockedClientWrapper wraps a Docker client to ensure thread-safe access
+// lockedClientWrapper wraps a Docker client to ensure thread-safe access.
 type lockedClientWrapper struct {
 	client.APIClient
 	mu *sync.Mutex
 }
 
-// DefaultClientConfig returns the default client configuration
+// DefaultClientConfig returns the default client configuration.
 func DefaultClientConfig() ClientConfig {
 	return ClientConfig{
 		Host:                  "unix:///var/run/docker.sock",
@@ -134,7 +134,7 @@ func DefaultClientConfig() ClientConfig {
 	}
 }
 
-// WithHost sets the Docker daemon host
+// WithHost sets the Docker daemon host.
 func WithHost(host string) ClientOption {
 	return func(config *ClientConfig) error {
 		if host == "" {
@@ -151,7 +151,7 @@ func WithHost(host string) ClientOption {
 	}
 }
 
-// WithAPIVersion sets the Docker API version
+// WithAPIVersion sets the Docker API version.
 func WithAPIVersion(version string) ClientOption {
 	return func(config *ClientConfig) error {
 		if version == "" {
@@ -171,7 +171,7 @@ func WithAPIVersion(version string) ClientOption {
 	}
 }
 
-// WithTLSVerify enables TLS verification
+// WithTLSVerify enables TLS verification.
 func WithTLSVerify(verify bool) ClientOption {
 	return func(config *ClientConfig) error {
 		config.TLSVerify = verify
@@ -179,7 +179,7 @@ func WithTLSVerify(verify bool) ClientOption {
 	}
 }
 
-// WithTLSConfig sets the complete TLS configuration
+// WithTLSConfig sets the complete TLS configuration.
 func WithTLSConfig(certPath, keyPath, caPath string) ClientOption {
 	return func(config *ClientConfig) error {
 		if certPath == "" || keyPath == "" || caPath == "" {
@@ -195,7 +195,7 @@ func WithTLSConfig(certPath, keyPath, caPath string) ClientOption {
 	}
 }
 
-// WithLogger sets the logger
+// WithLogger sets the logger.
 func WithLogger(logger logger.Logger) ClientOption {
 	return func(config *ClientConfig) error {
 		if logger == nil {
@@ -206,7 +206,7 @@ func WithLogger(logger logger.Logger) ClientOption {
 	}
 }
 
-// WithRequestTimeout sets the request timeout
+// WithRequestTimeout sets the request timeout.
 func WithRequestTimeout(timeout time.Duration) ClientOption {
 	return func(config *ClientConfig) error {
 		if timeout <= 0 {
@@ -217,7 +217,7 @@ func WithRequestTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
-// WithRetry sets retry parameters
+// WithRetry sets retry parameters.
 func WithRetry(count int, delay time.Duration) ClientOption {
 	return func(config *ClientConfig) error {
 		if count < 0 {
@@ -233,7 +233,7 @@ func WithRetry(count int, delay time.Duration) ClientOption {
 	}
 }
 
-// NewManager creates a new Docker client manager
+// NewManager creates a new Docker client manager.
 func NewManager(opts ...ClientOption) (*ClientManager, error) {
 	config := DefaultClientConfig()
 
@@ -271,12 +271,12 @@ func NewManager(opts ...ClientOption) (*ClientManager, error) {
 	return manager, nil
 }
 
-// GetClient returns a thread-safe Docker API client wrapper
+// GetClient returns a thread-safe Docker API client wrapper.
 func (m *ClientManager) GetClient() (client.APIClient, error) {
 	return m.GetWithContext(context.Background())
 }
 
-// GetWithContext returns a thread-safe Docker API client wrapper with context
+// GetWithContext returns a thread-safe Docker API client wrapper with context.
 func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, error) {
 	m.mu.RLock()
 	if m.closed {
@@ -321,7 +321,7 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 	for i := 0; i <= m.config.RetryCount; i++ {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("%w: %w", ErrContextCancelled, ctx.Err())
+			return nil, fmt.Errorf("%w: %w", ErrContextCanceled, ctx.Err())
 		default:
 		}
 
@@ -346,7 +346,7 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 			select {
 			case <-time.After(m.config.RetryDelay):
 			case <-ctx.Done():
-				return nil, fmt.Errorf("%w during retry delay: %w", ErrContextCancelled, ctx.Err())
+				return nil, fmt.Errorf("%w during retry delay: %w", ErrContextCanceled, ctx.Err())
 			}
 		}
 	}
@@ -355,7 +355,7 @@ func (m *ClientManager) GetWithContext(ctx context.Context) (client.APIClient, e
 	return nil, fmt.Errorf("failed to create Docker client after %d attempts: %w", m.config.RetryCount+1, lastErr)
 }
 
-// createClient handles the actual client creation logic
+// createClient handles the actual client creation logic.
 func (m *ClientManager) createClient(ctx context.Context) (*client.Client, error) {
 	var opts []client.Opt
 
@@ -406,7 +406,7 @@ func (m *ClientManager) createClient(ctx context.Context) (*client.Client, error
 	return cli, nil
 }
 
-// createSecureHTTPClient creates an *http.Client with TLS and timeout settings
+// createSecureHTTPClient creates an *http.Client with TLS and timeout settings.
 func (m *ClientManager) createSecureHTTPClient() *http.Client {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -484,7 +484,7 @@ func (m *ClientManager) createSecureHTTPClient() *http.Client {
 	}
 }
 
-// Ping checks the connectivity with the Docker daemon
+// Ping checks the connectivity with the Docker daemon.
 func (m *ClientManager) Ping(ctx context.Context) (types.Ping, error) {
 	m.pingMutex.Lock()
 	defer m.pingMutex.Unlock()
@@ -516,7 +516,7 @@ func (m *ClientManager) Ping(ctx context.Context) (types.Ping, error) {
 	return pingResult, nil
 }
 
-// Close closes the managed Docker client
+// Close closes the managed Docker client.
 func (m *ClientManager) Close() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -582,7 +582,7 @@ func (m *ClientManager) GetConfig() ClientConfig {
 }
 
 // Wrapper methods for thread-safe access - only implementing essential ones for brevity
-func (w *lockedClientWrapper) ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error) {
+func (w *lockedClientWrapper) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return w.APIClient.ContainerList(ctx, options)
@@ -612,7 +612,7 @@ func (w *lockedClientWrapper) ContainerRemove(ctx context.Context, containerID s
 	return w.APIClient.ContainerRemove(ctx, containerID, options)
 }
 
-func (w *lockedClientWrapper) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (w *lockedClientWrapper) ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return w.APIClient.ContainerInspect(ctx, containerID)

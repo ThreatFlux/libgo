@@ -1,0 +1,76 @@
+# Test configuration with Docker enabled
+server:
+  host: "0.0.0.0"
+  port: 8080
+  readTimeout: 30s
+  writeTimeout: 30s
+  maxHeaderBytes: 1048576
+
+database:
+  driver: "sqlite3"
+  dsn: "/tmp/libgo-test.db"
+  maxOpenConns: 10
+  maxIdleConns: 5
+  connMaxLifetime: 1h
+  autoMigrate: true
+
+libvirt:
+  uri: "qemu:///system"
+  connectionTimeout: 10s
+  maxConnections: 5
+  poolName: "default"
+  networkName: "default"
+
+# Docker configuration
+docker:
+  enabled: true
+  host: "unix:///var/run/docker.sock"
+  apiVersion: "1.41"
+  tlsVerify: false
+  requestTimeout: 30s
+  connectionTimeout: 10s
+  maxRetries: 3
+  retryDelay: 1s
+
+# Unified compute configuration
+compute:
+  defaultBackend: "kvm"  # or "docker"
+  allowMixedDeployments: true
+  resourceLimits:
+    maxInstances: 50
+    maxCPUCores: 64
+    maxMemoryGB: 256
+    maxStorageGB: 1000
+    maxNetworkMbps: 1000
+    cpuOvercommitRatio: 2.0
+    memoryOvercommitRatio: 1.5
+  healthCheckInterval: 30s
+  metricsCollectionInterval: 15s
+
+auth:
+  enabled: false  # Disable for testing
+  jwtSecretKey: "test-key"
+  tokenExpiration: 15m
+
+logging:
+  level: "info"
+  format: "json"
+
+storage:
+  defaultPool: "default"
+  poolPath: "/tmp/libgo-test-storage"
+
+export:
+  outputDir: "/tmp/libgo-exports"
+  tempDir: "/tmp/libgo-temp"
+  defaultFormat: "qcow2"
+  retention: 168h
+
+features:
+  cloudInit: true
+  export: true
+  metrics: true
+  rbacEnabled: false
+  storageCleanup: true
+
+templatesPath: "configs/templates"

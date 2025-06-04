@@ -19,9 +19,9 @@ import (
 
 // MockManager is a mock of Manager interface.
 type MockManager struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockManagerMockRecorder
-	isgomock struct{}
 }
 
 // MockManagerMockRecorder is the mock recorder for MockManager.
@@ -232,9 +232,9 @@ func (mr *MockManagerMockRecorder) Stop(ctx, name any) *gomock.Call {
 
 // MockXMLBuilder is a mock of XMLBuilder interface.
 type MockXMLBuilder struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockXMLBuilderMockRecorder
-	isgomock struct{}
 }
 
 // MockXMLBuilderMockRecorder is the mock recorder for MockXMLBuilder.

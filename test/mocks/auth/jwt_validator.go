@@ -19,9 +19,9 @@ import (
 
 // MockValidator is a mock of Validator interface.
 type MockValidator struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockValidatorMockRecorder
-	isgomock struct{}
 }
 
 // MockValidatorMockRecorder is the mock recorder for MockValidator.

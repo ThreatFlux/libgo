@@ -96,19 +96,19 @@ type XMLBuilder interface {
 
 // StoragePoolInfo represents detailed information about a storage pool.
 type StoragePoolInfo struct {
+	Source     *StoragePoolSource     `json:"source,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Target     *StoragePoolTarget     `json:"target,omitempty"`
+	Path       string                 `json:"path,omitempty"`
 	UUID       string                 `json:"uuid"`
-	Name       string                 `json:"name"`
-	Type       string                 `json:"type"` // dir, fs, netfs, logical, disk, iscsi, scsi, mpath, rbd, sheepdog, gluster, zfs.
 	State      StoragePoolState       `json:"state"`
+	Type       string                 `json:"type"`
+	Name       string                 `json:"name"`
+	Capacity   uint64                 `json:"capacity"`
+	Allocation uint64                 `json:"allocation"`
+	Available  uint64                 `json:"available"`
 	Autostart  bool                   `json:"autostart"`
 	Persistent bool                   `json:"persistent"`
-	Capacity   uint64                 `json:"capacity"`   // Total capacity in bytes.
-	Allocation uint64                 `json:"allocation"` // Current allocation in bytes.
-	Available  uint64                 `json:"available"`  // Available space in bytes.
-	Path       string                 `json:"path,omitempty"`
-	Source     *StoragePoolSource     `json:"source,omitempty"`
-	Target     *StoragePoolTarget     `json:"target,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // StoragePoolState represents the state of a storage pool.
@@ -133,36 +133,36 @@ type StoragePoolSource struct {
 
 // StoragePoolTarget represents the target configuration of a storage pool.
 type StoragePoolTarget struct {
-	Path        string `json:"path"`
 	Permissions *struct {
 		Mode  string `json:"mode,omitempty"`
 		Owner string `json:"owner,omitempty"`
 		Group string `json:"group,omitempty"`
 	} `json:"permissions,omitempty"`
+	Path string `json:"path"`
 }
 
 // CreatePoolParams represents parameters for creating a storage pool.
 type CreatePoolParams struct {
-	Name      string                 `json:"name" binding:"required"`
-	Type      string                 `json:"type" binding:"required"` // Default to "dir" if not specified.
-	Path      string                 `json:"path,omitempty"`          // For directory-based pools.
-	Source    *StoragePoolSource     `json:"source,omitempty"`        // For network/device-based pools.
-	Autostart bool                   `json:"autostart"`
+	Source    *StoragePoolSource     `json:"source,omitempty"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Name      string                 `json:"name" binding:"required"`
+	Type      string                 `json:"type" binding:"required"`
+	Path      string                 `json:"path,omitempty"`
+	Autostart bool                   `json:"autostart"`
 }
 
 // StorageVolumeInfo represents detailed information about a storage volume.
 type StorageVolumeInfo struct {
-	Name         string                 `json:"name"`
-	Key          string                 `json:"key"`        // Unique key for the volume.
-	Path         string                 `json:"path"`       // Full path to the volume.
-	Type         string                 `json:"type"`       // file, block, dir, network, netdir.
-	Capacity     uint64                 `json:"capacity"`   // Size in bytes.
-	Allocation   uint64                 `json:"allocation"` // Actual size on disk in bytes.
-	Format       string                 `json:"format"`     // qcow2, raw, vmdk, etc.
-	Pool         string                 `json:"pool"`       // Pool name this volume belongs to.
 	BackingStore *BackingStore          `json:"backing_store,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Name         string                 `json:"name"`
+	Key          string                 `json:"key"`
+	Path         string                 `json:"path"`
+	Type         string                 `json:"type"`
+	Format       string                 `json:"format"`
+	Pool         string                 `json:"pool"`
+	Capacity     uint64                 `json:"capacity"`
+	Allocation   uint64                 `json:"allocation"`
 }
 
 // BackingStore represents backing store information for a volume.
@@ -173,11 +173,11 @@ type BackingStore struct {
 
 // CreateVolumeParams represents parameters for creating a storage volume.
 type CreateVolumeParams struct {
-	Name          string                 `json:"name" binding:"required"`
-	CapacityBytes uint64                 `json:"capacity_bytes" binding:"required"`
-	Format        string                 `json:"format"` // Default to "qcow2" if not specified.
-	BackingStore  string                 `json:"backing_store,omitempty"`
 	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	Name          string                 `json:"name" binding:"required"`
+	Format        string                 `json:"format"`
+	BackingStore  string                 `json:"backing_store,omitempty"`
+	CapacityBytes uint64                 `json:"capacity_bytes" binding:"required"`
 }
 
 // UploadVolumeParams represents parameters for uploading to a storage volume.

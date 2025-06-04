@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// SetupRoutes configures the WebSocket routes with authentication
+// SetupRoutes configures the WebSocket routes with authentication.
 func SetupRoutes(
 	router *gin.Engine,
 	basePath string,
@@ -43,7 +43,7 @@ func SetupRoutes(
 	return handler
 }
 
-// SetupRoutesWithoutAuth configures the WebSocket routes without authentication
+// SetupRoutesWithoutAuth configures the WebSocket routes without authentication.
 func SetupRoutesWithoutAuth(
 	router *gin.Engine,
 	basePath string,

@@ -38,7 +38,6 @@ type Manager interface {
 
 // BridgeInfo represents information about an OVS bridge.
 type BridgeInfo struct {
-	Ports        []string          `json:"ports"`
 	ExternalIDs  map[string]string `json:"external_ids,omitempty"`
 	OtherConfig  map[string]string `json:"other_config,omitempty"`
 	Statistics   *BridgeStats      `json:"statistics,omitempty"`
@@ -46,32 +45,33 @@ type BridgeInfo struct {
 	UUID         string            `json:"uuid"`
 	Controller   string            `json:"controller,omitempty"`
 	DatapathType string            `json:"datapath_type"`
+	Ports        []string          `json:"ports"`
 }
 
 // PortInfo represents information about an OVS port.
 type PortInfo struct {
-	Interfaces  []string          `json:"interfaces"`
-	Trunks      []int             `json:"trunks,omitempty"` // VLAN trunks
 	ExternalIDs map[string]string `json:"external_ids,omitempty"`
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 	Statistics  *PortStats        `json:"statistics,omitempty"`
-	Tag         *int              `json:"tag,omitempty"` // VLAN tag
+	Tag         *int              `json:"tag,omitempty"`
 	Name        string            `json:"name"`
 	UUID        string            `json:"uuid"`
 	Bridge      string            `json:"bridge"`
-	Type        string            `json:"type"` // internal, patch, tunnel, etc.
+	Type        string            `json:"type"`
+	Interfaces  []string          `json:"interfaces"`
+	Trunks      []int             `json:"trunks,omitempty"`
 }
 
 // PortOptions represents options for creating a port.
 type PortOptions struct {
-	Trunks      []int             `json:"trunks,omitempty"`
 	ExternalIDs map[string]string `json:"external_ids,omitempty"`
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 	Tag         *int              `json:"tag,omitempty"`
-	Type        string            `json:"type,omitempty"`        // internal, patch, tunnel, etc.
-	PeerPort    string            `json:"peer_port,omitempty"`   // for patch ports
-	RemoteIP    string            `json:"remote_ip,omitempty"`   // for tunnel ports
-	TunnelType  string            `json:"tunnel_type,omitempty"` // vxlan, gre, geneve
+	Type        string            `json:"type,omitempty"`
+	PeerPort    string            `json:"peer_port,omitempty"`
+	RemoteIP    string            `json:"remote_ip,omitempty"`
+	TunnelType  string            `json:"tunnel_type,omitempty"`
+	Trunks      []int             `json:"trunks,omitempty"`
 }
 
 // FlowRule represents an OpenFlow rule.
@@ -115,7 +115,6 @@ type CreateBridgeParams struct {
 
 // CreatePortParams represents parameters for creating an OVS port.
 type CreatePortParams struct {
-	Trunks      []int             `json:"trunks,omitempty"`
 	ExternalIDs map[string]string `json:"external_ids,omitempty"`
 	OtherConfig map[string]string `json:"other_config,omitempty"`
 	Tag         *int              `json:"tag,omitempty"`
@@ -125,6 +124,7 @@ type CreatePortParams struct {
 	PeerPort    string            `json:"peer_port,omitempty"`
 	RemoteIP    string            `json:"remote_ip,omitempty"`
 	TunnelType  string            `json:"tunnel_type,omitempty"`
+	Trunks      []int             `json:"trunks,omitempty"`
 }
 
 // UpdatePortParams represents parameters for updating an OVS port.

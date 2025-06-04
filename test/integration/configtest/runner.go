@@ -23,19 +23,24 @@ var authToken string
 
 // ExportJob represents a VM export job
 type ExportJob struct {
-	ID           string            `json:"id"`
-	VMID         string            `json:"vmId"`
-	VMName       string            `json:"vmName"`
-	Format       string            `json:"format"`
-	Status       string            `json:"status"`
-	FilePath     string            `json:"filePath,omitempty"`
-	Error        string            `json:"error,omitempty"`
-	DownloadLink string            `json:"downloadLink,omitempty"`
-	Options      map[string]string `json:"options,omitempty"`
-	StartTime    time.Time         `json:"startTime"`
-	EndTime      time.Time         `json:"endTime,omitempty"`
-	FileSize     int64             `json:"fileSize,omitempty"`
-	Progress     int               `json:"progress"`
+	// Group strings together (8 bytes each on 64-bit)
+	ID           string `json:"id"`
+	VMID         string `json:"vmId"`
+	VMName       string `json:"vmName"`
+	Format       string `json:"format"`
+	Status       string `json:"status"`
+	FilePath     string `json:"filePath,omitempty"`
+	Error        string `json:"error,omitempty"`
+	DownloadLink string `json:"downloadLink,omitempty"`
+	// Group map (8 bytes)
+	Options map[string]string `json:"options,omitempty"`
+	// Group time.Time (8 bytes each)
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime,omitempty"`
+	// Group int64 (8 bytes)
+	FileSize int64 `json:"fileSize,omitempty"`
+	// Group int (4 bytes)
+	Progress int `json:"progress"`
 }
 
 // ExportJobResponse holds the export job response
@@ -289,8 +294,8 @@ func loginViaAPI(ctx context.Context, t *testing.T, apiURL string) (string, erro
 	// Parse response
 	var loginResp struct {
 		Token     string           `json:"token"`
-		ExpiresAt time.Time        `json:"expiresAt"`
 		User      *usermodels.User `json:"user"`
+		ExpiresAt time.Time        `json:"expiresAt"`
 	}
 	if err := json.Unmarshal(respBody, &loginResp); err != nil {
 		return "", fmt.Errorf("failed to unmarshal login response: %w", err)

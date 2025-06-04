@@ -21,9 +21,9 @@ import (
 
 // MockPoolManager is a mock of PoolManager interface.
 type MockPoolManager struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockPoolManagerMockRecorder
-	isgomock struct{}
 }
 
 // MockPoolManagerMockRecorder is the mock recorder for MockPoolManager.
@@ -219,9 +219,9 @@ func (mr *MockPoolManagerMockRecorder) Stop(ctx, name any) *gomock.Call {
 
 // MockVolumeManager is a mock of VolumeManager interface.
 type MockVolumeManager struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockVolumeManagerMockRecorder
-	isgomock struct{}
 }
 
 // MockVolumeManagerMockRecorder is the mock recorder for MockVolumeManager.
@@ -415,9 +415,9 @@ func (mr *MockVolumeManagerMockRecorder) Wipe(ctx, poolName, volName any) *gomoc
 
 // MockXMLBuilder is a mock of XMLBuilder interface.
 type MockXMLBuilder struct {
+	isgomock struct{}
 	ctrl     *gomock.Controller
 	recorder *MockXMLBuilderMockRecorder
-	isgomock struct{}
 }
 
 // MockXMLBuilderMockRecorder is the mock recorder for MockXMLBuilder.

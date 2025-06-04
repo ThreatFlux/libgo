@@ -12,12 +12,12 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
+	logger     logger.Logger
 	router     *gin.Engine
 	httpServer *http.Server
-	config     config.ServerConfig
-	logger     logger.Logger
 	certFile   string
 	keyFile    string
+	config     config.ServerConfig
 }
 
 // NewServer creates a new API server

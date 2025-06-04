@@ -9,8 +9,8 @@ import (
 
 // DeleteSnapshotResponse represents the response for a VM snapshot deletion request
 type DeleteSnapshotResponse struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 // DeleteSnapshot handles requests to delete a VM snapshot

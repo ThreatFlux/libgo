@@ -6,7 +6,7 @@ import (
 	"github.com/threatflux/libgo/internal/models/vm"
 )
 
-// Manager defines the interface for cloud-init operations
+// Manager defines the interface for cloud-init operations.
 type Manager interface {
 	// GenerateUserData generates cloud-init user-data content
 	GenerateUserData(params vm.VMParams) (string, error)

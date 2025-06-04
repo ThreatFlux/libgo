@@ -35,18 +35,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Core Components
-The application is a KVM/libvirt management API built with layered dependency injection:
+The application is a unified compute management API for both KVM/libvirt and Docker, built with layered dependency injection:
 
 **Dependency Flow:** `main.go` → **Managers** → **Handlers** → **API Routes**
 
-1. **Connection Layer** (`internal/libvirt/connection/`) - Manages libvirt connection pool
-2. **Resource Managers** - Each manages a specific libvirt resource type:
-   - `internal/libvirt/domain/` - VM lifecycle operations
-   - `internal/libvirt/storage/` - Disk and storage pool management  
-   - `internal/libvirt/network/` - Network configuration
+1. **Unified Compute Layer** (`internal/compute/`) - Abstraction for both VMs and containers
+2. **Backend Implementations**:
+   - **KVM/Libvirt Backend**:
+     - `internal/libvirt/connection/` - Connection pool management
+     - `internal/libvirt/domain/` - VM lifecycle operations
+     - `internal/libvirt/storage/` - Disk and storage pool management  
+     - `internal/libvirt/network/` - Network configuration
+   - **Docker Backend** (`internal/docker/`):
+     - `container/` - Container lifecycle and operations
+     - `image/` - Image management
+     - `network/` - Docker network management
+     - `volume/` - Volume management
 3. **SDN Management** (`internal/ovs/`) - OpenVSwitch software-defined networking
 4. **Business Logic** (`internal/vm/`) - Orchestrates resource managers for VM operations
-5. **API Layer** (`internal/api/`) - HTTP handlers and routing
+5. **API Layer** (`internal/api/`) - HTTP handlers and routing for unified and backend-specific APIs
 6. **Export System** (`internal/export/`) - VM export to multiple formats (QCOW2, VMDK, VDI, OVA)
 
 ### Key Patterns
@@ -85,18 +92,22 @@ The application is a KVM/libvirt management API built with layered dependency in
 
 ### Key Files to Understand
 - `cmd/server/main.go` - Application bootstrap and dependency wiring
+- `internal/compute/manager.go` - Unified compute instance management
 - `internal/vm/manager.go` - Core VM management orchestration
+- `internal/docker/manager.go` - Docker client management
+- `internal/docker/backend.go` - Docker backend service implementation
 - `internal/export/manager.go` - VM export job management  
 - `internal/ovs/manager.go` - OpenVSwitch bridge, port, and flow management
 - `internal/ovs/libvirt_integration.go` - OVS-libvirt integration for VM networking
 - `internal/api/router.go` - API route definitions
+- `internal/api/router_adapter.go` - Route configuration and middleware setup
 - `internal/libvirt/connection/manager.go` - Libvirt connection pooling
 
 ### Required Tools
 - Go 1.24.0+
-- Libvirt 9.0.0+ with development headers
+- Libvirt 9.0.0+ with development headers (for KVM support)
+- Docker 24.0.0+ (for container management functionality)
 - OpenVSwitch 2.13.0+ (for SDN functionality) - install with `make install-ovs`
-- Docker for containerization
 - Various linting tools (installed via `make setup` or `make test-setup`)
 
 ### Database

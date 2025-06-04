@@ -4,20 +4,20 @@ import "time"
 
 // Config holds all application configuration.
 type Config struct {
-	Server        ServerConfig     `yaml:"server" json:"server"`
-	Database      DatabaseConfig   `yaml:"database" json:"database"`
-	Libvirt       LibvirtConfig    `yaml:"libvirt" json:"libvirt"`
-	Docker        DockerConfig     `yaml:"docker" json:"docker"`
-	Compute       ComputeConfig    `yaml:"compute" json:"compute"`
-	Auth          AuthConfig       `yaml:"auth" json:"auth"`
-	Logging       LoggingConfig    `yaml:"logging" json:"logging"`
 	Storage       StorageConfig    `yaml:"storage" json:"storage"`
-	Network       NetworkConfig    `yaml:"network" json:"network"`
-	Export        ExportConfig     `yaml:"export" json:"export"`
-	Features      FeaturesConfig   `yaml:"features" json:"features"`
-	OVS           OVSConfig        `yaml:"ovs" json:"ovs"`
-	Monitoring    MonitoringConfig `yaml:"monitoring" json:"monitoring"`
 	TemplatesPath string           `yaml:"templatesPath" json:"templatesPath"`
+	Network       NetworkConfig    `yaml:"network" json:"network"`
+	Auth          AuthConfig       `yaml:"auth" json:"auth"`
+	Export        ExportConfig     `yaml:"export" json:"export"`
+	Libvirt       LibvirtConfig    `yaml:"libvirt" json:"libvirt"`
+	Server        ServerConfig     `yaml:"server" json:"server"`
+	OVS           OVSConfig        `yaml:"ovs" json:"ovs"`
+	Docker        DockerConfig     `yaml:"docker" json:"docker"`
+	Logging       LoggingConfig    `yaml:"logging" json:"logging"`
+	Database      DatabaseConfig   `yaml:"database" json:"database"`
+	Compute       ComputeConfig    `yaml:"compute" json:"compute"`
+	Monitoring    MonitoringConfig `yaml:"monitoring" json:"monitoring"`
+	Features      FeaturesConfig   `yaml:"features" json:"features"`
 }
 
 // DatabaseConfig holds database configuration.
@@ -33,42 +33,47 @@ type DatabaseConfig struct {
 // ServerConfig holds HTTP server configuration.
 type ServerConfig struct {
 	Host           string        `yaml:"host" json:"host"`
-	Port           int           `yaml:"port" json:"port"`
 	Mode           string        `yaml:"mode" json:"mode"`
+	TLS            TLSConfig     `yaml:"tls" json:"tls"`
 	ReadTimeout    time.Duration `yaml:"readTimeout" json:"readTimeout"`
 	WriteTimeout   time.Duration `yaml:"writeTimeout" json:"writeTimeout"`
+	Port           int           `yaml:"port" json:"port"`
 	MaxHeaderBytes int           `yaml:"maxHeaderBytes" json:"maxHeaderBytes"`
-	TLS            TLSConfig     `yaml:"tls" json:"tls"`
 }
 
 // TLSConfig holds TLS configuration.
 type TLSConfig struct {
-	Enabled      bool   `yaml:"enabled" json:"enabled"`
+	// String fields (8 bytes on 64-bit)
 	CertFile     string `yaml:"certFile" json:"certFile"`
 	KeyFile      string `yaml:"keyFile" json:"keyFile"`
 	MinVersion   string `yaml:"minVersion" json:"minVersion"`
 	MaxVersion   string `yaml:"maxVersion" json:"maxVersion"`
 	CipherSuites string `yaml:"cipherSuites" json:"cipherSuites"`
+	// Bool fields (1 byte)
+	Enabled bool `yaml:"enabled" json:"enabled"`
 }
 
 // LibvirtConfig holds libvirt connection settings.
 type LibvirtConfig struct {
-	URI               string        `yaml:"uri" json:"uri"`
+	// String fields (8 bytes on 64-bit)
+	URI         string `yaml:"uri" json:"uri"`
+	PoolName    string `yaml:"poolName" json:"poolName"`
+	NetworkName string `yaml:"networkName" json:"networkName"`
+	// Duration fields (8 bytes)
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout" json:"connectionTimeout"`
-	MaxConnections    int           `yaml:"maxConnections" json:"maxConnections"`
-	PoolName          string        `yaml:"poolName" json:"poolName"`
-	NetworkName       string        `yaml:"networkName" json:"networkName"`
+	// Int fields (4 bytes)
+	MaxConnections int `yaml:"maxConnections" json:"maxConnections"`
 }
 
 // AuthConfig holds authentication configuration.
 type AuthConfig struct {
-	Enabled         bool          `yaml:"enabled" json:"enabled"`
 	JWTSecretKey    string        `yaml:"jwtSecretKey" json:"jwtSecretKey"`
 	Issuer          string        `yaml:"issuer" json:"issuer"`
 	Audience        string        `yaml:"audience" json:"audience"`
-	TokenExpiration time.Duration `yaml:"tokenExpiration" json:"tokenExpiration"`
 	SigningMethod   string        `yaml:"signingMethod" json:"signingMethod"`
 	DefaultUsers    []DefaultUser `yaml:"defaultUsers" json:"defaultUsers"`
+	TokenExpiration time.Duration `yaml:"tokenExpiration" json:"tokenExpiration"`
+	Enabled         bool          `yaml:"enabled" json:"enabled"`
 }
 
 // DefaultUser represents a default user to create during system initialization.
@@ -92,9 +97,9 @@ type LoggingConfig struct {
 
 // StorageConfig holds storage configuration.
 type StorageConfig struct {
+	Templates   map[string]string `yaml:"templates" json:"templates"`
 	DefaultPool string            `yaml:"defaultPool" json:"defaultPool"`
 	PoolPath    string            `yaml:"poolPath" json:"poolPath"`
-	Templates   map[string]string `yaml:"templates" json:"templates"`
 }
 
 // ExportConfig holds export configuration.
@@ -117,10 +122,10 @@ type FeaturesConfig struct {
 
 // OVSConfig holds Open vSwitch configuration.
 type OVSConfig struct {
-	Enabled            bool              `yaml:"enabled" json:"enabled"`
 	DefaultBridges     []OVSBridgeConfig `yaml:"defaultBridges" json:"defaultBridges"`
-	LibvirtIntegration bool              `yaml:"libvirtIntegration" json:"libvirtIntegration"`
 	CommandTimeout     time.Duration     `yaml:"commandTimeout" json:"commandTimeout"`
+	Enabled            bool              `yaml:"enabled" json:"enabled"`
+	LibvirtIntegration bool              `yaml:"libvirtIntegration" json:"libvirtIntegration"`
 }
 
 // OVSBridgeConfig holds configuration for an OVS bridge.
@@ -128,30 +133,28 @@ type OVSBridgeConfig struct {
 	Name         string            `yaml:"name" json:"name"`
 	DatapathType string            `yaml:"datapathType" json:"datapathType"`
 	Controller   string            `yaml:"controller" json:"controller"`
-	AutoCreate   bool              `yaml:"autoCreate" json:"autoCreate"`
 	ExternalIDs  map[string]string `yaml:"externalIds" json:"externalIds"`
 	Ports        []OVSPortConfig   `yaml:"ports" json:"ports"`
+	AutoCreate   bool              `yaml:"autoCreate" json:"autoCreate"`
 }
 
 // OVSPortConfig holds configuration for an OVS port.
 type OVSPortConfig struct {
+	ExternalIDs map[string]string `yaml:"externalIds" json:"externalIds"`
+	Tag         *int              `yaml:"tag" json:"tag"`
 	Name        string            `yaml:"name" json:"name"`
 	Type        string            `yaml:"type" json:"type"`
-	Tag         *int              `yaml:"tag" json:"tag"`
-	Trunks      []int             `yaml:"trunks" json:"trunks"`
 	PeerPort    string            `yaml:"peerPort" json:"peerPort"`
 	RemoteIP    string            `yaml:"remoteIP" json:"remoteIP"`
 	TunnelType  string            `yaml:"tunnelType" json:"tunnelType"`
-	ExternalIDs map[string]string `yaml:"externalIds" json:"externalIds"`
+	Trunks      []int             `yaml:"trunks" json:"trunks"`
 	AutoCreate  bool              `yaml:"autoCreate" json:"autoCreate"`
 }
 
 // DockerConfig holds Docker daemon configuration.
 type DockerConfig struct {
-	Enabled           bool          `yaml:"enabled" json:"enabled"`
 	Host              string        `yaml:"host" json:"host"`
 	APIVersion        string        `yaml:"apiVersion" json:"apiVersion"`
-	TLSVerify         bool          `yaml:"tlsVerify" json:"tlsVerify"`
 	TLSCertPath       string        `yaml:"tlsCertPath" json:"tlsCertPath"`
 	TLSKeyPath        string        `yaml:"tlsKeyPath" json:"tlsKeyPath"`
 	TLSCAPath         string        `yaml:"tlsCaPath" json:"tlsCaPath"`
@@ -159,6 +162,8 @@ type DockerConfig struct {
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout" json:"connectionTimeout"`
 	MaxRetries        int           `yaml:"maxRetries" json:"maxRetries"`
 	RetryDelay        time.Duration `yaml:"retryDelay" json:"retryDelay"`
+	Enabled           bool          `yaml:"enabled" json:"enabled"`
+	TLSVerify         bool          `yaml:"tlsVerify" json:"tlsVerify"`
 }
 
 // ComputeConfig holds unified compute resource configuration.
@@ -193,11 +198,11 @@ type AutoScalingConfig struct {
 
 // NetworkConfig holds unified network configuration.
 type NetworkConfig struct {
-	DefaultProvider  string              `yaml:"defaultProvider" json:"defaultProvider"`
-	BridgeNetwork    BridgeNetworkConfig `yaml:"bridgeNetwork" json:"bridgeNetwork"`
 	DockerNetworks   DockerNetworkConfig `yaml:"dockerNetworks" json:"dockerNetworks"`
-	CrossPlatformNAT bool                `yaml:"crossPlatformNAT" json:"crossPlatformNAT"`
+	DefaultProvider  string              `yaml:"defaultProvider" json:"defaultProvider"`
 	IPAMConfig       IPAMConfig          `yaml:"ipam" json:"ipam"`
+	BridgeNetwork    BridgeNetworkConfig `yaml:"bridgeNetwork" json:"bridgeNetwork"`
+	CrossPlatformNAT bool                `yaml:"crossPlatformNAT" json:"crossPlatformNAT"`
 }
 
 // BridgeNetworkConfig holds bridge network configuration.
@@ -210,9 +215,9 @@ type BridgeNetworkConfig struct {
 
 // DockerNetworkConfig holds Docker-specific network configuration.
 type DockerNetworkConfig struct {
+	Options       map[string]string `yaml:"options" json:"options"`
 	DefaultDriver string            `yaml:"defaultDriver" json:"defaultDriver"`
 	IPAMDriver    string            `yaml:"ipamDriver" json:"ipamDriver"`
-	Options       map[string]string `yaml:"options" json:"options"`
 }
 
 // IPAMConfig holds IP address management configuration.
@@ -226,12 +231,12 @@ type IPAMConfig struct {
 
 // MonitoringConfig holds monitoring and metrics configuration.
 type MonitoringConfig struct {
-	Enabled           bool           `yaml:"enabled" json:"enabled"`
-	MetricsInterval   time.Duration  `yaml:"metricsInterval" json:"metricsInterval"`
-	PrometheusEnabled bool           `yaml:"prometheusEnabled" json:"prometheusEnabled"`
-	PrometheusPort    int            `yaml:"prometheusPort" json:"prometheusPort"`
-	AlertingEnabled   bool           `yaml:"alertingEnabled" json:"alertingEnabled"`
 	ResourceAlerts    ResourceAlerts `yaml:"resourceAlerts" json:"resourceAlerts"`
+	MetricsInterval   time.Duration  `yaml:"metricsInterval" json:"metricsInterval"`
+	PrometheusPort    int            `yaml:"prometheusPort" json:"prometheusPort"`
+	Enabled           bool           `yaml:"enabled" json:"enabled"`
+	PrometheusEnabled bool           `yaml:"prometheusEnabled" json:"prometheusEnabled"`
+	AlertingEnabled   bool           `yaml:"alertingEnabled" json:"alertingEnabled"`
 }
 
 // ResourceAlerts defines alerting thresholds for system resources.
