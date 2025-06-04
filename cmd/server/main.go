@@ -38,7 +38,7 @@ import (
 	"github.com/threatflux/libgo/internal/vm"
 	"github.com/threatflux/libgo/internal/vm/cloudinit"
 	"github.com/threatflux/libgo/internal/vm/template"
-	"github.com/threatflux/libgo/pkg/logger"
+	loggerPkg "github.com/threatflux/libgo/pkg/logger"
 	"github.com/threatflux/libgo/pkg/utils/exec"
 	"github.com/threatflux/libgo/pkg/utils/xmlutils"
 )
@@ -78,14 +78,14 @@ func main() {
 
 	// Log startup information
 	log.Info("Starting LibGo KVM API",
-		logger.String("version", version),
-		logger.String("commit", commit),
-		logger.String("buildDate", buildDate))
+		loggerPkg.String("version", version),
+		loggerPkg.String("commit", commit),
+		loggerPkg.String("buildDate", buildDate))
 
 	// Initialize libvirt connection manager
 	connManager, err := initLibvirt(cfg.Libvirt, log)
 	if err != nil {
-		log.Fatal("Failed to initialize libvirt connection", logger.Error(err))
+		log.Fatal("Failed to initialize libvirt connection", loggerPkg.Error(err))
 	}
 	defer connManager.Close()
 
@@ -95,34 +95,34 @@ func main() {
 	// Initialize components
 	components, err := initComponents(ctx, cfg, connManager, log)
 	if err != nil {
-		log.Error("Failed to initialize components", logger.Error(err))
+		log.Error("Failed to initialize components", loggerPkg.Error(err))
 		return
 	}
 
 	// Ensure storage pool exists
 	if poolErr := ensureStoragePool(ctx, components.PoolManager, cfg, log); poolErr != nil {
-		log.Error("Failed to ensure storage pool", logger.Error(poolErr))
+		log.Error("Failed to ensure storage pool", loggerPkg.Error(poolErr))
 		return
 	}
 
 	// Initialize default users if configured
 	log.Info("Default users configuration",
-		logger.Int("count", len(cfg.Auth.DefaultUsers)),
-		logger.String("config_path", *configPath))
+		loggerPkg.Int("count", len(cfg.Auth.DefaultUsers)),
+		loggerPkg.String("config_path", *configPath))
 
 	if len(cfg.Auth.DefaultUsers) > 0 {
 		log.Info("Initializing default users from config",
-			logger.Int("count", len(cfg.Auth.DefaultUsers)))
+			loggerPkg.Int("count", len(cfg.Auth.DefaultUsers)))
 
 		for i, u := range cfg.Auth.DefaultUsers {
 			log.Info("Default user config",
-				logger.Int("index", i),
-				logger.String("username", u.Username))
+				loggerPkg.Int("index", i),
+				loggerPkg.String("username", u.Username))
 		}
 
 		err = initDefaultUsers(ctx, components.UserService, cfg.Auth.DefaultUsers, log)
 		if err != nil {
-			log.Fatal("Failed to initialize default users", logger.Error(err))
+			log.Fatal("Failed to initialize default users", loggerPkg.Error(err))
 		}
 	} else {
 		log.Warn("No default users configured")
@@ -142,11 +142,11 @@ func main() {
 
 	// Start the server
 	log.Info("Starting HTTP server",
-		logger.String("host", cfg.Server.Host),
-		logger.Int("port", cfg.Server.Port))
+		loggerPkg.String("host", cfg.Server.Host),
+		loggerPkg.Int("port", cfg.Server.Port))
 
 	if err := server.Start(); err != nil {
-		log.Fatal("Failed to start server", logger.Error(err))
+		log.Fatal("Failed to start server", loggerPkg.Error(err))
 	}
 
 	// Wait for shutdown signal
@@ -179,9 +179,9 @@ func initConfig(configPath string) (*config.Config, error) {
 }
 
 // initLogger initializes logger.
-func initLogger(config config.LoggingConfig) (logger.Logger, error) {
+func initLogger(config config.LoggingConfig) (loggerPkg.Logger, error) {
 	// Create zap logger based on configuration
-	log, err := logger.NewZapLogger(config)
+	log, err := loggerPkg.NewZapLogger(config)
 	if err != nil {
 		return nil, fmt.Errorf("creating logger: %w", err)
 	}
@@ -190,7 +190,7 @@ func initLogger(config config.LoggingConfig) (logger.Logger, error) {
 }
 
 // initLibvirt initializes libvirt connections.
-func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.Manager, error) {
+func initLibvirt(config config.LibvirtConfig, logger loggerPkg.Logger) (connection.Manager, error) {
 	// Create connection manager
 	connManager, err := connection.NewConnectionManager(config, logger)
 	if err != nil {
@@ -205,7 +205,9 @@ func initLibvirt(config config.LibvirtConfig, logger logger.Logger) (connection.
 	if err != nil {
 		return nil, fmt.Errorf("connecting to libvirt: %w", err)
 	}
-	_ = connManager.Release(conn) // Ignore release errors for test connection
+	if releaseErr := connManager.Release(conn); releaseErr != nil {
+		logger.Warn("Failed to release test connection", loggerPkg.Error(releaseErr))
+	}
 
 	return connManager, nil
 }
@@ -250,7 +252,7 @@ type ComponentDependencies struct {
 }
 
 // initComponents initializes all application components.
-func initComponents(ctx context.Context, cfg *config.Config, connManager connection.Manager, log logger.Logger) (*ComponentDependencies, error) {
+func initComponents(ctx context.Context, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) (*ComponentDependencies, error) {
 	components := &ComponentDependencies{
 		ConnManager: connManager,
 	}
@@ -446,7 +448,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 }
 
 // initHealthChecker initializes the health checker.
-func initHealthChecker(components *ComponentDependencies, version, buildDate string, log logger.Logger) *health.Checker {
+func initHealthChecker(components *ComponentDependencies, version, buildDate string, log loggerPkg.Logger) *health.Checker {
 	// Create health checker
 	checker := health.NewChecker(version, buildDate)
 
@@ -463,7 +465,7 @@ func initHealthChecker(components *ComponentDependencies, version, buildDate str
 }
 
 // setupRoutes configures API routes.
-func setupRoutes(server *api.Server, components *ComponentDependencies, healthChecker *health.Checker, cfg *config.Config, log logger.Logger) {
+func setupRoutes(server *api.Server, components *ComponentDependencies, healthChecker *health.Checker, cfg *config.Config, log loggerPkg.Logger) {
 	// Create API handlers
 	vmHandler := handlers.NewVMHandler(components.VMManager, log)
 	exportHandler := handlers.NewExportHandler(components.VMManager, components.ExportManager, log)
@@ -575,8 +577,8 @@ func setupRoutes(server *api.Server, components *ComponentDependencies, healthCh
 }
 
 // initDefaultUsers initializes default users from configuration.
-func initDefaultUsers(ctx context.Context, userService user.Service, defaultUsers []config.DefaultUser, log logger.Logger) error {
-	log.Info("Initializing default users", logger.Int("count", len(defaultUsers)))
+func initDefaultUsers(ctx context.Context, userService user.Service, defaultUsers []config.DefaultUser, log loggerPkg.Logger) error {
+	log.Info("Initializing default users", loggerPkg.Int("count", len(defaultUsers)))
 
 	// Convert DefaultUser config structs to the format expected by InitializeDefaultUsers
 	userConfigs := make([]user.DefaultUserConfig, len(defaultUsers))
@@ -595,7 +597,7 @@ func initDefaultUsers(ctx context.Context, userService user.Service, defaultUser
 }
 
 // setupSignalHandler sets up signal handling for graceful shutdown.
-func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
+func setupSignalHandler(server *api.Server, log loggerPkg.Logger) chan os.Signal {
 	stopCh := make(chan os.Signal, 1)
 	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
@@ -609,7 +611,7 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 
 		// Shutdown the server
 		if err := server.Stop(ctx); err != nil {
-			log.Error("Error during server shutdown", logger.Error(err))
+			log.Error("Error during server shutdown", loggerPkg.Error(err))
 		}
 
 		// Signal that shutdown is complete
@@ -620,7 +622,7 @@ func setupSignalHandler(server *api.Server, log logger.Logger) chan os.Signal {
 }
 
 // ensureStoragePool ensures the required storage pool exists and is active.
-func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log logger.Logger) error {
+func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg *config.Config, log loggerPkg.Logger) error {
 	poolName, poolPath := resolvePoolConfiguration(cfg, log)
 
 	if err := createPoolDirectory(poolPath); err != nil {
@@ -635,20 +637,20 @@ func ensureStoragePool(ctx context.Context, poolManager storage.PoolManager, cfg
 }
 
 // resolvePoolConfiguration resolves pool name and path from configuration.
-func resolvePoolConfiguration(cfg *config.Config, log logger.Logger) (string, string) {
+func resolvePoolConfiguration(cfg *config.Config, log loggerPkg.Logger) (string, string) {
 	poolName := cfg.Storage.DefaultPool
 	poolPath := cfg.Storage.PoolPath
 
 	if poolName == "" {
 		poolName = cfg.Libvirt.PoolName
 		log.Warn("Storage default pool not specified, using libvirt pool name",
-			logger.String("pool", poolName))
+			loggerPkg.String("pool", poolName))
 	}
 
 	if poolPath == "" {
 		poolPath = "/tmp/libgo-storage"
 		log.Warn("Storage pool path not specified, using default path",
-			logger.String("path", poolPath))
+			loggerPkg.String("path", poolPath))
 	}
 
 	return poolName, poolPath
@@ -663,24 +665,24 @@ func createPoolDirectory(poolPath string) error {
 }
 
 // copyTemplateImages copies template images to the storage pool.
-func copyTemplateImages(templates map[string]string, poolPath string, log logger.Logger) error {
+func copyTemplateImages(templates map[string]string, poolPath string, log loggerPkg.Logger) error {
 	for templateName, imagePath := range templates {
 		if err := copyTemplateImage(templateName, imagePath, poolPath, log); err != nil {
 			// Log error but continue with other templates
 			log.Warn("Failed to copy template image",
-				logger.String("template", templateName),
-				logger.Error(err))
+				loggerPkg.String("template", templateName),
+				loggerPkg.Error(err))
 		}
 	}
 	return nil
 }
 
 // copyTemplateImage copies a single template image to the pool.
-func copyTemplateImage(templateName, imagePath, poolPath string, log logger.Logger) error {
+func copyTemplateImage(templateName, imagePath, poolPath string, log loggerPkg.Logger) error {
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		log.Warn("Template image not found, skipping copy",
-			logger.String("template", templateName),
-			logger.String("path", imagePath))
+			loggerPkg.String("template", templateName),
+			loggerPkg.String("path", imagePath))
 		return nil
 	}
 
@@ -690,15 +692,15 @@ func copyTemplateImage(templateName, imagePath, poolPath string, log logger.Logg
 	}
 
 	log.Info("Copying template image to storage pool",
-		logger.String("template", templateName),
-		logger.String("source", imagePath),
-		logger.String("destination", destPath))
+		loggerPkg.String("template", templateName),
+		loggerPkg.String("source", imagePath),
+		loggerPkg.String("destination", destPath))
 
 	return performImageCopy(imagePath, destPath, templateName, log)
 }
 
 // performImageCopy performs the actual file copy operation.
-func performImageCopy(imagePath, destPath, templateName string, log logger.Logger) error {
+func performImageCopy(imagePath, destPath, templateName string, log loggerPkg.Logger) error {
 	src, err := os.Open(imagePath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
@@ -713,8 +715,8 @@ func performImageCopy(imagePath, destPath, templateName string, log logger.Logge
 
 	if err := dst.Chmod(0666); err != nil {
 		log.Warn("Failed to set permissions on destination file",
-			logger.String("path", destPath),
-			logger.Error(err))
+			loggerPkg.String("path", destPath),
+			loggerPkg.Error(err))
 	}
 
 	if _, err := io.Copy(dst, src); err != nil {
@@ -722,8 +724,8 @@ func performImageCopy(imagePath, destPath, templateName string, log logger.Logge
 	}
 
 	log.Info("Template image copied successfully",
-		logger.String("template", templateName),
-		logger.String("destination", destPath))
+		loggerPkg.String("template", templateName),
+		loggerPkg.String("destination", destPath))
 
 	return nil
 }
@@ -747,7 +749,7 @@ func convertConfigResourceLimits(limits config.ResourceLimits) compute.ComputeRe
 }
 
 // NewKVMBackendAdapter creates an adapter that wraps the VM manager to implement the BackendService interface.
-func NewKVMBackendAdapter(vmManager vm.Manager, logger logger.Logger) compute.BackendService {
+func NewKVMBackendAdapter(vmManager vm.Manager, logger loggerPkg.Logger) compute.BackendService {
 	return &kvmBackendAdapter{
 		vmManager: vmManager,
 		logger:    logger,
@@ -757,7 +759,7 @@ func NewKVMBackendAdapter(vmManager vm.Manager, logger logger.Logger) compute.Ba
 // kvmBackendAdapter adapts the VM manager to the compute backend interface.
 type kvmBackendAdapter struct {
 	vmManager vm.Manager
-	logger    logger.Logger
+	logger    loggerPkg.Logger
 }
 
 // Create creates a new KVM instance.
@@ -892,11 +894,21 @@ func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceReques
 			Count: int(req.Resources.CPU.Cores),
 		},
 		Memory: vmmodels.MemoryParams{
-			SizeBytes: uint64(req.Resources.Memory.Limit),
+			SizeBytes: func() uint64 {
+				if req.Resources.Memory.Limit < 0 {
+					return 0
+				}
+				return uint64(req.Resources.Memory.Limit)
+			}(),
 		},
 		Disk: vmmodels.DiskParams{
-			SizeBytes: uint64(req.Resources.Storage.TotalSpace),
-			Format:    vmmodels.DiskFormatQCOW2,
+			SizeBytes: func() uint64 {
+				if req.Resources.Storage.TotalSpace < 0 {
+					return 0
+				}
+				return uint64(req.Resources.Storage.TotalSpace)
+			}(),
+			Format: vmmodels.DiskFormatQCOW2,
 		},
 		Network: vmmodels.NetParams{
 			Type:   vmmodels.NetworkTypeBridge,
