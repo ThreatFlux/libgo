@@ -295,7 +295,7 @@ func (m *ClientManager) tryExistingClient(ctx context.Context) (client.APIClient
 	if m.closed {
 		return nil, ErrClientClosed
 	}
-	
+
 	if m.client != nil {
 		pingCtx, cancel := context.WithTimeout(ctx, m.config.PingTimeout)
 		defer cancel()
@@ -308,7 +308,7 @@ func (m *ClientManager) tryExistingClient(ctx context.Context) (client.APIClient
 			m.logger.Warn("Existing Docker client failed ping", logger.Error(err))
 		}
 	}
-	
+
 	return nil, nil // No existing client available
 }
 
@@ -341,7 +341,7 @@ func (m *ClientManager) createClientWithRetry(ctx context.Context) (client.APICl
 func (m *ClientManager) performClientCreationRetries(ctx context.Context) (client.APIClient, error) {
 	var newClient *client.Client
 	var lastErr error
-	
+
 	for i := 0; i <= m.config.RetryCount; i++ {
 		select {
 		case <-ctx.Done():
@@ -352,7 +352,7 @@ func (m *ClientManager) performClientCreationRetries(ctx context.Context) (clien
 		if m.logger != nil {
 			m.logger.Debug("Attempting to create Docker client", logger.Int("attempt", i+1), logger.Int("max_attempts", m.config.RetryCount+1))
 		}
-		
+
 		newClient, lastErr = m.createClient(ctx)
 		if lastErr == nil {
 			if m.logger != nil {
@@ -367,7 +367,7 @@ func (m *ClientManager) performClientCreationRetries(ctx context.Context) (clien
 		if m.logger != nil {
 			m.logger.Warn("Error creating Docker client", logger.Int("attempt", i+1), logger.Error(lastErr))
 		}
-		
+
 		if i < m.config.RetryCount {
 			select {
 			case <-time.After(m.config.RetryDelay):
@@ -498,7 +498,7 @@ func (m *ClientManager) createTLSConfig() *tls.Config {
 	if minVersion < tls.VersionTLS12 {
 		minVersion = tls.VersionTLS12
 	}
-	
+
 	return &tls.Config{
 		MinVersion:               minVersion,
 		MaxVersion:               m.config.TLSMaxVersion,

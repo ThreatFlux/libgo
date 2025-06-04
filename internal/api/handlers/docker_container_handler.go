@@ -12,7 +12,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DockerContainerHandler handles Docker container operations
+// DockerContainerHandler handles Docker container operations.
 type DockerContainerHandler struct {
 	containerService containerSvc.Service
 	logger           logger.Logger
@@ -175,7 +175,7 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetContainer gets a specific container by ID
+// GetContainer gets a specific container by ID.
 func (h *DockerContainerHandler) GetContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_get"),
@@ -201,7 +201,7 @@ func (h *DockerContainerHandler) GetContainer(c *gin.Context) {
 	c.JSON(http.StatusOK, containerJSON)
 }
 
-// StartContainer starts a container
+// StartContainer starts a container.
 func (h *DockerContainerHandler) StartContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_start"),
@@ -226,7 +226,7 @@ func (h *DockerContainerHandler) StartContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// StopContainer stops a container
+// StopContainer stops a container.
 func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_stop"),
@@ -259,7 +259,7 @@ func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// RestartContainer restarts a container
+// RestartContainer restarts a container.
 func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_restart"),
@@ -292,7 +292,7 @@ func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// DeleteContainer deletes a container
+// DeleteContainer deletes a container.
 func (h *DockerContainerHandler) DeleteContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_delete"),
@@ -320,7 +320,7 @@ func (h *DockerContainerHandler) DeleteContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// GetContainerLogs gets container logs
+// GetContainerLogs gets container logs.
 func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_logs"),
@@ -380,7 +380,7 @@ func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 	}
 }
 
-// GetContainerStats gets container statistics
+// GetContainerStats gets container statistics.
 func (h *DockerContainerHandler) GetContainerStats(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_stats"),

@@ -7,13 +7,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DeleteSnapshotResponse represents the response for a VM snapshot deletion request
+// DeleteSnapshotResponse represents the response for a VM snapshot deletion request.
 type DeleteSnapshotResponse struct {
 	Message string `json:"message"`
 	Success bool   `json:"success"`
 }
 
-// DeleteSnapshot handles requests to delete a VM snapshot
+// DeleteSnapshot handles requests to delete a VM snapshot.
 func (h *VMHandler) DeleteSnapshot(c *gin.Context) {
 	// Get VM name and snapshot name from URL path
 	vmName := c.Param("name")

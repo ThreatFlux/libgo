@@ -8,12 +8,12 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// CreateSnapshotResponse represents the response for a VM snapshot creation request
+// CreateSnapshotResponse represents the response for a VM snapshot creation request.
 type CreateSnapshotResponse struct {
 	Snapshot *vmmodels.Snapshot `json:"snapshot"`
 }
 
-// CreateSnapshot handles requests to create a new VM snapshot
+// CreateSnapshot handles requests to create a new VM snapshot.
 func (h *VMHandler) CreateSnapshot(c *gin.Context) {
 	// Get VM name from URL path
 	vmName := c.Param("name")
