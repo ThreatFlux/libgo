@@ -10,13 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DockerImageHandler handles Docker image API requests
+// DockerImageHandler handles Docker image API requests.
 type DockerImageHandler struct {
 	service dockerimage.Service
 	logger  logger.Logger
 }
 
-// NewDockerImageHandler creates a new Docker image handler
+// NewDockerImageHandler creates a new Docker image handler.
 func NewDockerImageHandler(service dockerimage.Service, logger logger.Logger) *DockerImageHandler {
 	return &DockerImageHandler{
 		service: service,
@@ -24,7 +24,7 @@ func NewDockerImageHandler(service dockerimage.Service, logger logger.Logger) *D
 	}
 }
 
-// ListImages handles GET /docker/images
+// ListImages handles GET /docker/images.
 func (h *DockerImageHandler) ListImages(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -41,7 +41,7 @@ func (h *DockerImageHandler) ListImages(c *gin.Context) {
 	})
 }
 
-// PullImage handles POST /docker/images/pull
+// PullImage handles POST /docker/images/pull.
 func (h *DockerImageHandler) PullImage(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -76,7 +76,7 @@ func (h *DockerImageHandler) PullImage(c *gin.Context) {
 	})
 }
 
-// RemoveImage handles DELETE /docker/images/:id
+// RemoveImage handles DELETE /docker/images/:id.
 func (h *DockerImageHandler) RemoveImage(c *gin.Context) {
 	ctx := c.Request.Context()
 	imageID := c.Param("id")
@@ -102,7 +102,7 @@ func (h *DockerImageHandler) RemoveImage(c *gin.Context) {
 	})
 }
 
-// InspectImage handles GET /docker/images/:id
+// InspectImage handles GET /docker/images/:id.
 func (h *DockerImageHandler) InspectImage(c *gin.Context) {
 	ctx := c.Request.Context()
 	imageID := c.Param("id")
@@ -119,7 +119,7 @@ func (h *DockerImageHandler) InspectImage(c *gin.Context) {
 	c.JSON(http.StatusOK, imageInfo)
 }
 
-// PruneImages handles POST /docker/images/prune
+// PruneImages handles POST /docker/images/prune.
 func (h *DockerImageHandler) PruneImages(c *gin.Context) {
 	ctx := c.Request.Context()
 

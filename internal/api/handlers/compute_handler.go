@@ -11,6 +11,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
+const (
+	trueString = "true"
+)
+
 // ComputeHandler handles unified compute instance requests.
 type ComputeHandler struct {
 	computeManager compute.Manager
@@ -29,7 +33,7 @@ func NewComputeHandler(computeManager compute.Manager, logger logger.Logger) *Co
 func (h *ComputeHandler) CreateInstance(c *gin.Context) {
 	contextLogger := getContextLogger(c, h.logger)
 
-	// Parse and validate request body
+	// Parse and validate request body.
 	var req compute.ComputeInstanceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		contextLogger.Warn("Invalid compute instance creation request", logger.Error(err))
@@ -37,14 +41,14 @@ func (h *ComputeHandler) CreateInstance(c *gin.Context) {
 		return
 	}
 
-	// Set user ID from context
+	// Set user ID from context.
 	if userID, exists := c.Get("user_id"); exists {
 		if uid, ok := userID.(uint); ok {
 			req.UserID = uid
 		}
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if err := h.validateCreateRequest(req); err != nil {
 		contextLogger.Warn("Invalid compute instance parameters",
 			logger.String("name", req.Name),
@@ -254,7 +258,7 @@ func (h *ComputeHandler) DeleteInstance(c *gin.Context) {
 	}
 
 	// Parse force parameter
-	force := c.Query("force") == "true"
+	force := c.Query("force") == trueString
 
 	err := h.computeManager.DeleteInstance(c.Request.Context(), id, force)
 	if err != nil {
@@ -286,7 +290,7 @@ func (h *ComputeHandler) StartInstance(c *gin.Context) {
 
 // StopInstance handles requests to stop a compute instance.
 func (h *ComputeHandler) StopInstance(c *gin.Context) {
-	force := c.Query("force") == "true"
+	force := c.Query("force") == trueString
 	h.performLifecycleAction(c, "stop", func(id string) error {
 		return h.computeManager.StopInstance(c.Request.Context(), id, force)
 	})
@@ -294,7 +298,7 @@ func (h *ComputeHandler) StopInstance(c *gin.Context) {
 
 // RestartInstance handles requests to restart a compute instance.
 func (h *ComputeHandler) RestartInstance(c *gin.Context) {
-	force := c.Query("force") == "true"
+	force := c.Query("force") == trueString
 	h.performLifecycleAction(c, "restart", func(id string) error {
 		return h.computeManager.RestartInstance(c.Request.Context(), id, force)
 	})
@@ -534,7 +538,7 @@ func (h *ComputeHandler) parseEventOptions(c *gin.Context) compute.EventOptions 
 		}
 	}
 
-	if follow := c.Query("follow"); follow == "true" {
+	if follow := c.Query("follow"); follow == trueString {
 		opts.Follow = true
 	}
 

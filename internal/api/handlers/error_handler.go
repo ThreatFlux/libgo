@@ -12,6 +12,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
+const (
+	internalServerErrorCode = "INTERNAL_SERVER_ERROR"
+)
+
 // Error types.
 var (
 	ErrNotFound      = errors.New("resource not found")
@@ -94,11 +98,11 @@ func mapErrorToStatusAndCode(err error) (int, string) {
 		return status, code
 	}
 	if errors.Is(err, ErrInternalError) {
-		return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
+		return http.StatusInternalServerError, internalServerErrorCode
 	}
 
 	// Default case.
-	return http.StatusInternalServerError, "INTERNAL_SERVER_ERROR"
+	return http.StatusInternalServerError, internalServerErrorCode
 }
 
 // checkNotFoundErrors checks for not found error types.

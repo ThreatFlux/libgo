@@ -28,16 +28,16 @@ func NewDockerContainerHandler(containerService containerSvc.Service, logger log
 
 // CreateContainerRequest represents the request to create a container.
 type CreateContainerRequest struct {
-	// Struct fields (need to be first for alignment)
+	// Struct fields (need to be first for alignment).
 	HostConfig container.HostConfig `json:"host_config,omitempty"`
-	// Slice fields (24 bytes each)
+	// Slice fields (24 bytes each).
 	Cmd        []string `json:"cmd,omitempty"`
 	Entrypoint []string `json:"entrypoint,omitempty"`
 	Env        []string `json:"env,omitempty"`
-	// Map fields (24 bytes each)
+	// Map fields (24 bytes each).
 	Labels  map[string]string   `json:"labels,omitempty"`
 	Volumes map[string]struct{} `json:"volumes,omitempty"`
-	// String fields (16 bytes each)
+	// String fields (16 bytes each).
 	Name       string `json:"name" binding:"required"`
 	Image      string `json:"image" binding:"required"`
 	WorkingDir string `json:"working_dir,omitempty"`
@@ -46,13 +46,13 @@ type CreateContainerRequest struct {
 
 // ContainerResponse represents a container in responses.
 type ContainerResponse struct {
-	// Slice fields (24 bytes)
+	// Slice fields (24 bytes).
 	Ports []PortMapping `json:"ports,omitempty"`
-	// Map fields (24 bytes)
+	// Map fields (24 bytes).
 	Labels map[string]string `json:"labels,omitempty"`
-	// Int64 fields (8 bytes)
+	// Int64 fields (8 bytes).
 	Created int64 `json:"created"`
-	// String fields (16 bytes each)
+	// String fields (16 bytes each).
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Image  string `json:"image"`
@@ -68,7 +68,7 @@ type PortMapping struct {
 	Public  uint16 `json:"public"`
 }
 
-// CreateContainer creates a new Docker container.
+// CreateContainer creates a new Docker container..
 func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_create"),
@@ -83,7 +83,7 @@ func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 		return
 	}
 
-	// Build container config
+	// Build container config.
 	config := &container.Config{
 		Image:      req.Image,
 		Cmd:        req.Cmd,
@@ -95,7 +95,7 @@ func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 		User:       req.User,
 	}
 
-	// Create container
+	// Create container.
 	id, err := h.containerService.Create(c.Request.Context(), config, &req.HostConfig, req.Name)
 	if err != nil {
 		contextLogger.Error("Failed to create container", logger.Error(err))
@@ -113,7 +113,7 @@ func (h *DockerContainerHandler) CreateContainer(c *gin.Context) {
 	})
 }
 
-// ListContainers lists Docker containers.
+// ListContainers lists Docker containers..
 func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_list"),
@@ -121,8 +121,8 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 		logger.String("path", c.Request.URL.Path),
 	)
 
-	// Parse query parameters
-	all := c.DefaultQuery("all", "false") == "true"
+	// Parse query parameters.
+	all := c.DefaultQuery("all", "false") == trueString
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "0"))
 	if err != nil {
 		limit = 0 // Default to no limit if parsing fails
@@ -133,7 +133,7 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 		Limit: limit,
 	}
 
-	// Add filters if provided
+	// Add filters if provided.
 	if labelFilter := c.Query("label"); labelFilter != "" {
 		options.Filters.Add("label", labelFilter)
 	}
@@ -148,7 +148,7 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format
+	// Convert to response format.
 	response := make([]ContainerResponse, len(containers))
 	for i, cnt := range containers {
 		response[i] = ContainerResponse{
@@ -161,7 +161,7 @@ func (h *DockerContainerHandler) ListContainers(c *gin.Context) {
 			Labels:  cnt.Labels,
 		}
 
-		// Convert ports
+		// Convert ports.
 		for _, port := range cnt.Ports {
 			response[i].Ports = append(response[i].Ports, PortMapping{
 				Private: port.PrivatePort,
@@ -201,7 +201,7 @@ func (h *DockerContainerHandler) GetContainer(c *gin.Context) {
 	c.JSON(http.StatusOK, containerJSON)
 }
 
-// StartContainer starts a container.
+// StartContainer starts a container..
 func (h *DockerContainerHandler) StartContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_start"),
@@ -226,7 +226,7 @@ func (h *DockerContainerHandler) StartContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// StopContainer stops a container.
+// StopContainer stops a container..
 func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_stop"),
@@ -240,7 +240,7 @@ func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 		return
 	}
 
-	// Parse timeout from query
+	// Parse timeout from query.
 	var timeout *int
 	if t := c.Query("timeout"); t != "" {
 		if timeoutVal, err := strconv.Atoi(t); err == nil {
@@ -259,7 +259,7 @@ func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// RestartContainer restarts a container.
+// RestartContainer restarts a container..
 func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_restart"),
@@ -273,7 +273,7 @@ func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
 		return
 	}
 
-	// Parse timeout from query
+	// Parse timeout from query.
 	var timeout *int
 	if t := c.Query("timeout"); t != "" {
 		if timeoutVal, err := strconv.Atoi(t); err == nil {
@@ -292,7 +292,7 @@ func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// DeleteContainer deletes a container.
+// DeleteContainer deletes a container..
 func (h *DockerContainerHandler) DeleteContainer(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_delete"),
@@ -306,7 +306,7 @@ func (h *DockerContainerHandler) DeleteContainer(c *gin.Context) {
 		return
 	}
 
-	force := c.Query("force") == "true"
+	force := c.Query("force") == trueString
 
 	if err := h.containerService.Remove(c.Request.Context(), containerID, force); err != nil {
 		contextLogger.Error("Failed to delete container",
@@ -320,7 +320,7 @@ func (h *DockerContainerHandler) DeleteContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// GetContainerLogs gets container logs.
+// GetContainerLogs gets container logs..
 func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_logs"),
@@ -334,20 +334,20 @@ func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 		return
 	}
 
-	// Parse options
+	// Parse options.
 	options := container.LogsOptions{
-		ShowStdout: c.DefaultQuery("stdout", "true") == "true",
-		ShowStderr: c.DefaultQuery("stderr", "true") == "true",
-		Follow:     c.Query("follow") == "true",
-		Timestamps: c.Query("timestamps") == "true",
+		ShowStdout: c.DefaultQuery("stdout", "true") == trueString,
+		ShowStderr: c.DefaultQuery("stderr", "true") == trueString,
+		Follow:     c.Query("follow") == trueString,
+		Timestamps: c.Query("timestamps") == trueString,
 	}
 
-	// Parse tail option
+	// Parse tail option.
 	if tail := c.Query("tail"); tail != "" {
 		options.Tail = tail
 	}
 
-	// Parse since option
+	// Parse since option.
 	if since := c.Query("since"); since != "" {
 		options.Since = since
 	}
@@ -362,7 +362,7 @@ func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 	}
 	defer logs.Close()
 
-	// Stream logs to response
+	// Stream logs to response.
 	c.Header("Content-Type", "text/plain; charset=utf-8")
 	c.Header("Transfer-Encoding", "chunked")
 
@@ -372,7 +372,7 @@ func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 
-	// Copy logs to response
+	// Copy logs to response.
 	if _, err := io.Copy(c.Writer, logs); err != nil {
 		contextLogger.Error("Failed to stream logs",
 			logger.String("container_id", containerID),
@@ -380,7 +380,7 @@ func (h *DockerContainerHandler) GetContainerLogs(c *gin.Context) {
 	}
 }
 
-// GetContainerStats gets container statistics.
+// GetContainerStats gets container statistics..
 func (h *DockerContainerHandler) GetContainerStats(c *gin.Context) {
 	contextLogger := h.logger.WithFields(
 		logger.String("handler", "docker_container_stats"),
@@ -394,7 +394,7 @@ func (h *DockerContainerHandler) GetContainerStats(c *gin.Context) {
 		return
 	}
 
-	stream := c.Query("stream") == "true"
+	stream := c.Query("stream") == trueString
 
 	stats, err := h.containerService.Stats(c.Request.Context(), containerID, stream)
 	if err != nil {
@@ -406,7 +406,7 @@ func (h *DockerContainerHandler) GetContainerStats(c *gin.Context) {
 	}
 	defer stats.Body.Close()
 
-	// Set appropriate headers
+	// Set appropriate headers.
 	c.Header("Content-Type", "application/json")
 	if stream {
 		c.Header("Transfer-Encoding", "chunked")
@@ -415,7 +415,7 @@ func (h *DockerContainerHandler) GetContainerStats(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 
-	// Copy stats to response
+	// Copy stats to response.
 	if _, err := io.Copy(c.Writer, stats.Body); err != nil {
 		contextLogger.Error("Failed to stream stats",
 			logger.String("container_id", containerID),

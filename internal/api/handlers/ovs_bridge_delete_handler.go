@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// OVSBridgeDeleteHandler handles deleting OVS bridges
+// OVSBridgeDeleteHandler handles deleting OVS bridges.
 type OVSBridgeDeleteHandler struct {
 	ovsManager ovs.Manager
 	logger     logger.Logger
 }
 
-// NewOVSBridgeDeleteHandler creates a new OVSBridgeDeleteHandler
+// NewOVSBridgeDeleteHandler creates a new OVSBridgeDeleteHandler.
 func NewOVSBridgeDeleteHandler(ovsManager ovs.Manager, logger logger.Logger) *OVSBridgeDeleteHandler {
 	return &OVSBridgeDeleteHandler{
 		ovsManager: ovsManager,
@@ -22,7 +22,7 @@ func NewOVSBridgeDeleteHandler(ovsManager ovs.Manager, logger logger.Logger) *OV
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *OVSBridgeDeleteHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 	name := c.Param("bridge")

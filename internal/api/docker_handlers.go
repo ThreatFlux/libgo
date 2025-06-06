@@ -4,7 +4,7 @@ import "github.com/threatflux/libgo/internal/api/handlers"
 
 // DockerHandlers groups all Docker-related handlers.
 type DockerHandlers struct {
-	// Container handlers
+	// Container handlers.
 	CreateContainer   *handlers.DockerContainerHandler
 	ListContainers    *handlers.DockerContainerHandler
 	GetContainer      *handlers.DockerContainerHandler
@@ -15,7 +15,7 @@ type DockerHandlers struct {
 	GetContainerLogs  *handlers.DockerContainerHandler
 	GetContainerStats *handlers.DockerContainerHandler
 
-	// Image handlers (future)
-	// Network handlers (future)
-	// Volume handlers (future)
+	// Image handlers (future).
+	// Network handlers (future).
+	// Volume handlers (future).
 }

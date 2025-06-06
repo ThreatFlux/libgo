@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NetworkListHandler handles listing all networks
+// NetworkListHandler handles listing all networks.
 type NetworkListHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewNetworkListHandler creates a new NetworkListHandler
+// NewNetworkListHandler creates a new NetworkListHandler.
 func NewNetworkListHandler(networkManager network.Manager, logger logger.Logger) *NetworkListHandler {
 	return &NetworkListHandler{
 		networkManager: networkManager,
@@ -22,11 +22,11 @@ func NewNetworkListHandler(networkManager network.Manager, logger logger.Logger)
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *NetworkListHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// List all networks
+	// List all networks.
 	networks, err := h.networkManager.List(ctx)
 	if err != nil {
 		h.logger.Error("Failed to list networks", logger.Error(err))
@@ -36,12 +36,12 @@ func (h *NetworkListHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Ensure networks is not nil
+	// Ensure networks is not nil.
 	if networks == nil {
 		networks = []*network.NetworkInfo{}
 	}
 
-	// Return the list
+	// Return the list.
 	c.JSON(http.StatusOK, gin.H{
 		"networks": networks,
 		"count":    len(networks),

@@ -6,13 +6,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NetworkStopHandler handles stopping a network
+// NetworkStopHandler handles stopping a network.
 type NetworkStopHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewNetworkStopHandler creates a new NetworkStopHandler
+// NewNetworkStopHandler creates a new NetworkStopHandler.
 func NewNetworkStopHandler(networkManager network.Manager, logger logger.Logger) *NetworkStopHandler {
 	return &NetworkStopHandler{
 		networkManager: networkManager,
@@ -20,7 +20,7 @@ func NewNetworkStopHandler(networkManager network.Manager, logger logger.Logger)
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *NetworkStopHandler) Handle(c *gin.Context) {
 	networkOperationHandler(c, h.networkManager, h.logger, h.networkManager.Stop, "stop")
 }

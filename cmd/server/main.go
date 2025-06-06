@@ -51,6 +51,22 @@ var (
 	buildDate string = "unknown"
 )
 
+// safeInt64ToUint64 safely converts int64 to uint64, avoiding overflow.
+func safeInt64ToUint64(val int64) uint64 {
+	if val < 0 {
+		return 0
+	}
+	return uint64(val)
+}
+
+// safeUint64ToInt64 safely converts uint64 to int64, avoiding overflow.
+func safeUint64ToInt64(val uint64) int64 {
+	if val > uint64(math.MaxInt64) {
+		return math.MaxInt64
+	}
+	return int64(val)
+}
+
 func main() {
 	// Parse command-line flags
 	configPath := flag.String("config", "configs/config.yaml", "Path to configuration file")
@@ -148,7 +164,8 @@ func main() {
 		loggerPkg.Int("port", cfg.Server.Port))
 
 	if err := server.Start(); err != nil {
-		log.Fatal("Failed to start server", loggerPkg.Error(err))
+		log.Error("Failed to start server", loggerPkg.Error(err))
+		return
 	}
 
 	// Wait for shutdown signal
@@ -264,25 +281,7 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 		return nil, fmt.Errorf("initializing libvirt components: %w", err)
 	}
 
-	// Initialize VM components
-	if err := initVMComponents(components, cfg, log); err != nil {
-		return nil, fmt.Errorf("initializing VM components: %w", err)
-	}
-
-	// Initialize authentication components
-	if err := initAuthComponents(components, cfg, log); err != nil {
-		return nil, fmt.Errorf("initializing auth components: %w", err)
-	}
-
-	// Initialize Docker components if enabled
-	if err := initDockerComponents(components, cfg, log); err != nil {
-		return nil, fmt.Errorf("initializing Docker components: %w", err)
-	}
-
-	// Initialize unified compute manager
-	if err := initComputeManager(components, cfg, log); err != nil {
-		return nil, fmt.Errorf("initializing compute manager: %w", err)
-	}
+	// All components (VM, auth, Docker, compute) are handled in initLibvirtComponents
 
 	// Initialize metrics
 	if err := initMetricsComponents(ctx, components, log); err != nil {
@@ -294,14 +293,29 @@ func initComponents(ctx context.Context, cfg *config.Config, connManager connect
 
 // initLibvirtComponents initializes libvirt-related components.
 func initLibvirtComponents(ctx context.Context, components *ComponentDependencies, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) error {
+	if err := initLibvirtManagers(components, cfg, connManager, log); err != nil {
+		return err
+	}
+	if err := initAuthComponents(components, cfg, log); err != nil {
+		return err
+	}
+	if err := initDockerManager(components, cfg, log); err != nil {
+		return err
+	}
+	if err := initComputeManager(ctx, components, cfg, log); err != nil {
+		return err
+	}
+	return nil
+}
+
+// initLibvirtManagers initializes all libvirt-related managers and components.
+func initLibvirtManagers(components *ComponentDependencies, cfg *config.Config, connManager connection.Manager, log loggerPkg.Logger) error {
 	// Initialize XML builder for domain
 	domainXMLLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "domain"))
 	if err != nil {
 		return fmt.Errorf("creating domain template loader: %w", err)
 	}
 	domainXMLBuilder := domain.NewTemplateXMLBuilder(domainXMLLoader, log)
-
-	// Initialize domain manager
 	components.DomainManager = domain.NewDomainManager(connManager, domainXMLBuilder, log)
 
 	// Initialize storage components
@@ -310,7 +324,6 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 		return fmt.Errorf("creating storage template loader: %w", err)
 	}
 	storageXMLBuilder := storage.NewTemplateXMLBuilder(storageXMLLoader, log)
-
 	components.PoolManager = storage.NewLibvirtPoolManager(connManager, storageXMLBuilder, log)
 	components.StorageManager = storage.NewLibvirtVolumeManager(connManager, components.PoolManager, storageXMLBuilder, log)
 
@@ -320,7 +333,6 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 		return fmt.Errorf("creating network template loader: %w", err)
 	}
 	networkXMLBuilder := network.TemplateXMLBuilderWithLoader(networkXMLLoader, log)
-
 	components.NetworkManager = network.NewLibvirtNetworkManager(connManager, networkXMLBuilder, log)
 
 	// Initialize OVS manager with sudo wrapper
@@ -328,6 +340,11 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 	sudoExecutor := ovs.NewSudoExecutor(commandExecutor)
 	components.OVSManager = ovs.NewOVSManager(sudoExecutor, log)
 
+	return initVMComponents(components, cfg, log)
+}
+
+// initVMComponents initializes VM-related components.
+func initVMComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
 	// Initialize cloud-init components
 	cloudInitTemplateLoader, err := xmlutils.NewTemplateLoader(filepath.Join(cfg.TemplatesPath, "cloudinit"))
 	if err != nil {
@@ -378,6 +395,11 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 		log,
 	)
 
+	return nil
+}
+
+// initAuthComponents initializes authentication and database components.
+func initAuthComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
 	// Initialize database connection
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
@@ -398,38 +420,46 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 	components.RecoveryMiddleware = recovery.RecoveryMiddleware(log)
 	components.LoggingMiddleware = logging.RequestLoggerMiddleware(log)
 
-	// Initialize Docker manager if enabled
-	if cfg.Docker.Enabled {
-		log.Info("Initializing Docker client manager")
+	return nil
+}
 
-		dockerOpts := []docker.ClientOption{
-			docker.WithHost(cfg.Docker.Host),
-			docker.WithAPIVersion(cfg.Docker.APIVersion),
-			docker.WithTLSVerify(cfg.Docker.TLSVerify),
-			docker.WithRequestTimeout(cfg.Docker.RequestTimeout),
-			docker.WithRetry(cfg.Docker.MaxRetries, cfg.Docker.RetryDelay),
-			docker.WithLogger(log),
-		}
-
-		if cfg.Docker.TLSVerify {
-			dockerOpts = append(dockerOpts, docker.WithTLSConfig(
-				cfg.Docker.TLSCertPath,
-				cfg.Docker.TLSKeyPath,
-				cfg.Docker.TLSCAPath,
-			))
-		}
-
-		components.DockerManager, err = docker.NewManager(dockerOpts...)
-		if err != nil {
-			return fmt.Errorf("creating Docker manager: %w", err)
-		}
-
-		log.Info("Docker client manager initialized successfully")
-	} else {
+// initDockerManager initializes Docker manager if enabled.
+func initDockerManager(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
+	if !cfg.Docker.Enabled {
 		log.Info("Docker support disabled in configuration")
+		return nil
 	}
 
-	// Initialize unified compute manager
+	log.Info("Initializing Docker client manager")
+	dockerOpts := []docker.ClientOption{
+		docker.WithHost(cfg.Docker.Host),
+		docker.WithAPIVersion(cfg.Docker.APIVersion),
+		docker.WithTLSVerify(cfg.Docker.TLSVerify),
+		docker.WithRequestTimeout(cfg.Docker.RequestTimeout),
+		docker.WithRetry(cfg.Docker.MaxRetries, cfg.Docker.RetryDelay),
+		docker.WithLogger(log),
+	}
+
+	if cfg.Docker.TLSVerify {
+		dockerOpts = append(dockerOpts, docker.WithTLSConfig(
+			cfg.Docker.TLSCertPath,
+			cfg.Docker.TLSKeyPath,
+			cfg.Docker.TLSCAPath,
+		))
+	}
+
+	var err error
+	components.DockerManager, err = docker.NewManager(dockerOpts...)
+	if err != nil {
+		return fmt.Errorf("creating Docker manager: %w", err)
+	}
+
+	log.Info("Docker client manager initialized successfully")
+	return nil
+}
+
+// initComputeManager initializes the unified compute manager and backends.
+func initComputeManager(ctx context.Context, components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
 	log.Info("Initializing unified compute manager")
 
 	computeConfig := compute.ManagerConfig{
@@ -476,35 +506,12 @@ func initLibvirtComponents(ctx context.Context, components *ComponentDependencie
 		metricsDeps["docker_manager"] = components.DockerManager
 	}
 
+	var err error
 	components.MetricsCollector, err = metrics.NewCollector("prometheus", ctx, metricsDeps, log)
 	if err != nil {
 		return fmt.Errorf("creating metrics collector: %w", err)
 	}
 
-	return nil
-}
-
-// initVMComponents initializes VM-related components.
-func initVMComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
-	// VM components are already initialized in initLibvirtComponents
-	return nil
-}
-
-// initAuthComponents initializes authentication components.
-func initAuthComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
-	// Auth components are already initialized in initLibvirtComponents
-	return nil
-}
-
-// initDockerComponents initializes Docker components.
-func initDockerComponents(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
-	// Docker components are already initialized in initLibvirtComponents
-	return nil
-}
-
-// initComputeManager initializes the unified compute manager.
-func initComputeManager(components *ComponentDependencies, cfg *config.Config, log loggerPkg.Logger) error {
-	// Compute manager is already initialized in initLibvirtComponents
 	return nil
 }
 
@@ -961,29 +968,11 @@ func (a *kvmBackendAdapter) convertToVMRequest(req compute.ComputeInstanceReques
 			Count: int(req.Resources.CPU.Cores),
 		},
 		Memory: vmmodels.MemoryParams{
-			SizeBytes: func() uint64 {
-				if req.Resources.Memory.Limit < 0 {
-					return 0
-				}
-				// Safe conversion: int64 to uint64
-				if req.Resources.Memory.Limit > int64(math.MaxInt64) {
-					return uint64(math.MaxInt64)
-				}
-				return uint64(req.Resources.Memory.Limit)
-			}(),
+			SizeBytes: safeInt64ToUint64(req.Resources.Memory.Limit),
 		},
 		Disk: vmmodels.DiskParams{
-			SizeBytes: func() uint64 {
-				if req.Resources.Storage.TotalSpace < 0 {
-					return 0
-				}
-				// Safe conversion: int64 to uint64
-				if req.Resources.Storage.TotalSpace > int64(math.MaxInt64) {
-					return uint64(math.MaxInt64)
-				}
-				return uint64(req.Resources.Storage.TotalSpace)
-			}(),
-			Format: vmmodels.DiskFormatQCOW2,
+			SizeBytes: safeInt64ToUint64(req.Resources.Storage.TotalSpace),
+			Format:    vmmodels.DiskFormatQCOW2,
 		},
 		Network: vmmodels.NetParams{
 			Type:   vmmodels.NetworkTypeBridge,
@@ -1011,12 +1000,7 @@ func (a *kvmBackendAdapter) convertFromVM(vmInstance *vmmodels.VM) *compute.Comp
 				Cores: float64(vmInstance.CPU.Count),
 			},
 			Memory: compute.MemoryResources{
-				Limit: func() int64 {
-					if vmInstance.Memory.SizeBytes > uint64(math.MaxInt64) {
-						return math.MaxInt64
-					}
-					return int64(vmInstance.Memory.SizeBytes)
-				}(),
+				Limit: safeUint64ToInt64(vmInstance.Memory.SizeBytes),
 			},
 		},
 		CreatedAt: vmInstance.CreatedAt,

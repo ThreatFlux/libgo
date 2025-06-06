@@ -112,7 +112,7 @@ func (h *ExportHandler) ExportVM(c *gin.Context) {
 
 		// Normal error handling for real errors.
 		statusCode := http.StatusInternalServerError
-		errorCode := "INTERNAL_SERVER_ERROR"
+		errorCode := internalServerErrorCode
 		errorMessage := "Failed to create export job"
 
 		if apierrors.Is(err, apierrors.ErrVMNotFound) {
@@ -184,7 +184,7 @@ func (h *ExportHandler) GetExportStatus(c *gin.Context) {
 	job, err := h.exportManager.GetJob(c.Request.Context(), jobID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
-		errorCode := "INTERNAL_SERVER_ERROR"
+		errorCode := internalServerErrorCode
 		errorMessage := "Failed to get export job status"
 
 		if apierrors.Is(err, apierrors.ErrExportJobNotFound) {
@@ -227,7 +227,7 @@ func (h *ExportHandler) CancelExport(c *gin.Context) {
 	err := h.exportManager.CancelJob(c.Request.Context(), jobID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
-		errorCode := "INTERNAL_SERVER_ERROR"
+		errorCode := internalServerErrorCode
 		errorMessage := "Failed to cancel export job"
 
 		if apierrors.Is(err, apierrors.ErrExportJobNotFound) {
@@ -264,7 +264,7 @@ func (h *ExportHandler) ListExports(c *gin.Context) {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  http.StatusInternalServerError,
-			"code":    "INTERNAL_SERVER_ERROR",
+			"code":    internalServerErrorCode,
 			"message": "Failed to list export jobs",
 		})
 		return

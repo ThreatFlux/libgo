@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageCreateHandler handles creating storage pools
+// StorageCreateHandler handles creating storage pools.
 type StorageCreateHandler struct {
 	poolManager storage.PoolManager
 	logger      logger.Logger
 }
 
-// NewStorageCreateHandler creates a new storage create handler
+// NewStorageCreateHandler creates a new storage create handler.
 func NewStorageCreateHandler(poolManager storage.PoolManager, logger logger.Logger) *StorageCreateHandler {
 	return &StorageCreateHandler{
 		poolManager: poolManager,
@@ -22,11 +22,11 @@ func NewStorageCreateHandler(poolManager storage.PoolManager, logger logger.Logg
 	}
 }
 
-// Handle handles the storage create request
+// Handle handles the storage create request.
 func (h *StorageCreateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// Parse request body
+	// Parse request body.
 	var params storage.CreatePoolParams
 	if err := c.ShouldBindJSON(&params); err != nil {
 		h.logger.Error("Failed to parse create pool request", logger.Error(err))
@@ -36,7 +36,7 @@ func (h *StorageCreateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Create storage pool
+	// Create storage pool.
 	poolInfo, err := h.poolManager.Create(ctx, &params)
 	if err != nil {
 		if err == storage.ErrPoolExists {

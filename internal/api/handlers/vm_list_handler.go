@@ -113,26 +113,6 @@ func (h *VMHandler) ListVMs(c *gin.Context) {
 
 // Helper functions.
 
-// getVMFilterFromQuery extracts VM filter parameters from the query string.
-func getVMFilterFromQuery(c *gin.Context) map[string]string {
-	filter := make(map[string]string)
-
-	// Add supported filter parameters.
-	if name := c.Query("name"); name != "" {
-		filter["name"] = name
-	}
-
-	if status := c.Query("status"); status != "" {
-		filter["status"] = status
-	}
-
-	if tags := c.Query("tags"); tags != "" {
-		filter["tags"] = tags
-	}
-
-	return filter
-}
-
 // parseInt parses a string to an integer with min/max bounds.
 func parseInt(value string, minVal, maxVal int) (int, error) {
 	var result int

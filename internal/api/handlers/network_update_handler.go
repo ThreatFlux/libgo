@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NetworkUpdateHandler handles network updates
+// NetworkUpdateHandler handles network updates.
 type NetworkUpdateHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewNetworkUpdateHandler creates a new NetworkUpdateHandler
+// NewNetworkUpdateHandler creates a new NetworkUpdateHandler.
 func NewNetworkUpdateHandler(networkManager network.Manager, logger logger.Logger) *NetworkUpdateHandler {
 	return &NetworkUpdateHandler{
 		networkManager: networkManager,
@@ -22,11 +22,11 @@ func NewNetworkUpdateHandler(networkManager network.Manager, logger logger.Logge
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *NetworkUpdateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// Get network name from URL parameter
+	// Get network name from URL parameter.
 	name := c.Param("name")
 	if name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -35,7 +35,7 @@ func (h *NetworkUpdateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Parse request body
+	// Parse request body.
 	var params network.UpdateNetworkParams
 	if err := c.ShouldBindJSON(&params); err != nil {
 		h.logger.Debug("Invalid request body", logger.Error(err))
@@ -45,14 +45,14 @@ func (h *NetworkUpdateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Update the network
+	// Update the network.
 	networkInfo, err := h.networkManager.Update(ctx, name, &params)
 	if err != nil {
 		h.logger.Error("Failed to update network",
 			logger.String("name", name),
 			logger.Error(err))
 
-		// Check for specific errors
+		// Check for specific errors.
 		if err.Error() == "looking up network: "+err.Error() {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Network not found",
@@ -70,6 +70,6 @@ func (h *NetworkUpdateHandler) Handle(c *gin.Context) {
 		logger.String("name", networkInfo.Name),
 		logger.String("uuid", networkInfo.UUID))
 
-	// Return the updated network info
+	// Return the updated network info.
 	c.JSON(http.StatusOK, networkInfo)
 }

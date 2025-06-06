@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// OVSBridgeCreateHandler handles creating OVS bridges
+// OVSBridgeCreateHandler handles creating OVS bridges.
 type OVSBridgeCreateHandler struct {
 	ovsManager ovs.Manager
 	logger     logger.Logger
 }
 
-// NewOVSBridgeCreateHandler creates a new OVSBridgeCreateHandler
+// NewOVSBridgeCreateHandler creates a new OVSBridgeCreateHandler.
 func NewOVSBridgeCreateHandler(ovsManager ovs.Manager, logger logger.Logger) *OVSBridgeCreateHandler {
 	return &OVSBridgeCreateHandler{
 		ovsManager: ovsManager,
@@ -22,7 +22,7 @@ func NewOVSBridgeCreateHandler(ovsManager ovs.Manager, logger logger.Logger) *OV
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *OVSBridgeCreateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 

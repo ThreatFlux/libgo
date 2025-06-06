@@ -10,13 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DockerVolumeHandler handles Docker volume API requests
+// DockerVolumeHandler handles Docker volume API requests.
 type DockerVolumeHandler struct {
 	service dockervolume.Service
 	logger  logger.Logger
 }
 
-// NewDockerVolumeHandler creates a new Docker volume handler
+// NewDockerVolumeHandler creates a new Docker volume handler.
 func NewDockerVolumeHandler(service dockervolume.Service, logger logger.Logger) *DockerVolumeHandler {
 	return &DockerVolumeHandler{
 		service: service,
@@ -24,7 +24,7 @@ func NewDockerVolumeHandler(service dockervolume.Service, logger logger.Logger) 
 	}
 }
 
-// ListVolumes handles GET /docker/volumes
+// ListVolumes handles GET /docker/volumes.
 func (h *DockerVolumeHandler) ListVolumes(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -41,7 +41,7 @@ func (h *DockerVolumeHandler) ListVolumes(c *gin.Context) {
 	})
 }
 
-// CreateVolume handles POST /docker/volumes
+// CreateVolume handles POST /docker/volumes.
 func (h *DockerVolumeHandler) CreateVolume(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -79,7 +79,7 @@ func (h *DockerVolumeHandler) CreateVolume(c *gin.Context) {
 	})
 }
 
-// InspectVolume handles GET /docker/volumes/:name
+// InspectVolume handles GET /docker/volumes/:name.
 func (h *DockerVolumeHandler) InspectVolume(c *gin.Context) {
 	ctx := c.Request.Context()
 	volumeName := c.Param("name")
@@ -96,7 +96,7 @@ func (h *DockerVolumeHandler) InspectVolume(c *gin.Context) {
 	c.JSON(http.StatusOK, vol)
 }
 
-// RemoveVolume handles DELETE /docker/volumes/:name
+// RemoveVolume handles DELETE /docker/volumes/:name.
 func (h *DockerVolumeHandler) RemoveVolume(c *gin.Context) {
 	ctx := c.Request.Context()
 	volumeName := c.Param("name")
@@ -117,7 +117,7 @@ func (h *DockerVolumeHandler) RemoveVolume(c *gin.Context) {
 	})
 }
 
-// PruneVolumes handles POST /docker/volumes/prune
+// PruneVolumes handles POST /docker/volumes/prune.
 func (h *DockerVolumeHandler) PruneVolumes(c *gin.Context) {
 	ctx := c.Request.Context()
 

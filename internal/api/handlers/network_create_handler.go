@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NetworkCreateHandler handles network creation
+// NetworkCreateHandler handles network creation.
 type NetworkCreateHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewNetworkCreateHandler creates a new NetworkCreateHandler
+// NewNetworkCreateHandler creates a new NetworkCreateHandler.
 func NewNetworkCreateHandler(networkManager network.Manager, logger logger.Logger) *NetworkCreateHandler {
 	return &NetworkCreateHandler{
 		networkManager: networkManager,
@@ -22,11 +22,11 @@ func NewNetworkCreateHandler(networkManager network.Manager, logger logger.Logge
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// Parse request body
+	// Parse request body.
 	var params network.CreateNetworkParams
 	if err := c.ShouldBindJSON(&params); err != nil {
 		h.logger.Debug("Invalid request body", logger.Error(err))
@@ -36,7 +36,7 @@ func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if params.Name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Network name is required",
@@ -44,7 +44,7 @@ func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Set defaults if not provided
+	// Set defaults if not provided.
 	if params.BridgeName == "" {
 		params.BridgeName = "virbr-" + params.Name
 	}
@@ -56,7 +56,7 @@ func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 	}
 
 	if params.IP == nil {
-		// Default to 192.168.100.0/24 with DHCP
+		// Default to 192.168.100.0/24 with DHCP.
 		params.IP = &network.NetworkIP{
 			Address: "192.168.100.1",
 			Netmask: "255.255.255.0",
@@ -66,14 +66,14 @@ func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 		}
 	}
 
-	// Create the network
+	// Create the network.
 	networkInfo, err := h.networkManager.Create(ctx, &params)
 	if err != nil {
 		h.logger.Error("Failed to create network",
 			logger.String("name", params.Name),
 			logger.Error(err))
 
-		// Check for specific errors
+		// Check for specific errors.
 		if err.Error() == "network already exists: "+params.Name {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": "Network already exists",
@@ -91,6 +91,6 @@ func (h *NetworkCreateHandler) Handle(c *gin.Context) {
 		logger.String("name", networkInfo.Name),
 		logger.String("uuid", networkInfo.UUID))
 
-	// Return the created network info
+	// Return the created network info.
 	c.JSON(http.StatusCreated, networkInfo)
 }

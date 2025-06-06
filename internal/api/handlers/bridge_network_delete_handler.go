@@ -8,6 +8,10 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
+const (
+	bridgeNetworkMode = "bridge"
+)
+
 // BridgeNetworkDeleteHandler handles deleting bridge networks.
 type BridgeNetworkDeleteHandler struct {
 	networkManager network.Manager
@@ -47,7 +51,7 @@ func (h *BridgeNetworkDeleteHandler) Handle(c *gin.Context) {
 	}
 
 	// Check if it's a bridge network.
-	if details.Forward.Mode != "bridge" {
+	if details.Forward.Mode != bridgeNetworkMode {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Network is not a bridge network",
 		})

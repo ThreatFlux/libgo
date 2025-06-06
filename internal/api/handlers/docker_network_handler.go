@@ -10,13 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// DockerNetworkHandler handles Docker network API requests
+// DockerNetworkHandler handles Docker network API requests.
 type DockerNetworkHandler struct {
 	service dockernetwork.Service
 	logger  logger.Logger
 }
 
-// NewDockerNetworkHandler creates a new Docker network handler
+// NewDockerNetworkHandler creates a new Docker network handler.
 func NewDockerNetworkHandler(service dockernetwork.Service, logger logger.Logger) *DockerNetworkHandler {
 	return &DockerNetworkHandler{
 		service: service,
@@ -24,7 +24,7 @@ func NewDockerNetworkHandler(service dockernetwork.Service, logger logger.Logger
 	}
 }
 
-// ListNetworks handles GET /docker/networks
+// ListNetworks handles GET /docker/networks.
 func (h *DockerNetworkHandler) ListNetworks(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -41,7 +41,7 @@ func (h *DockerNetworkHandler) ListNetworks(c *gin.Context) {
 	})
 }
 
-// CreateNetwork handles POST /docker/networks
+// CreateNetwork handles POST /docker/networks.
 func (h *DockerNetworkHandler) CreateNetwork(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -87,7 +87,7 @@ func (h *DockerNetworkHandler) CreateNetwork(c *gin.Context) {
 	})
 }
 
-// InspectNetwork handles GET /docker/networks/:id
+// InspectNetwork handles GET /docker/networks/:id.
 func (h *DockerNetworkHandler) InspectNetwork(c *gin.Context) {
 	ctx := c.Request.Context()
 	networkID := c.Param("id")
@@ -104,7 +104,7 @@ func (h *DockerNetworkHandler) InspectNetwork(c *gin.Context) {
 	c.JSON(http.StatusOK, networkInfo)
 }
 
-// RemoveNetwork handles DELETE /docker/networks/:id
+// RemoveNetwork handles DELETE /docker/networks/:id.
 func (h *DockerNetworkHandler) RemoveNetwork(c *gin.Context) {
 	ctx := c.Request.Context()
 	networkID := c.Param("id")
@@ -123,7 +123,7 @@ func (h *DockerNetworkHandler) RemoveNetwork(c *gin.Context) {
 	})
 }
 
-// ConnectContainer handles POST /docker/networks/:id/connect
+// ConnectContainer handles POST /docker/networks/:id/connect.
 func (h *DockerNetworkHandler) ConnectContainer(c *gin.Context) {
 	ctx := c.Request.Context()
 	networkID := c.Param("id")
@@ -154,7 +154,7 @@ func (h *DockerNetworkHandler) ConnectContainer(c *gin.Context) {
 	})
 }
 
-// DisconnectContainer handles POST /docker/networks/:id/disconnect
+// DisconnectContainer handles POST /docker/networks/:id/disconnect.
 func (h *DockerNetworkHandler) DisconnectContainer(c *gin.Context) {
 	ctx := c.Request.Context()
 	networkID := c.Param("id")
@@ -185,7 +185,7 @@ func (h *DockerNetworkHandler) DisconnectContainer(c *gin.Context) {
 	})
 }
 
-// PruneNetworks handles POST /docker/networks/prune
+// PruneNetworks handles POST /docker/networks/prune.
 func (h *DockerNetworkHandler) PruneNetworks(c *gin.Context) {
 	ctx := c.Request.Context()
 

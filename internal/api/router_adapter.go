@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +31,27 @@ func (a *vmManagerWebSocketAdapter) Get(ctx context.Context, name string) (*vmmo
 }
 
 // GetMetrics implements the GetMetrics method of websocket.VMManager.
+// safeInt64ToUint64 safely converts int64 to uint64, avoiding overflow.
+func safeInt64ToUint64(val int64) uint64 {
+	if val < 0 {
+		return 0
+	}
+	return uint64(val)
+}
+
+// generateMockBytesValue generates a mock byte value for testing.
+func generateMockBytesValue(mod int64, multiplier uint64) uint64 {
+	unixTime := time.Now().Unix()
+	if unixTime < 0 {
+		return 0
+	}
+	modResult := unixTime % mod
+	if modResult < 0 {
+		modResult = -modResult
+	}
+	return safeInt64ToUint64(modResult) * multiplier
+}
+
 func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string) (*websocket.VMMetrics, error) {
 	// First try the exact signature
 	if getter, ok := a.manager.(interface {
@@ -41,7 +61,16 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 	}
 
 	// Try to get VM metrics from the VM manager directly
-	// This handles the case where VM manager returns its own metrics type
+	if metrics, err := a.tryVMMetricsType(ctx, name); metrics != nil || err != nil {
+		return metrics, err
+	}
+
+	// Fallback to generic metrics
+	return a.fallbackToGenericMetrics(ctx, name)
+}
+
+// tryVMMetricsType attempts to get metrics using the VM-specific metrics type.
+func (a *vmManagerWebSocketAdapter) tryVMMetricsType(ctx context.Context, name string) (*websocket.VMMetrics, error) {
 	type vmMetrics struct {
 		CPU struct {
 			Utilization float64
@@ -81,7 +110,11 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 		return wsMetrics, nil
 	}
 
-	// Fallback to using the VM.GetMetrics method with a generic return type
+	return nil, nil
+}
+
+// fallbackToGenericMetrics creates mock metrics when specific metrics are unavailable.
+func (a *vmManagerWebSocketAdapter) fallbackToGenericMetrics(ctx context.Context, name string) (*websocket.VMMetrics, error) {
 	if getter, ok := a.manager.(interface {
 		GetMetrics(ctx context.Context, name string) (interface{}, error)
 	}); ok {
@@ -90,68 +123,15 @@ func (a *vmManagerWebSocketAdapter) GetMetrics(ctx context.Context, name string)
 			return nil, err
 		}
 
-		// Create mock metrics - the real metrics conversion would be more complex
+		// Create mock metrics
 		wsMetrics := &websocket.VMMetrics{}
-		wsMetrics.CPU.Utilization = 25.0 + float64(time.Now().Unix()%50) // Random-ish value between 25-75%
-		wsMetrics.Memory.Used = 1024*1024*1024 + func() uint64 {
-			unixTime := time.Now().Unix()
-			if unixTime < 0 {
-				return 0
-			}
-			modResult := unixTime % 3
-			if modResult < 0 {
-				modResult = -modResult // Ensure positive
-			}
-			if modResult > int64(math.MaxInt64) {
-				return 0 // Safety fallback
-			}
-			return uint64(modResult) * 1024 * 1024 * 1024
-		}() // 1-4GB
-		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024 // 8GB
-		wsMetrics.Network.RxBytes = func() uint64 {
-			unixTime := time.Now().Unix()
-			if unixTime < 0 {
-				return 0
-			}
-			modResult := unixTime % 10
-			if modResult < 0 {
-				modResult = -modResult
-			}
-			return uint64(modResult) * 1024 * 1024
-		}() // 0-10MB
-		wsMetrics.Network.TxBytes = func() uint64 {
-			unixTime := time.Now().Unix()
-			if unixTime < 0 {
-				return 0
-			}
-			modResult := unixTime % 5
-			if modResult < 0 {
-				modResult = -modResult
-			}
-			return uint64(modResult) * 1024 * 1024
-		}() // 0-5MB
-		wsMetrics.Disk.ReadBytes = func() uint64 {
-			unixTime := time.Now().Unix()
-			if unixTime < 0 {
-				return 0
-			}
-			modResult := unixTime % 20
-			if modResult < 0 {
-				modResult = -modResult
-			}
-			return uint64(modResult) * 1024 * 1024
-		}() // 0-20MB
-		wsMetrics.Disk.WriteBytes = func() uint64 {
-			unixTime := time.Now().Unix()
-			if unixTime < 0 {
-				return 0
-			}
-			modResult := unixTime % 10
-			if modResult < 0 {
-				modResult = -modResult
-			}
-			return uint64(modResult) * 1024 * 1024
-		}() // 0-10MB
+		wsMetrics.CPU.Utilization = 25.0 + float64(time.Now().Unix()%50)                   // Random-ish value between 25-75%
+		wsMetrics.Memory.Used = 1024*1024*1024 + generateMockBytesValue(3, 1024*1024*1024) // 1-4GB
+		wsMetrics.Memory.Total = 8 * 1024 * 1024 * 1024                                    // 8GB
+		wsMetrics.Network.RxBytes = generateMockBytesValue(10, 1024*1024)                  // 0-10MB
+		wsMetrics.Network.TxBytes = generateMockBytesValue(5, 1024*1024)                   // 0-5MB
+		wsMetrics.Disk.ReadBytes = generateMockBytesValue(20, 1024*1024)                   // 0-20MB
+		wsMetrics.Disk.WriteBytes = generateMockBytesValue(10, 1024*1024)                  // 0-10MB
 
 		return wsMetrics, nil
 	}

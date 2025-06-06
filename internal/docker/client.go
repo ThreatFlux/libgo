@@ -402,10 +402,8 @@ func (m *ClientManager) createClient(ctx context.Context) (*client.Client, error
 		httpClient := m.createSecureHTTPClient()
 		if httpClient != nil {
 			opts = append(opts, client.WithHTTPClient(httpClient))
-		} else {
-			if m.logger != nil {
-				m.logger.Error("Failed to create secure HTTP client when required")
-			}
+		} else if m.logger != nil {
+			m.logger.Error("Failed to create secure HTTP client when required")
 		}
 	}
 

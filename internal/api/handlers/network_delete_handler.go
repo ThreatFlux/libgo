@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// NetworkDeleteHandler handles network deletion
+// NetworkDeleteHandler handles network deletion.
 type NetworkDeleteHandler struct {
 	networkManager network.Manager
 	logger         logger.Logger
 }
 
-// NewNetworkDeleteHandler creates a new NetworkDeleteHandler
+// NewNetworkDeleteHandler creates a new NetworkDeleteHandler.
 func NewNetworkDeleteHandler(networkManager network.Manager, logger logger.Logger) *NetworkDeleteHandler {
 	return &NetworkDeleteHandler{
 		networkManager: networkManager,
@@ -22,11 +22,11 @@ func NewNetworkDeleteHandler(networkManager network.Manager, logger logger.Logge
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *NetworkDeleteHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	// Get network name from URL parameter
+	// Get network name from URL parameter.
 	name := c.Param("name")
 	if name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -35,14 +35,14 @@ func (h *NetworkDeleteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// Delete the network
+	// Delete the network.
 	err := h.networkManager.Delete(ctx, name)
 	if err != nil {
 		h.logger.Error("Failed to delete network",
 			logger.String("name", name),
 			logger.Error(err))
 
-		// Check for specific errors
+		// Check for specific errors.
 		if err.Error() == "looking up network: "+err.Error() {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Network not found",
@@ -59,7 +59,7 @@ func (h *NetworkDeleteHandler) Handle(c *gin.Context) {
 	h.logger.Info("Network deleted successfully",
 		logger.String("name", name))
 
-	// Return success
+	// Return success.
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Network deleted successfully",
 	})
