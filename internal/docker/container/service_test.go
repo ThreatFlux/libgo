@@ -160,54 +160,54 @@ func TestContainerService_Create(t *testing.T) {
 	service := NewService(mockManager, mockLog)
 
 	testCases := []struct {
-		name          string
-		config        *container.Config
-		hostConfig    *container.HostConfig
-		containerName string
-		setupMocks    func()
-		expectedID    string
-		expectedError bool
+		config        *container.Config     // 8 bytes (pointer)
+		hostConfig    *container.HostConfig // 8 bytes (pointer)
+		setupMocks    func()                // 8 bytes (function pointer)
+		containerName string                // 16 bytes (string header)
+		name          string                // 16 bytes (string header)
+		expectedID    string                // 16 bytes (string header)
+		expectedError bool                  // 1 byte (bool)
 	}{
 		{
-			name: "successful creation",
 			config: &container.Config{
 				Image: "nginx:latest",
 			},
-			hostConfig:    &container.HostConfig{},
-			containerName: "test-container",
+			hostConfig: &container.HostConfig{},
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "test-container").
 					Return(container.CreateResponse{ID: "abc123", Warnings: []string{"test warning"}}, nil)
 			},
+			containerName: "test-container",
+			name:          "successful creation",
 			expectedID:    "abc123",
 			expectedError: false,
 		},
 		{
-			name: "manager error",
 			config: &container.Config{
 				Image: "nginx:latest",
 			},
-			hostConfig:    &container.HostConfig{},
-			containerName: "test-container",
+			hostConfig: &container.HostConfig{},
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(nil, errors.New("manager error"))
 			},
+			containerName: "test-container",
+			name:          "manager error",
 			expectedID:    "",
 			expectedError: true,
 		},
 		{
-			name: "creation error",
 			config: &container.Config{
 				Image: "nginx:latest",
 			},
-			hostConfig:    &container.HostConfig{},
-			containerName: "test-container",
+			hostConfig: &container.HostConfig{},
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerCreate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "test-container").
 					Return(container.CreateResponse{}, errors.New("creation failed"))
 			},
+			containerName: "test-container",
+			name:          "creation error",
 			expectedID:    "",
 			expectedError: true,
 		},
@@ -242,27 +242,27 @@ func TestContainerService_Start(t *testing.T) {
 	service := NewService(mockManager, mockLog)
 
 	testCases := []struct {
-		name          string
-		containerID   string
-		setupMocks    func()
-		expectedError bool
+		setupMocks    func() // 8 bytes (function pointer)
+		name          string // 16 bytes (string header)
+		containerID   string // 16 bytes (string header)
+		expectedError bool   // 1 byte (bool)
 	}{
 		{
-			name:        "successful start",
-			containerID: "abc123",
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerStart", mock.Anything, "abc123", mock.Anything).Return(nil)
 			},
+			name:          "successful start",
+			containerID:   "abc123",
 			expectedError: false,
 		},
 		{
-			name:        "start error",
-			containerID: "abc123",
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerStart", mock.Anything, "abc123", mock.Anything).Return(errors.New("start failed"))
 			},
+			name:          "start error",
+			containerID:   "abc123",
 			expectedError: true,
 		},
 	}
@@ -297,34 +297,34 @@ func TestContainerService_Stop(t *testing.T) {
 	timeout := 30
 
 	testCases := []struct {
-		name          string
-		containerID   string
-		timeout       *int
-		setupMocks    func()
-		expectedError bool
+		timeout       *int   // 8 bytes (pointer)
+		setupMocks    func() // 8 bytes (function pointer)
+		name          string // 16 bytes (string header)
+		containerID   string // 16 bytes (string header)
+		expectedError bool   // 1 byte (bool)
 	}{
 		{
-			name:        "successful stop with timeout",
-			containerID: "abc123",
-			timeout:     &timeout,
+			timeout: &timeout,
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerStop", mock.Anything, "abc123", mock.MatchedBy(func(opts container.StopOptions) bool {
 					return opts.Timeout != nil && *opts.Timeout == 30
 				})).Return(nil)
 			},
+			name:          "successful stop with timeout",
+			containerID:   "abc123",
 			expectedError: false,
 		},
 		{
-			name:        "successful stop without timeout",
-			containerID: "abc123",
-			timeout:     nil,
+			timeout: nil,
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerStop", mock.Anything, "abc123", mock.MatchedBy(func(opts container.StopOptions) bool {
 					return opts.Timeout == nil
 				})).Return(nil)
 			},
+			name:          "successful stop without timeout",
+			containerID:   "abc123",
 			expectedError: false,
 		},
 	}
@@ -370,30 +370,30 @@ func TestContainerService_List(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name          string
-		options       container.ListOptions
-		setupMocks    func()
-		expected      []container.Summary
-		expectedError bool
+		expected      []container.Summary   // 24 bytes (slice header)
+		setupMocks    func()                // 8 bytes (function pointer)
+		options       container.ListOptions // size depends on struct, but typically large
+		name          string                // 16 bytes (string header)
+		expectedError bool                  // 1 byte (bool)
 	}{
 		{
-			name:    "successful list",
-			options: container.ListOptions{All: true},
+			expected: expectedContainers,
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerList", mock.Anything, mock.Anything).Return(expectedContainers, nil)
 			},
-			expected:      expectedContainers,
+			options:       container.ListOptions{All: true},
+			name:          "successful list",
 			expectedError: false,
 		},
 		{
-			name:    "list error",
-			options: container.ListOptions{All: true},
+			expected: nil,
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerList", mock.Anything, mock.Anything).Return(nil, errors.New("list failed"))
 			},
-			expected:      nil,
+			options:       container.ListOptions{All: true},
+			name:          "list error",
 			expectedError: true,
 		},
 	}
@@ -429,36 +429,36 @@ func TestContainerService_Logs(t *testing.T) {
 	mockReadCloser := io.NopCloser(strings.NewReader("test logs"))
 
 	testCases := []struct {
-		name          string
-		containerID   string
-		options       container.LogsOptions
-		setupMocks    func()
-		expectedError bool
+		setupMocks    func()                // 8 bytes (function pointer)
+		options       container.LogsOptions // size depends on struct, but typically large
+		name          string                // 16 bytes (string header)
+		containerID   string                // 16 bytes (string header)
+		expectedError bool                  // 1 byte (bool)
 	}{
 		{
-			name:        "successful logs retrieval",
-			containerID: "abc123",
+			setupMocks: func() {
+				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
+				mockClient.On("ContainerLogs", mock.Anything, "abc123", mock.Anything).Return(mockReadCloser, nil)
+			},
 			options: container.LogsOptions{
 				ShowStdout: true,
 				ShowStderr: true,
 				Follow:     false,
 			},
-			setupMocks: func() {
-				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
-				mockClient.On("ContainerLogs", mock.Anything, "abc123", mock.Anything).Return(mockReadCloser, nil)
-			},
+			name:          "successful logs retrieval",
+			containerID:   "abc123",
 			expectedError: false,
 		},
 		{
-			name:        "logs error",
-			containerID: "abc123",
-			options: container.LogsOptions{
-				ShowStdout: true,
-			},
 			setupMocks: func() {
 				mockManager.On("GetWithContext", mock.Anything).Return(mockClient, nil)
 				mockClient.On("ContainerLogs", mock.Anything, "abc123", mock.Anything).Return(nil, errors.New("logs failed"))
 			},
+			options: container.LogsOptions{
+				ShowStdout: true,
+			},
+			name:          "logs error",
+			containerID:   "abc123",
 			expectedError: true,
 		},
 	}

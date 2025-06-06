@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageGetHandler handles getting storage pool details
+// StorageGetHandler handles getting storage pool details.
 type StorageGetHandler struct {
 	poolManager storage.PoolManager
 	logger      logger.Logger
 }
 
-// NewStorageGetHandler creates a new storage get handler
+// NewStorageGetHandler creates a new storage get handler.
 func NewStorageGetHandler(poolManager storage.PoolManager, logger logger.Logger) *StorageGetHandler {
 	return &StorageGetHandler{
 		poolManager: poolManager,
@@ -22,7 +22,7 @@ func NewStorageGetHandler(poolManager storage.PoolManager, logger logger.Logger)
 	}
 }
 
-// Handle handles the storage get request
+// Handle handles the storage get request.
 func (h *StorageGetHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 

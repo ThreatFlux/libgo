@@ -157,50 +157,50 @@ func TestLibvirtVolumeManager_Create(t *testing.T) {
 
 	// Test cases
 	testCases := []struct {
-		name        string
-		poolName    string
-		volName     string
-		capacity    uint64
-		format      string
-		volExists   bool
-		poolActive  bool
-		expectError bool
+		capacity    uint64 // 8 bytes (uint64)
+		name        string // 16 bytes (string header)
+		poolName    string // 16 bytes (string header)
+		volName     string // 16 bytes (string header)
+		format      string // 16 bytes (string header)
+		volExists   bool   // 1 byte (bool)
+		poolActive  bool   // 1 byte (bool)
+		expectError bool   // 1 byte (bool)
 	}{
 		{
+			capacity:    10 * 1024 * 1024 * 1024, // 10GB
 			name:        "Create new volume in active pool",
 			poolName:    "active-pool",
 			volName:     "new-vol",
-			capacity:    10 * 1024 * 1024 * 1024, // 10GB
 			format:      "qcow2",
 			volExists:   false,
 			poolActive:  true,
 			expectError: false,
 		},
 		{
+			capacity:    5 * 1024 * 1024 * 1024, // 5GB
 			name:        "Volume already exists",
 			poolName:    "active-pool",
 			volName:     "existing-vol",
-			capacity:    5 * 1024 * 1024 * 1024, // 5GB
 			format:      "qcow2",
 			volExists:   true,
 			poolActive:  true,
 			expectError: true,
 		},
 		{
+			capacity:    1 * 1024 * 1024 * 1024, // 1GB
 			name:        "Inactive pool",
 			poolName:    "inactive-pool",
 			volName:     "test-vol",
-			capacity:    1 * 1024 * 1024 * 1024, // 1GB
 			format:      "raw",
 			volExists:   false,
 			poolActive:  false,
 			expectError: true,
 		},
 		{
+			capacity:    1 * 1024 * 1024 * 1024, // 1GB
 			name:        "Pool not found",
 			poolName:    "nonexistent-pool",
 			volName:     "test-vol",
-			capacity:    1 * 1024 * 1024 * 1024, // 1GB
 			format:      "raw",
 			volExists:   false,
 			poolActive:  false,
@@ -270,11 +270,11 @@ func TestLibvirtVolumeManager_Delete(t *testing.T) {
 
 	// Test cases
 	testCases := []struct {
-		name        string
-		poolName    string
-		volName     string
-		volExists   bool
-		expectError bool
+		name        string // 16 bytes (string header)
+		poolName    string // 16 bytes (string header)
+		volName     string // 16 bytes (string header)
+		volExists   bool   // 1 byte (bool)
+		expectError bool   // 1 byte (bool)
 	}{
 		{
 			name:        "Delete existing volume",
@@ -358,12 +358,12 @@ func TestLibvirtVolumeManager_GetPath(t *testing.T) {
 
 	// Test cases
 	testCases := []struct {
-		name         string
-		poolName     string
-		volName      string
-		volExists    bool
-		expectedPath string
-		expectError  bool
+		name         string // 16 bytes (string header)
+		poolName     string // 16 bytes (string header)
+		volName      string // 16 bytes (string header)
+		expectedPath string // 16 bytes (string header)
+		volExists    bool   // 1 byte (bool)
+		expectError  bool   // 1 byte (bool)
 	}{
 		{
 			name:         "Get path for existing volume",

@@ -7,13 +7,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// RevertSnapshotResponse represents the response for a VM snapshot revert request
+// RevertSnapshotResponse represents the response for a VM snapshot revert request.
 type RevertSnapshotResponse struct {
 	Message string `json:"message"`
 	Success bool   `json:"success"`
 }
 
-// RevertSnapshot handles requests to revert a VM to a snapshot
+// RevertSnapshot handles requests to revert a VM to a snapshot.
 func (h *VMHandler) RevertSnapshot(c *gin.Context) {
 	// Get VM name and snapshot name from URL path
 	vmName := c.Param("name")

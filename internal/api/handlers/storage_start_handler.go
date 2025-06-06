@@ -9,7 +9,7 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// storageOperationHandler is a generic handler for storage pool start/stop operations
+// storageOperationHandler is a generic handler for storage pool start/stop operations.
 func storageOperationHandler(c *gin.Context, poolManager storage.PoolManager, log logger.Logger,
 	operation func(context.Context, string) error, operationName string) {
 	ctx := c.Request.Context()
@@ -46,13 +46,13 @@ func storageOperationHandler(c *gin.Context, poolManager storage.PoolManager, lo
 	})
 }
 
-// StorageStartHandler handles starting storage pools
+// StorageStartHandler handles starting storage pools.
 type StorageStartHandler struct {
 	poolManager storage.PoolManager
 	logger      logger.Logger
 }
 
-// NewStorageStartHandler creates a new storage start handler
+// NewStorageStartHandler creates a new storage start handler.
 func NewStorageStartHandler(poolManager storage.PoolManager, logger logger.Logger) *StorageStartHandler {
 	return &StorageStartHandler{
 		poolManager: poolManager,
@@ -60,7 +60,7 @@ func NewStorageStartHandler(poolManager storage.PoolManager, logger logger.Logge
 	}
 }
 
-// Handle handles the storage start request
+// Handle handles the storage start request.
 func (h *StorageStartHandler) Handle(c *gin.Context) {
 	storageOperationHandler(c, h.poolManager, h.logger, h.poolManager.Start, "start")
 }

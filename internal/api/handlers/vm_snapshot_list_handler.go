@@ -63,7 +63,7 @@ func (h *VMHandler) ListSnapshots(c *gin.Context) {
 	})
 }
 
-// GetSnapshot handles requests to get information about a specific VM snapshot
+// GetSnapshot handles requests to get information about a specific VM snapshot.
 func (h *VMHandler) GetSnapshot(c *gin.Context) {
 	// Get VM name and snapshot name from URL path
 	vmName := c.Param("name")

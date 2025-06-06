@@ -10,13 +10,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageVolumeUploadHandler handles uploading data to storage volumes
+// StorageVolumeUploadHandler handles uploading data to storage volumes.
 type StorageVolumeUploadHandler struct {
 	volumeManager storage.VolumeManager
 	logger        logger.Logger
 }
 
-// NewStorageVolumeUploadHandler creates a new storage volume upload handler
+// NewStorageVolumeUploadHandler creates a new storage volume upload handler.
 func NewStorageVolumeUploadHandler(volumeManager storage.VolumeManager, logger logger.Logger) *StorageVolumeUploadHandler {
 	return &StorageVolumeUploadHandler{
 		volumeManager: volumeManager,
@@ -24,7 +24,7 @@ func NewStorageVolumeUploadHandler(volumeManager storage.VolumeManager, logger l
 	}
 }
 
-// Handle handles the storage volume upload request
+// Handle handles the storage volume upload request.
 func (h *StorageVolumeUploadHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 

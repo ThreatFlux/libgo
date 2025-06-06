@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// OVSPortListHandler handles listing OVS ports
+// OVSPortListHandler handles listing OVS ports.
 type OVSPortListHandler struct {
 	ovsManager ovs.Manager
 	logger     logger.Logger
 }
 
-// NewOVSPortListHandler creates a new OVSPortListHandler
+// NewOVSPortListHandler creates a new OVSPortListHandler.
 func NewOVSPortListHandler(ovsManager ovs.Manager, logger logger.Logger) *OVSPortListHandler {
 	return &OVSPortListHandler{
 		ovsManager: ovsManager,
@@ -22,7 +22,7 @@ func NewOVSPortListHandler(ovsManager ovs.Manager, logger logger.Logger) *OVSPor
 	}
 }
 
-// Handle implements Handler interface
+// Handle implements Handler interface.
 func (h *OVSPortListHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 	bridge := c.Param("bridge")

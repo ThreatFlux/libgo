@@ -97,22 +97,21 @@ func TestClaims_Valid(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		claims  *Claims
-		wantErr bool
+		claims  *Claims // 8 bytes (pointer)
+		name    string  // 16 bytes (string header)
+		wantErr bool    // 1 byte (bool)
 	}{
 		{
-			name: "Valid claims",
 			claims: &Claims{
 				RegisteredClaims: validRegisteredClaims,
 				UserID:           "test-id",
 				Username:         "testuser",
 				Roles:            []string{user.RoleAdmin},
 			},
+			name:    "Valid claims",
 			wantErr: false,
 		},
 		{
-			name: "Expired token",
 			claims: &Claims{
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(now.Add(-1 * time.Hour)),
@@ -121,46 +120,47 @@ func TestClaims_Valid(t *testing.T) {
 				Username: "testuser",
 				Roles:    []string{user.RoleAdmin},
 			},
+			name:    "Expired token",
 			wantErr: true,
 		},
 		{
-			name: "Missing user ID",
 			claims: &Claims{
 				RegisteredClaims: validRegisteredClaims,
 				UserID:           "",
 				Username:         "testuser",
 				Roles:            []string{user.RoleAdmin},
 			},
+			name:    "Missing user ID",
 			wantErr: true,
 		},
 		{
-			name: "Missing username",
 			claims: &Claims{
 				RegisteredClaims: validRegisteredClaims,
 				UserID:           "test-id",
 				Username:         "",
 				Roles:            []string{user.RoleAdmin},
 			},
+			name:    "Missing username",
 			wantErr: true,
 		},
 		{
-			name: "Empty roles",
 			claims: &Claims{
 				RegisteredClaims: validRegisteredClaims,
 				UserID:           "test-id",
 				Username:         "testuser",
 				Roles:            []string{},
 			},
+			name:    "Empty roles",
 			wantErr: true,
 		},
 		{
-			name: "Invalid role",
 			claims: &Claims{
 				RegisteredClaims: validRegisteredClaims,
 				UserID:           "test-id",
 				Username:         "testuser",
 				Roles:            []string{"invalid-role"},
 			},
+			name:    "Invalid role",
 			wantErr: true,
 		},
 	}
@@ -177,32 +177,32 @@ func TestClaims_Valid(t *testing.T) {
 
 func TestClaims_HasPermission(t *testing.T) {
 	tests := []struct {
-		name       string
-		roles      []string
-		permission string
-		want       bool
+		roles      []string // 24 bytes (slice header)
+		name       string   // 16 bytes (string header)
+		permission string   // 16 bytes (string header)
+		want       bool     // 1 byte (bool)
 	}{
 		{
-			name:       "Admin has create permission",
 			roles:      []string{user.RoleAdmin},
+			name:       "Admin has create permission",
 			permission: user.PermCreate,
 			want:       true,
 		},
 		{
-			name:       "Operator has read permission",
 			roles:      []string{user.RoleOperator},
+			name:       "Operator has read permission",
 			permission: user.PermRead,
 			want:       true,
 		},
 		{
-			name:       "Operator does not have create permission",
 			roles:      []string{user.RoleOperator},
+			name:       "Operator does not have create permission",
 			permission: user.PermCreate,
 			want:       false,
 		},
 		{
-			name:       "Multiple roles with permission",
 			roles:      []string{user.RoleViewer, user.RoleOperator},
+			name:       "Multiple roles with permission",
 			permission: user.PermUpdate,
 			want:       true,
 		},
@@ -226,32 +226,32 @@ func TestClaims_HasPermission(t *testing.T) {
 
 func TestClaims_HasRole(t *testing.T) {
 	tests := []struct {
-		name  string
-		roles []string
-		role  string
-		want  bool
+		roles []string // 24 bytes (slice header)
+		name  string   // 16 bytes (string header)
+		role  string   // 16 bytes (string header)
+		want  bool     // 1 byte (bool)
 	}{
 		{
-			name:  "Has admin role",
 			roles: []string{user.RoleAdmin, user.RoleOperator},
+			name:  "Has admin role",
 			role:  user.RoleAdmin,
 			want:  true,
 		},
 		{
-			name:  "Has operator role",
 			roles: []string{user.RoleAdmin, user.RoleOperator},
+			name:  "Has operator role",
 			role:  user.RoleOperator,
 			want:  true,
 		},
 		{
-			name:  "Does not have viewer role",
 			roles: []string{user.RoleAdmin, user.RoleOperator},
+			name:  "Does not have viewer role",
 			role:  user.RoleViewer,
 			want:  false,
 		},
 		{
-			name:  "Does not have non-existent role",
 			roles: []string{user.RoleAdmin, user.RoleOperator},
+			name:  "Does not have non-existent role",
 			role:  "non-existent",
 			want:  false,
 		},

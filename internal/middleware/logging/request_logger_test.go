@@ -87,52 +87,62 @@ func TestRequestLogger(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		path           string
-		method         string
-		body           string
-		expectStatus   int
-		requestHeaders map[string]string
+		requestHeaders map[string]string // 24 bytes (map header)
+		body           string            // 16 bytes (string header)
+		path           string            // 16 bytes (string header)
+		method         string            // 16 bytes (string header)
+		name           string            // 16 bytes (string header)
+		expectStatus   int               // 8 bytes (int64 on 64-bit systems)
 	}{
 		{
-			name:         "Success response",
-			path:         "/success",
-			method:       "GET",
-			expectStatus: http.StatusOK,
+			requestHeaders: nil,
+			body:           "",
+			path:           "/success",
+			method:         "GET",
+			name:           "Success response",
+			expectStatus:   http.StatusOK,
 		},
 		{
-			name:         "Client error response",
-			path:         "/client-error",
-			method:       "GET",
-			expectStatus: http.StatusBadRequest,
+			requestHeaders: nil,
+			body:           "",
+			path:           "/client-error",
+			method:         "GET",
+			name:           "Client error response",
+			expectStatus:   http.StatusBadRequest,
 		},
 		{
-			name:         "Server error response",
-			path:         "/server-error",
-			method:       "GET",
-			expectStatus: http.StatusInternalServerError,
+			requestHeaders: nil,
+			body:           "",
+			path:           "/server-error",
+			method:         "GET",
+			name:           "Server error response",
+			expectStatus:   http.StatusInternalServerError,
 		},
 		{
-			name:         "Skipped path",
-			path:         "/health",
-			method:       "GET",
-			expectStatus: http.StatusOK,
+			requestHeaders: nil,
+			body:           "",
+			path:           "/health",
+			method:         "GET",
+			name:           "Skipped path",
+			expectStatus:   http.StatusOK,
 		},
 		{
-			name:         "With request body",
-			path:         "/with-body",
-			method:       "POST",
-			body:         `{"key":"value"}`,
-			expectStatus: http.StatusOK,
+			requestHeaders: nil,
+			body:           `{"key":"value"}`,
+			path:           "/with-body",
+			method:         "POST",
+			name:           "With request body",
+			expectStatus:   http.StatusOK,
 		},
 		{
-			name:         "With request ID",
-			path:         "/success",
-			method:       "GET",
-			expectStatus: http.StatusOK,
 			requestHeaders: map[string]string{
 				"X-Request-ID": "test-request-id",
 			},
+			body:         "",
+			path:         "/success",
+			method:       "GET",
+			name:         "With request ID",
+			expectStatus: http.StatusOK,
 		},
 	}
 
@@ -196,36 +206,36 @@ func TestRequestLogger(t *testing.T) {
 func TestBodyLogWriter(t *testing.T) {
 	// Test the bodyLogWriter
 	testCases := []struct {
-		name          string
-		input         string
-		maxSize       int
-		expectedSize  int
-		expectedBytes int
+		input         string // 16 bytes (string header)
+		name          string // 16 bytes (string header)
+		maxSize       int    // 8 bytes (int64 on 64-bit systems)
+		expectedSize  int    // 8 bytes (int64 on 64-bit systems)
+		expectedBytes int    // 8 bytes (int64 on 64-bit systems)
 	}{
 		{
-			name:          "Small body",
 			input:         "small body",
+			name:          "Small body",
 			maxSize:       100,
 			expectedSize:  10,
 			expectedBytes: 10,
 		},
 		{
-			name:          "Body equal to max",
 			input:         strings.Repeat("a", 10),
+			name:          "Body equal to max",
 			maxSize:       10,
 			expectedSize:  10,
 			expectedBytes: 10,
 		},
 		{
-			name:          "Body larger than max",
 			input:         strings.Repeat("a", 20),
+			name:          "Body larger than max",
 			maxSize:       10,
 			expectedSize:  10,
 			expectedBytes: 20,
 		},
 		{
-			name:          "Zero max size",
 			input:         "body",
+			name:          "Zero max size",
 			maxSize:       0,
 			expectedSize:  0,
 			expectedBytes: 4,

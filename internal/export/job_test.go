@@ -85,17 +85,17 @@ func TestJobStore_UpdateJobStatus(t *testing.T) {
 	job := store.createJob("test-vm", "qcow2", nil)
 
 	testCases := []struct {
-		name     string
-		status   Status
-		progress int
-		err      error
+		err      error  // 16 bytes (interface header)
+		name     string // 16 bytes (string header)
+		progress int    // 8 bytes (int64 on 64-bit systems)
+		status   Status // 8 bytes (Status is likely int type)
 	}{
-		{"Update to running", StatusRunning, 25, nil},
-		{"Update progress", StatusRunning, 50, nil},
-		{"Update with error", StatusRunning, 75, errors.New("test error")},
-		{"Update to completed", StatusCompleted, 100, nil},
-		{"Update to failed", StatusFailed, 60, errors.New("failure error")},
-		{"Update to canceled", StatusCanceled, 30, nil},
+		{nil, "Update to running", 25, StatusRunning},
+		{nil, "Update progress", 50, StatusRunning},
+		{errors.New("test error"), "Update with error", 75, StatusRunning},
+		{nil, "Update to completed", 100, StatusCompleted},
+		{errors.New("failure error"), "Update to failed", 60, StatusFailed},
+		{nil, "Update to canceled", 30, StatusCanceled},
 	}
 
 	for _, tc := range testCases {

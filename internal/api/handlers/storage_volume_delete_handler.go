@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageVolumeDeleteHandler handles deleting storage volumes
+// StorageVolumeDeleteHandler handles deleting storage volumes.
 type StorageVolumeDeleteHandler struct {
 	volumeManager storage.VolumeManager
 	logger        logger.Logger
 }
 
-// NewStorageVolumeDeleteHandler creates a new storage volume delete handler
+// NewStorageVolumeDeleteHandler creates a new storage volume delete handler.
 func NewStorageVolumeDeleteHandler(volumeManager storage.VolumeManager, logger logger.Logger) *StorageVolumeDeleteHandler {
 	return &StorageVolumeDeleteHandler{
 		volumeManager: volumeManager,
@@ -22,7 +22,7 @@ func NewStorageVolumeDeleteHandler(volumeManager storage.VolumeManager, logger l
 	}
 }
 
-// Handle handles the storage volume delete request
+// Handle handles the storage volume delete request.
 func (h *StorageVolumeDeleteHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 

@@ -41,15 +41,13 @@ func (m *MockCommandExecutor) ExecuteContext(ctx context.Context, cmd string, ar
 
 func TestOVSManager_CreateBridge(t *testing.T) {
 	tests := []struct {
-		name          string
-		bridgeName    string
-		mockSetup     func(*MockCommandExecutor)
-		expectedError bool
-		errorContains string
+		mockSetup     func(*MockCommandExecutor) // 8 bytes (function pointer)
+		name          string                     // 16 bytes (string header)
+		bridgeName    string                     // 16 bytes (string header)
+		errorContains string                     // 16 bytes (string header)
+		expectedError bool                       // 1 byte (bool)
 	}{
 		{
-			name:       "successful bridge creation",
-			bridgeName: "br-test",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-test").
@@ -59,22 +57,23 @@ func TestOVSManager_CreateBridge(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-br", "br-test").
 					Return([]byte{}, nil)
 			},
+			name:          "successful bridge creation",
+			bridgeName:    "br-test",
+			errorContains: "",
 			expectedError: false,
 		},
 		{
-			name:       "bridge already exists",
-			bridgeName: "br-existing",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns success (bridge exists)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-existing").
 					Return([]byte{}, nil)
 			},
-			expectedError: true,
+			name:          "bridge already exists",
+			bridgeName:    "br-existing",
 			errorContains: "already exists",
+			expectedError: true,
 		},
 		{
-			name:       "creation command fails",
-			bridgeName: "br-fail",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-fail").
@@ -84,8 +83,10 @@ func TestOVSManager_CreateBridge(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-br", "br-fail").
 					Return([]byte{}, fmt.Errorf("failed to create bridge"))
 			},
-			expectedError: true,
+			name:          "creation command fails",
+			bridgeName:    "br-fail",
 			errorContains: "creating bridge",
+			expectedError: true,
 		},
 	}
 
@@ -125,14 +126,12 @@ func TestOVSManager_CreateBridge(t *testing.T) {
 
 func TestOVSManager_DeleteBridge(t *testing.T) {
 	tests := []struct {
-		name          string
-		bridgeName    string
-		mockSetup     func(*MockCommandExecutor)
-		expectedError bool
+		mockSetup     func(*MockCommandExecutor) // 8 bytes (function pointer)
+		name          string                     // 16 bytes (string header)
+		bridgeName    string                     // 16 bytes (string header)
+		expectedError bool                       // 1 byte (bool)
 	}{
 		{
-			name:       "successful bridge deletion",
-			bridgeName: "br-test",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns success (bridge exists)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-test").
@@ -142,16 +141,18 @@ func TestOVSManager_DeleteBridge(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "del-br", "br-test").
 					Return([]byte{}, nil)
 			},
+			name:          "successful bridge deletion",
+			bridgeName:    "br-test",
 			expectedError: false,
 		},
 		{
-			name:       "bridge doesn't exist",
-			bridgeName: "br-nonexistent",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-nonexistent").
 					Return([]byte{}, fmt.Errorf("exit status 2"))
 			},
+			name:          "bridge doesn't exist",
+			bridgeName:    "br-nonexistent",
 			expectedError: false, // Should not error if bridge doesn't exist
 		},
 	}
@@ -189,18 +190,15 @@ func TestOVSManager_DeleteBridge(t *testing.T) {
 
 func TestOVSManager_AddPort(t *testing.T) {
 	tests := []struct {
-		name          string
-		bridge        string
-		port          string
-		options       *PortOptions
-		mockSetup     func(*MockCommandExecutor)
-		expectedError bool
-		errorContains string
+		options       *PortOptions               // 8 bytes (pointer)
+		mockSetup     func(*MockCommandExecutor) // 8 bytes (function pointer)
+		name          string                     // 16 bytes (string header)
+		bridge        string                     // 16 bytes (string header)
+		port          string                     // 16 bytes (string header)
+		errorContains string                     // 16 bytes (string header)
+		expectedError bool                       // 1 byte (bool)
 	}{
 		{
-			name:   "successful port addition",
-			bridge: "br-test",
-			port:   "eth0",
 			options: &PortOptions{
 				Type: "system",
 			},
@@ -213,25 +211,26 @@ func TestOVSManager_AddPort(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "add-port", "br-test", "eth0", "--", "set", "Interface", "eth0", "type=system").
 					Return([]byte{}, nil)
 			},
+			name:          "successful port addition",
+			bridge:        "br-test",
+			port:          "eth0",
+			errorContains: "",
 			expectedError: false,
 		},
 		{
-			name:    "bridge doesn't exist",
-			bridge:  "br-nonexistent",
-			port:    "eth0",
 			options: nil,
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock bridge exists check - returns exit code 2 (bridge doesn't exist)
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "br-exists", "br-nonexistent").
 					Return([]byte{}, fmt.Errorf("exit status 2"))
 			},
-			expectedError: true,
+			name:          "bridge doesn't exist",
+			bridge:        "br-nonexistent",
+			port:          "eth0",
 			errorContains: "not found",
+			expectedError: true,
 		},
 		{
-			name:   "port addition with VLAN tag",
-			bridge: "br-test",
-			port:   "eth1",
 			options: &PortOptions{
 				Tag: &[]int{100}[0], // Pointer to int
 			},
@@ -252,6 +251,10 @@ func TestOVSManager_AddPort(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "set", "Port", "eth1", "tag=100").
 					Return([]byte{}, nil)
 			},
+			name:          "port addition with VLAN tag",
+			bridge:        "br-test",
+			port:          "eth1",
+			errorContains: "",
 			expectedError: false,
 		},
 	}
@@ -292,13 +295,12 @@ func TestOVSManager_AddPort(t *testing.T) {
 
 func TestOVSManager_ListBridges(t *testing.T) {
 	tests := []struct {
-		name          string
-		mockSetup     func(*MockCommandExecutor)
-		expectedCount int
-		expectedError bool
+		mockSetup     func(*MockCommandExecutor) // 8 bytes (function pointer)
+		name          string                     // 16 bytes (string header)
+		expectedCount int                        // 8 bytes (int64 on 64-bit systems)
+		expectedError bool                       // 1 byte (bool)
 	}{
 		{
-			name: "successful bridge listing",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock list bridges command
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "list-br").
@@ -341,26 +343,27 @@ func TestOVSManager_ListBridges(t *testing.T) {
 				executor.On("ExecuteContext", mock.Anything, "ovs-ofctl", "dump-flows", "br-mgmt").
 					Return([]byte("NXST_FLOW reply (xid=0x4):\n"), nil)
 			},
+			name:          "successful bridge listing",
 			expectedCount: 2,
 			expectedError: false,
 		},
 		{
-			name: "no bridges",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock list bridges command returning empty result
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "list-br").
 					Return([]byte("\n"), nil)
 			},
+			name:          "no bridges",
 			expectedCount: 0,
 			expectedError: false,
 		},
 		{
-			name: "command failure",
 			mockSetup: func(executor *MockCommandExecutor) {
 				// Mock list bridges command failure
 				executor.On("ExecuteContext", mock.Anything, "ovs-vsctl", "list-br").
 					Return([]byte{}, fmt.Errorf("failed to list bridges"))
 			},
+			name:          "command failure",
 			expectedCount: 0,
 			expectedError: true,
 		},

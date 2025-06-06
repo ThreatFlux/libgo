@@ -6,13 +6,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageStopHandler handles stopping storage pools
+// StorageStopHandler handles stopping storage pools.
 type StorageStopHandler struct {
 	poolManager storage.PoolManager
 	logger      logger.Logger
 }
 
-// NewStorageStopHandler creates a new storage stop handler
+// NewStorageStopHandler creates a new storage stop handler.
 func NewStorageStopHandler(poolManager storage.PoolManager, logger logger.Logger) *StorageStopHandler {
 	return &StorageStopHandler{
 		poolManager: poolManager,
@@ -20,7 +20,7 @@ func NewStorageStopHandler(poolManager storage.PoolManager, logger logger.Logger
 	}
 }
 
-// Handle handles the storage stop request
+// Handle handles the storage stop request.
 func (h *StorageStopHandler) Handle(c *gin.Context) {
 	storageOperationHandler(c, h.poolManager, h.logger, h.poolManager.Stop, "stop")
 }

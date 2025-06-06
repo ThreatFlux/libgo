@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -226,10 +227,10 @@ func (h *DockerContainerHandler) StartContainer(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// StopContainer stops a container..
-func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
+// handleContainerAction handles common container actions with timeout.
+func (h *DockerContainerHandler) handleContainerAction(c *gin.Context, action string, actionFunc func(ctx context.Context, containerID string, timeout *int) error) {
 	contextLogger := h.logger.WithFields(
-		logger.String("handler", "docker_container_stop"),
+		logger.String("handler", "docker_container_"+action),
 		logger.String("method", c.Request.Method),
 		logger.String("path", c.Request.URL.Path),
 	)
@@ -248,48 +249,25 @@ func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
 		}
 	}
 
-	if err := h.containerService.Stop(c.Request.Context(), containerID, timeout); err != nil {
-		contextLogger.Error("Failed to stop container",
+	if err := actionFunc(c.Request.Context(), containerID, timeout); err != nil {
+		contextLogger.Error("Failed to "+action+" container",
 			logger.String("container_id", containerID),
 			logger.Error(err))
-		HandleError(c, fmt.Errorf("failed to stop container: %w", err))
+		HandleError(c, fmt.Errorf("failed to %s container: %w", action, err))
 		return
 	}
 
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// RestartContainer restarts a container..
+// StopContainer stops a container.
+func (h *DockerContainerHandler) StopContainer(c *gin.Context) {
+	h.handleContainerAction(c, "stop", h.containerService.Stop)
+}
+
+// RestartContainer restarts a container.
 func (h *DockerContainerHandler) RestartContainer(c *gin.Context) {
-	contextLogger := h.logger.WithFields(
-		logger.String("handler", "docker_container_restart"),
-		logger.String("method", c.Request.Method),
-		logger.String("path", c.Request.URL.Path),
-	)
-
-	containerID := c.Param("id")
-	if containerID == "" {
-		HandleError(c, ErrInvalidInput)
-		return
-	}
-
-	// Parse timeout from query.
-	var timeout *int
-	if t := c.Query("timeout"); t != "" {
-		if timeoutVal, err := strconv.Atoi(t); err == nil {
-			timeout = &timeoutVal
-		}
-	}
-
-	if err := h.containerService.Restart(c.Request.Context(), containerID, timeout); err != nil {
-		contextLogger.Error("Failed to restart container",
-			logger.String("container_id", containerID),
-			logger.Error(err))
-		HandleError(c, fmt.Errorf("failed to restart container: %w", err))
-		return
-	}
-
-	c.JSON(http.StatusNoContent, nil)
+	h.handleContainerAction(c, "restart", h.containerService.Restart)
 }
 
 // DeleteContainer deletes a container..

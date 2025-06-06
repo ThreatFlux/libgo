@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageDeleteHandler handles deleting storage pools
+// StorageDeleteHandler handles deleting storage pools.
 type StorageDeleteHandler struct {
 	poolManager storage.PoolManager
 	logger      logger.Logger
 }
 
-// NewStorageDeleteHandler creates a new storage delete handler
+// NewStorageDeleteHandler creates a new storage delete handler.
 func NewStorageDeleteHandler(poolManager storage.PoolManager, logger logger.Logger) *StorageDeleteHandler {
 	return &StorageDeleteHandler{
 		poolManager: poolManager,
@@ -22,7 +22,7 @@ func NewStorageDeleteHandler(poolManager storage.PoolManager, logger logger.Logg
 	}
 }
 
-// Handle handles the storage delete request
+// Handle handles the storage delete request.
 func (h *StorageDeleteHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 
