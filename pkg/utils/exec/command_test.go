@@ -12,42 +12,42 @@ import (
 
 func TestExecuteCommand(t *testing.T) {
 	testCases := []struct {
-		name        string
-		cmd         string
-		args        []string
-		options     CommandOptions
-		expectedOut string
-		expectError bool
+		args        []string       // 24 bytes (slice header)
+		options     CommandOptions // struct size varies
+		name        string         // 16 bytes (string header)
+		cmd         string         // 16 bytes (string header)
+		expectedOut string         // 16 bytes (string header)
+		expectError bool           // 1 byte (bool)
 	}{
 		{
-			name:        "Echo command",
-			cmd:         getEchoCmdName(),
 			args:        getEchoArgs("Hello, World!"),
 			options:     CommandOptions{},
+			name:        "Echo command",
+			cmd:         getEchoCmdName(),
 			expectedOut: "Hello, World!",
 			expectError: false,
 		},
 		{
-			name:        "Command with env variables",
-			cmd:         "sh",
 			args:        getEchoEnvArgs("TEST_VAR"),
 			options:     CommandOptions{Environment: []string{"TEST_VAR=test_value"}},
+			name:        "Command with env variables",
+			cmd:         "sh",
 			expectedOut: "test_value",
 			expectError: false,
 		},
 		{
-			name:        "Command with timeout (non-expiring)",
-			cmd:         getEchoCmdName(),
 			args:        getEchoArgs("timeout test"),
 			options:     CommandOptions{Timeout: 1 * time.Second},
+			name:        "Command with timeout (non-expiring)",
+			cmd:         getEchoCmdName(),
 			expectedOut: "timeout test",
 			expectError: false,
 		},
 		{
-			name:        "Nonexistent command",
-			cmd:         "nonexistent_command",
 			args:        []string{},
 			options:     CommandOptions{},
+			name:        "Nonexistent command",
+			cmd:         "nonexistent_command",
 			expectedOut: "",
 			expectError: true,
 		},

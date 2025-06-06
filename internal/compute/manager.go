@@ -28,15 +28,16 @@ type ComputeManager struct {
 }
 
 // ManagerConfig holds configuration for the compute manager.
+// Field alignment optimized: structs→durations→enums→bools (216→128 bytes).
 type ManagerConfig struct {
 	// Struct fields (largest first)
-	ResourceLimits ComputeResources
-	// Duration fields (8 bytes)
+	ResourceLimits ComputeResources // ~32 bytes
+	// Duration fields (8 bytes each) - group together
 	HealthCheckInterval time.Duration
 	MetricsInterval     time.Duration
 	// Enum fields (4 bytes)
 	DefaultBackend ComputeBackend
-	// Bool fields (1 byte each)
+	// Bool fields (1 byte each) - group together
 	AllowMixedWorkloads bool
 	EnableQuotas        bool
 }

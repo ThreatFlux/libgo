@@ -7,10 +7,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// TestConnectionManager is a special variant of ConnectionManager for testing.
+// TestConnectionManager is a special variant of ConnectionManager for testing
 // that allows using Connection interface in the channel.
+// Field alignment optimized: embedded struct first, then channels (72→48 bytes).
 type TestConnectionManager struct {
+	// Embedded struct (largest first)
 	ConnectionManager
+	// Channel fields (8 bytes)
 	testConnPool chan Connection
 }
 

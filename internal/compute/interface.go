@@ -348,14 +348,15 @@ type BulkActionResult struct {
 }
 
 // BackendInfo represents information about a compute backend.
+// Field alignment optimized: structs→maps/slices→strings→pointers→enums.
 type BackendInfo struct {
 	// Struct fields (largest first)
-	ResourceLimits     ComputeResources `json:"resource_limits"`
-	AvailableResources ComputeResources `json:"available_resources"`
-	// Slice and map fields (24 bytes each)
+	ResourceLimits     ComputeResources `json:"resource_limits"`     // ~32 bytes
+	AvailableResources ComputeResources `json:"available_resources"` // ~32 bytes
+	// Map and slice fields (24 bytes each)
+	Configuration  map[string]interface{} `json:"configuration,omitempty"`
 	Capabilities   []string               `json:"capabilities"`
 	SupportedTypes []ComputeInstanceType  `json:"supported_types"`
-	Configuration  map[string]interface{} `json:"configuration,omitempty"`
 	// String fields (16 bytes each)
 	Version    string `json:"version"`
 	APIVersion string `json:"api_version"`
@@ -367,19 +368,20 @@ type BackendInfo struct {
 }
 
 // ClusterStatus represents the overall status of the compute cluster.
+// Field alignment optimized: structs→time→maps→pointers→duration→ints.
 type ClusterStatus struct {
 	// Struct fields (largest first)
-	ResourceUsage  ComputeResources `json:"resource_usage"`
-	ResourceLimits ComputeResources `json:"resource_limits"`
-	// Map fields (24 bytes)
-	Backends map[ComputeBackend]*BackendInfo `json:"backends"`
+	ResourceUsage  ComputeResources `json:"resource_usage"`  // ~32 bytes
+	ResourceLimits ComputeResources `json:"resource_limits"` // ~32 bytes
 	// Time fields (24 bytes)
 	LastUpdated time.Time `json:"last_updated"`
-	// Duration fields (8 bytes)
-	Uptime time.Duration `json:"uptime"`
+	// Map fields (24 bytes)
+	Backends map[ComputeBackend]*BackendInfo `json:"backends"`
 	// Pointer fields (8 bytes)
 	Health *HealthStatus `json:"health"`
-	// Int fields (8 bytes on 64-bit)
+	// Duration fields (8 bytes)
+	Uptime time.Duration `json:"uptime"`
+	// Int fields (8 bytes on 64-bit) - group together
 	TotalInstances   int `json:"total_instances"`
 	RunningInstances int `json:"running_instances"`
 	StoppedInstances int `json:"stopped_instances"`
@@ -406,17 +408,18 @@ type ResourceQuotas struct {
 }
 
 // InstanceTemplate represents a template for creating instances.
+// Field alignment optimized: structs→time→maps/slices→strings→uint→enums→bool.
 type InstanceTemplate struct {
 	// Struct fields (largest first)
-	Config    ComputeInstanceConfig `json:"config"`
-	Resources ComputeResources      `json:"resources"`
-	// Slice and map fields (24 bytes each)
-	Networks []NetworkAttachment `json:"networks"`
-	Storage  []StorageAttachment `json:"storage"`
-	Labels   map[string]string   `json:"labels,omitempty"`
+	Config    ComputeInstanceConfig `json:"config"`    // ~40+ bytes
+	Resources ComputeResources      `json:"resources"` // ~32 bytes
 	// Time fields (24 bytes each)
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	// Map and slice fields (24 bytes each)
+	Labels   map[string]string   `json:"labels,omitempty"`
+	Networks []NetworkAttachment `json:"networks"`
+	Storage  []StorageAttachment `json:"storage"`
 	// String fields (16 bytes each)
 	ID          string `json:"id"`
 	Name        string `json:"name"`

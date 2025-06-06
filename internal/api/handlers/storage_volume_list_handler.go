@@ -1,5 +1,6 @@
 package handlers
 
+//nolint:dupl // Different handler types with different purposes
 import (
 	"net/http"
 

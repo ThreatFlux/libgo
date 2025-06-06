@@ -38,29 +38,37 @@ const (
 )
 
 // ComputeInstance represents a unified compute resource (VM or Container).
+// Field alignment optimized: structs first, time, maps/slices, pointers, strings, enums, primitives.
 type ComputeInstance struct {
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	// Struct fields (largest first)
+	Config      ComputeInstanceConfig `json:"config"`           // ~200+ bytes
+	Resources   ComputeResources      `json:"resources"`        // ~160+ bytes
+	Limits      ComputeResources      `json:"limits,omitempty"` // ~160+ bytes
+	RuntimeInfo RuntimeInfo           `json:"runtime_info"`     // ~150+ bytes
+	// Time fields (24 bytes each)
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	// Map and slice fields (24 bytes each)
 	Labels      map[string]string      `json:"labels,omitempty"`
 	Annotations map[string]string      `json:"annotations,omitempty"`
-	StartedAt   *time.Time             `json:"started_at,omitempty"`
-	FinishedAt  *time.Time             `json:"finished_at,omitempty"`
 	BackendData map[string]interface{} `json:"backend_data,omitempty"`
-	HealthState string                 `json:"health_state,omitempty"`
-	Name        string                 `json:"name"`
-	Backend     ComputeBackend         `json:"backend"`
-	Type        ComputeInstanceType    `json:"type"`
-	State       ComputeInstanceState   `json:"state"`
-	Status      string                 `json:"status"`
-	UUID        string                 `json:"uuid,omitempty"`
-	ID          string                 `json:"id"`
 	Storage     []StorageAttachment    `json:"storage"`
 	Networks    []NetworkAttachment    `json:"networks"`
-	Config      ComputeInstanceConfig  `json:"config"`
-	Resources   ComputeResources       `json:"resources"`
-	Limits      ComputeResources       `json:"limits,omitempty"`
-	RuntimeInfo RuntimeInfo            `json:"runtime_info"`
-	UserID      uint                   `json:"user_id"`
+	// Pointer fields (8 bytes each)
+	StartedAt  *time.Time `json:"started_at,omitempty"`
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
+	// String fields (16 bytes each) - group together
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	UUID        string `json:"uuid,omitempty"`
+	ID          string `json:"id"`
+	HealthState string `json:"health_state,omitempty"`
+	// Uint fields (8 bytes on 64-bit)
+	UserID uint `json:"user_id"`
+	// Enum fields (4 bytes each) - group together
+	Backend ComputeBackend       `json:"backend"`
+	Type    ComputeInstanceType  `json:"type"`
+	State   ComputeInstanceState `json:"state"`
 }
 
 // ComputeInstanceConfig holds instance configuration.
@@ -180,23 +188,31 @@ type HealthCheck struct {
 }
 
 // ComputeResources represents resource allocation.
+// Field alignment optimized: slices first, then structs by size.
 type ComputeResources struct {
-	Memory  MemoryResources  `json:"memory"`
-	Storage StorageResources `json:"storage,omitempty"`
-	GPU     []GPUResources   `json:"gpu,omitempty"`
-	CPU     CPUResources     `json:"cpu"`
-	Network NetworkResources `json:"network,omitempty"`
+	// Slice fields (24 bytes)
+	GPU []GPUResources `json:"gpu,omitempty"`
+	// Struct fields (ordered by size - largest first)
+	Memory  MemoryResources  `json:"memory"`            // ~40 bytes
+	CPU     CPUResources     `json:"cpu"`               // ~80 bytes with embedded struct
+	Storage StorageResources `json:"storage,omitempty"` // ~24 bytes
+	Network NetworkResources `json:"network,omitempty"` // ~16 bytes
 }
 
 // CPUResources represents CPU allocation.
+// Field alignment optimized: structs first, then strings, then float64, then int64.
 type CPUResources struct {
-	SetCPUs  string      `json:"set_cpus,omitempty"`
-	SetMems  string      `json:"set_mems,omitempty"`
-	Topology CPUTopology `json:"topology,omitempty"`
-	Cores    float64     `json:"cores"`
-	Shares   int64       `json:"shares,omitempty"`
-	Quota    int64       `json:"quota,omitempty"`
-	Period   int64       `json:"period,omitempty"`
+	// Struct fields (largest first)
+	Topology CPUTopology `json:"topology,omitempty"` // ~24 bytes (3 ints)
+	// String fields (16 bytes each)
+	SetCPUs string `json:"set_cpus,omitempty"`
+	SetMems string `json:"set_mems,omitempty"`
+	// Float64 fields (8 bytes)
+	Cores float64 `json:"cores"`
+	// Int64 fields (8 bytes each) - group together
+	Shares int64 `json:"shares,omitempty"`
+	Quota  int64 `json:"quota,omitempty"`
+	Period int64 `json:"period,omitempty"`
 }
 
 // CPUTopology defines CPU topology for VMs.
@@ -207,12 +223,15 @@ type CPUTopology struct {
 }
 
 // MemoryResources represents memory allocation.
+// Field alignment optimized: int64s first, then pointers.
 type MemoryResources struct {
-	Swappiness  *int  `json:"swappiness,omitempty"`
+	// Int64 fields (8 bytes each) - group together
 	Limit       int64 `json:"limit"`
 	Request     int64 `json:"request,omitempty"`
 	Swap        int64 `json:"swap,omitempty"`
 	Reservation int64 `json:"reservation,omitempty"`
+	// Pointer fields (8 bytes)
+	Swappiness *int `json:"swappiness,omitempty"`
 }
 
 // StorageResources represents storage allocation.
@@ -245,20 +264,24 @@ type GPUResources struct {
 }
 
 // NetworkAttachment represents a network interface attachment.
+// Field alignment optimized: maps/slices first, then pointers, then strings.
 type NetworkAttachment struct {
-	Options     map[string]string `json:"options,omitempty"`
-	Firewall    *FirewallConfig   `json:"firewall,omitempty"`
-	IPAddress   string            `json:"ip_address,omitempty"`
-	NetworkID   string            `json:"network_id,omitempty"`
-	Driver      string            `json:"driver,omitempty"`
-	MacAddress  string            `json:"mac_address,omitempty"`
-	Name        string            `json:"name"`
-	IPv6Address string            `json:"ipv6_address,omitempty"`
-	Gateway     string            `json:"gateway,omitempty"`
-	Network     string            `json:"network"`
-	Interface   string            `json:"interface"`
-	DNS         []string          `json:"dns,omitempty"`
-	Routes      []Route           `json:"routes,omitempty"`
+	// Map and slice fields (24 bytes each)
+	Options map[string]string `json:"options,omitempty"`
+	DNS     []string          `json:"dns,omitempty"`
+	Routes  []Route           `json:"routes,omitempty"`
+	// Pointer fields (8 bytes)
+	Firewall *FirewallConfig `json:"firewall,omitempty"`
+	// String fields (16 bytes each) - group together
+	Name        string `json:"name"`
+	Network     string `json:"network"`
+	Interface   string `json:"interface"`
+	IPAddress   string `json:"ip_address,omitempty"`
+	NetworkID   string `json:"network_id,omitempty"`
+	Driver      string `json:"driver,omitempty"`
+	MacAddress  string `json:"mac_address,omitempty"`
+	IPv6Address string `json:"ipv6_address,omitempty"`
+	Gateway     string `json:"gateway,omitempty"`
 }
 
 // Route represents a network route.

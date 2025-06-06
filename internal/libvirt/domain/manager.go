@@ -33,28 +33,35 @@ type DomainManager struct {
 }
 
 // libvirtDomain is a struct to parse libvirt domain XML.
+// Field alignment optimized: largest structs first, then strings, then ints.
 type libvirtDomain struct {
 	// Anonymous struct fields (largest first)
 	Devices struct {
+		// Slice fields (24 bytes each)
 		Disks      []libvirtDisk      `xml:"disk"`
 		Interfaces []libvirtInterface `xml:"interface"`
 	} `xml:"devices"`
 	CPU struct {
-		Mode  string `xml:"mode,attr"`
+		// Anonymous struct field
 		Model struct {
-			Value string `xml:",chardata"`
+			Value string `xml:",chardata"` // 16 bytes
 		} `xml:"model"`
 		Topology struct {
+			// Int fields (8 bytes each on 64-bit)
 			Sockets int `xml:"sockets,attr"`
 			Cores   int `xml:"cores,attr"`
 			Threads int `xml:"threads,attr"`
 		} `xml:"topology"`
+		// String fields (16 bytes)
+		Mode string `xml:"mode,attr"`
 	} `xml:"cpu"`
 	Memory struct {
-		Unit  string `xml:"unit,attr"`
+		// Uint64 fields (8 bytes)
 		Value uint64 `xml:",chardata"`
+		// String fields (16 bytes)
+		Unit string `xml:"unit,attr"`
 	} `xml:"memory"`
-	// String fields (16 bytes each)
+	// String fields (16 bytes each) - group together
 	Name   string `xml:"name"`
 	UUID   string `xml:"uuid"`
 	Status string `xml:"state,attr"`
@@ -63,50 +70,57 @@ type libvirtDomain struct {
 }
 
 // libvirtDisk represents a disk in libvirt domain XML.
+// Field alignment optimized: largest structs first, then strings, then pointers.
 type libvirtDisk struct {
-	// Anonymous struct fields (largest first - Source is largest with 5 strings)
+	// Anonymous struct fields (largest first - Source with 5 strings ≈ 80 bytes)
 	Source struct {
+		// String fields (16 bytes each) - group together
 		File    string `xml:"file,attr"`
 		Pool    string `xml:"pool,attr"`
 		Dev     string `xml:"dev,attr"`
 		Bridge  string `xml:"bridge,attr"`
 		Network string `xml:"network,attr"`
 	} `xml:"source"`
-	// String fields (16 bytes each) - group together for better alignment
-	Type   string `xml:"type,attr"`
-	Device string `xml:"device,attr"`
-	// Smaller struct fields
+	// Medium struct fields (2 strings each ≈ 32 bytes)
 	Driver struct {
-		Name string `xml:"name,attr"`
-		Type string `xml:"type,attr"`
+		Name string `xml:"name,attr"` // 16 bytes
+		Type string `xml:"type,attr"` // 16 bytes
 	} `xml:"driver"`
 	Target struct {
-		Dev string `xml:"dev,attr"`
-		Bus string `xml:"bus,attr"`
+		Dev string `xml:"dev,attr"` // 16 bytes
+		Bus string `xml:"bus,attr"` // 16 bytes
 	} `xml:"target"`
-	// Pointer fields (8 bytes each)
+	// Small struct field (1 int ≈ 8 bytes)
+	Boot struct {
+		Order int `xml:"order,attr"` // 8 bytes on 64-bit
+	} `xml:"boot"`
+	// String fields (16 bytes each) - group together
+	Type   string `xml:"type,attr"`
+	Device string `xml:"device,attr"`
+	// Pointer fields (8 bytes each) - group together
 	ReadOnly  *struct{} `xml:"readonly"`
 	Shareable *struct{} `xml:"shareable"`
-	// Smallest struct field (contains only int, 8 bytes)
-	Boot struct {
-		Order int `xml:"order,attr"`
-	} `xml:"boot"`
 }
 
 // libvirtInterface represents an interface in libvirt domain XML.
+// Field alignment optimized: largest structs first, then strings.
 type libvirtInterface struct {
-	Type   string `xml:"type,attr"`
+	// Anonymous struct fields (largest first - Source with 3 strings ≈ 48 bytes)
 	Source struct {
+		// String fields (16 bytes each) - group together
 		Bridge  string `xml:"bridge,attr"`
 		Network string `xml:"network,attr"`
 		Dev     string `xml:"dev,attr"`
 	} `xml:"source"`
+	// Smaller struct fields (1 string each ≈ 16 bytes)
 	MAC struct {
 		Address string `xml:"address,attr"`
 	} `xml:"mac"`
 	Model struct {
 		Type string `xml:"type,attr"`
 	} `xml:"model"`
+	// String fields (16 bytes)
+	Type string `xml:"type,attr"`
 }
 
 // NewDomainManager creates a new DomainManager.
@@ -796,13 +810,14 @@ func (m *DomainManager) getSnapshotInfo(conn *libvirt.Libvirt, snapshot libvirt.
 }
 
 // snapshotXML represents libvirt snapshot XML structure.
+// Field alignment optimized: XMLName/slices first, then strings, int64, pointers.
 type snapshotXML struct {
-	// Slice fields (24 bytes) - largest first
-	Disks []struct {
-		Name string `xml:"name,attr"`
-	} `xml:"disks>disk,omitempty"`
-	// XMLName field (24 bytes) - two strings = 16 + 8 for struct overhead
+	// XMLName field (24 bytes) - must be first for xml package
 	XMLName xml.Name `xml:"domainsnapshot"`
+	// Slice fields (24 bytes)
+	Disks []struct {
+		Name string `xml:"name,attr"` // 16 bytes
+	} `xml:"disks>disk,omitempty"`
 	// String fields (16 bytes each) - group together
 	Name        string `xml:"name"`
 	Description string `xml:"description,omitempty"`

@@ -40,12 +40,12 @@ type TestDomain struct {
 	Name    string   `xml:"name"`
 	UUID    string   `xml:"uuid"`
 	Memory  struct {
-		Value int    `xml:",chardata"`
-		Unit  string `xml:"unit,attr"`
+		Unit  string `xml:"unit,attr"` // 16 bytes (string)
+		Value int    `xml:",chardata"` // 8 bytes (int)
 	} `xml:"memory"`
 	VCPU struct {
-		Value     int    `xml:",chardata"`
-		Placement string `xml:"placement,attr"`
+		Placement string `xml:"placement,attr"` // 16 bytes (string)
+		Value     int    `xml:",chardata"`      // 8 bytes (int)
 	} `xml:"vcpu"`
 }
 

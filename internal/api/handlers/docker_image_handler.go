@@ -10,6 +10,8 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
+const trueString = "true"
+
 // DockerImageHandler handles Docker image API requests.
 type DockerImageHandler struct {
 	service dockerimage.Service
@@ -82,8 +84,8 @@ func (h *DockerImageHandler) RemoveImage(c *gin.Context) {
 	imageID := c.Param("id")
 
 	removeOptions := image.RemoveOptions{
-		Force:         c.Query("force") == "true",
-		PruneChildren: c.Query("prune") == "true",
+		Force:         c.Query("force") == trueString,
+		PruneChildren: c.Query("prune") == trueString,
 	}
 
 	deleteResponses, err := h.service.Remove(ctx, imageID, removeOptions)

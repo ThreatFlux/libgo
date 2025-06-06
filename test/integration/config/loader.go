@@ -9,46 +9,54 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-// TestConfig represents the structure of a test configuration file
+// TestConfig represents the structure of a test configuration file.
+// Field alignment optimized for memory efficiency.
 type TestConfig struct {
+	// Largest struct fields first
+	VM struct {
+		// Slice fields (24 bytes) - largest first
+		Provisioning struct {
+			Scripts []struct {
+				Name    string `yaml:"name"`    // 16 bytes each
+				Content string `yaml:"content"` // 16 bytes each
+			} `yaml:"scripts,omitempty"`
+			Method        string `yaml:"method"`                  // 16 bytes
+			UnattendedXml string `yaml:"unattendedXml,omitempty"` // 16 bytes
+		} `yaml:"provisioning"`
+		// Struct fields (group by size)
+		Network vmmodels.NetParams    `yaml:"network,omitempty"`
+		Disk    vmmodels.DiskParams   `yaml:"disk,omitempty"`
+		CPU     vmmodels.CPUParams    `yaml:"cpu,omitempty"`
+		Memory  vmmodels.MemoryParams `yaml:"memory,omitempty"`
+		// String fields (16 bytes each) - group together
+		Name        string `yaml:"name"`
+		Template    string `yaml:"template"`
+		Description string `yaml:"description"`
+	} `yaml:"vm"`
+	Verification struct {
+		// Slice fields (24 bytes)
+		Services []struct {
+			// String fields (16 bytes each) - group together
+			Name            string `yaml:"name"`
+			Protocol        string `yaml:"protocol"`
+			ExpectedContent string `yaml:"expectedContent"`
+			// Int fields (8 bytes on 64-bit) - group together
+			Port    int `yaml:"port"`
+			Timeout int `yaml:"timeout"`
+		} `yaml:"services"`
+	} `yaml:"verification"`
+	Export struct {
+		// Map fields (24 bytes) - largest first
+		Options map[string]string `yaml:"options"`
+		// String fields (16 bytes)
+		Format string `yaml:"format"`
+	} `yaml:"export"`
 	Test struct {
+		// String fields (16 bytes each) - group together
 		Name        string `yaml:"name"`
 		Description string `yaml:"description"`
 		Timeout     string `yaml:"timeout"`
 	} `yaml:"test"`
-	Export struct {
-		Options map[ // Duration string e.g. "60m"
-		// Group map (8 bytes) before string (8 bytes) for better alignment
-		string]string `yaml:"options"`
-		Format string `yaml:"format"`
-	} `yaml:"export"`
-	VM struct {
-		Network      vmmodels.NetParams `yaml:"network,omitempty"`
-		Name         string             `yaml:"name"`
-		Template     string             `yaml:"template"`
-		Description  string             `yaml:"description"`
-		Provisioning struct {
-			Method        string `yaml:"method"`
-			UnattendedXml string `yaml:"unattendedXml,omitempty"`
-			Scripts       []struct {
-				Name    string `yaml:"name"`
-				Content string `yaml:"content"`
-			} `yaml:"scripts,omitempty"`
-		} `yaml:"provisioning"`
-		Disk   vmmodels.DiskParams   `yaml:"disk,omitempty"`
-		CPU    vmmodels.CPUParams    `yaml:"cpu,omitempty"`
-		Memory vmmodels.MemoryParams `yaml:"memory,omitempty"`
-	} `yaml:"vm"`
-	Verification struct {
-		Services []struct {
-			Name            string `yaml:"name"`
-			Protocol        string `yaml:"protocol"`
-			ExpectedContent string `yaml:"expectedContent"`
-			Port            int    `yaml:"port"`
-			Timeout         int    `yaml:"timeout"`
-		} `yaml:"services"`
-	} `yaml:"verification"` // Group strings together
-	// Group ints together (4 bytes each)
 }
 
 // GetTimeout returns the test timeout duration with a default fallback
