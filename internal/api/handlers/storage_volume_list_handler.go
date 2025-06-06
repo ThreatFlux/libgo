@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// StorageVolumeListHandler handles listing storage volumes
+// StorageVolumeListHandler handles listing storage volumes.
 type StorageVolumeListHandler struct {
 	volumeManager storage.VolumeManager
 	logger        logger.Logger
 }
 
-// NewStorageVolumeListHandler creates a new storage volume list handler
+// NewStorageVolumeListHandler creates a new storage volume list handler.
 func NewStorageVolumeListHandler(volumeManager storage.VolumeManager, logger logger.Logger) *StorageVolumeListHandler {
 	return &StorageVolumeListHandler{
 		volumeManager: volumeManager,
@@ -22,7 +22,7 @@ func NewStorageVolumeListHandler(volumeManager storage.VolumeManager, logger log
 	}
 }
 
-// Handle handles the storage volume list request
+// Handle handles the storage volume list request.
 func (h *StorageVolumeListHandler) Handle(c *gin.Context) {
 	ctx := c.Request.Context()
 

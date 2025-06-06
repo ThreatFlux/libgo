@@ -8,13 +8,13 @@ import (
 	"github.com/threatflux/libgo/pkg/logger"
 )
 
-// ListSnapshotsResponse represents the response for listing VM snapshots
+// ListSnapshotsResponse represents the response for listing VM snapshots.
 type ListSnapshotsResponse struct {
 	Snapshots []*vmmodels.Snapshot `json:"snapshots"`
 	Count     int                  `json:"count"`
 }
 
-// ListSnapshots handles requests to list VM snapshots
+// ListSnapshots handles requests to list VM snapshots.
 func (h *VMHandler) ListSnapshots(c *gin.Context) {
 	// Get VM name from URL path
 	vmName := c.Param("name")

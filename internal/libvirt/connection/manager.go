@@ -18,10 +18,10 @@ type ConnectionManager struct {
 	logger logger.Logger
 	// String (16 bytes)
 	uri string
-	// Mutex (8 bytes) - struct types by size
-	mu sync.Mutex
-	// Channel (8 bytes)
+	// Channel (8 bytes) - before other 8-byte fields for alignment
 	connPool chan *libvirtConnection
+	// Mutex (variable size, but typically 8 bytes on 64-bit)
+	mu sync.Mutex
 	// Duration (8 bytes)
 	timeout time.Duration
 	// Int (8 bytes)

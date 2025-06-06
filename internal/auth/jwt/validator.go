@@ -26,7 +26,7 @@ type Validator interface {
 
 // JWTValidator implements Validator.
 type JWTValidator struct {
-	// Slice fields (24 bytes each)
+	// Slice fields (24 bytes each) - largest first
 	secretKey []byte
 	audience  []string
 	// Interface fields (16 bytes)
