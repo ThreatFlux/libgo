@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24.3-alpine3.21 AS builder
+FROM golang:1.24.4-alpine3.21 AS builder
 
 # Set necessary environment variables
 ENV CGO_ENABLED=0 \
