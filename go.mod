@@ -6,6 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/beevik/etree v1.5.1
+	github.com/containerd/errdefs v1.0.0
 	github.com/digitalocean/go-libvirt v0.0.0-20250512231903-57024326652b
 	github.com/docker/docker v28.2.2+incompatible
 	github.com/gin-gonic/gin v1.10.1
@@ -20,7 +21,7 @@ require (
 	golang.org/x/crypto v0.38.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/driver/sqlite v1.5.7
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
@@ -31,7 +32,6 @@ require (
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
